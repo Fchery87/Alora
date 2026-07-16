@@ -1,0 +1,115 @@
+/*
+  Alora design tokens — "Quiet Dawn"
+  -----------------------------------------------------------------
+  This is the transferable design system. When Alora is built for
+  real in React Native, these values map directly to a JS theme
+  object (e.g. theme.color.feed, theme.motion.easeOut). Keep names
+  semantic so the RN port is a 1:1 translation, not a redesign.
+*/
+
+:root {
+  /* ---- Type families ---- */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Hanken Grotesk", -apple-system, system-ui, sans-serif;
+
+  /* ---- Type scale (mobile) ---- */
+  --t-hero: 56px;     /* the status timer */
+  --t-display: 30px;
+  --t-title: 22px;
+  --t-heading: 17px;
+  --t-body: 15px;
+  --t-label: 13px;
+  --t-caption: 11.5px;
+
+  /* ---- Spacing scale ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+
+  /* ---- Radii ---- */
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+
+  /* ---- Motion (Emil curves) ---- */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --d-press: 140ms;
+  --d-pop: 200ms;
+  --d-screen: 320ms;
+
+  /* ---- Light theme: "Dawn" ---- */
+  --bg: #faf4ec;
+  --bg-grad-1: #fcf7f0;
+  --bg-grad-2: #f3e9da;
+  --surface: #fffdfa;
+  --surface-2: #f4ebde;
+  --surface-sunken: #efe4d4;
+  --ink: #2a2420;
+  --ink-soft: #6f6256;
+  --ink-faint: #a3978a;
+  --line: #e9ddcd;
+  --line-strong: #ddcdb8;
+
+  /* event color-coding */
+  --feed: #d9824a;
+  --feed-tint: #f8e7d8;
+  --diaper: #5f9a82;
+  --diaper-tint: #e0eee7;
+  --sleep: #6172a6;
+  --sleep-tint: #e2e5f1;
+
+  --accent: #c96a40;
+  --positive: #5f9a82;
+  --warning: #c79a3e;
+  --danger: #bf5640;
+
+  --shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.05), 0 2px 8px rgba(60, 40, 20, 0.04);
+  --shadow-md: 0 4px 14px rgba(60, 40, 20, 0.08), 0 1px 3px rgba(60, 40, 20, 0.05);
+  --shadow-lg: 0 18px 48px rgba(50, 33, 15, 0.16), 0 4px 12px rgba(50, 33, 15, 0.08);
+  --shadow-press: 0 1px 2px rgba(60, 40, 20, 0.06);
+
+  --grain-opacity: 0.04;
+}
+
+/* ---- Night theme: warm dim, usable at 3am ---- */
+[data-theme="night"] {
+  --bg: #14110d;
+  --bg-grad-1: #181410;
+  --bg-grad-2: #100d0a;
+  --surface: #1e1812;
+  --surface-2: #281f17;
+  --surface-sunken: #15110c;
+  --ink: #f1e8db;
+  --ink-soft: #b6aa9a;
+  --ink-faint: #7c7062;
+  --line: #322a20;
+  --line-strong: #43392c;
+
+  --feed: #e2a06b;
+  --feed-tint: #2f2316;
+  --diaper: #82b89e;
+  --diaper-tint: #16241d;
+  --sleep: #96a3cd;
+  --sleep-tint: #1a1d2c;
+
+  --accent: #e2a06b;
+  --positive: #82b89e;
+  --warning: #d9b765;
+  --danger: #d97a63;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.55);
+  --shadow-press: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  --grain-opacity: 0.05;
+}

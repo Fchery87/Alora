@@ -1,0 +1,50 @@
+# Alora — PowerSync sync rules
+# ---------------------------------------------------------------------------
+# Defines which rows each device pulls into its local SQLite. This is the
+# enforcement point for the PRD's "shared by default, private where needed"
+# rule (principle #4): check-ins live in a per-user bucket and are NEVER
+# included in the family bucket, so a partner's device cannot receive them.
+#
+# `token_parameters.user_id` is the authenticated user id from the Supabase JWT.
+# RLS (rls.sql) double-enforces everything below.
+
+bucket_definitions:
+  # -----------------------------------------------------------------------
+  # Family bucket — shared baby-care data for each family the user belongs to.
+  # -----------------------------------------------------------------------
+  family:
+    parameters: >
+      select family_id as id
+      from family_members
+      where user_id = token_parameters.user_id
+    data:
+      - select * from families            where id = bucket.id
+      - select * from family_members      where family_id = bucket.id
+      - select * from babies              where family_id = bucket.id
+      # include soft-deleted rows so deletions propagate as tombstones;
+      # the client filters on deleted_at for display.
+      - select * from baby_events         where family_id = bucket.id
+      - select * from event_edits         where family_id = bucket.id
+      - select * from reminders           where family_id = bucket.id
+      - select * from audit_logs          where family_id = bucket.id
+      - select * from subscription_status where family_id = bucket.id
+
+  # -----------------------------------------------------------------------
+  # Private bucket — data that belongs to the individual user only.
+  # A co-member's device never subscribes to this bucket.
+  # -----------------------------------------------------------------------
+  user_private:
+    parameters: select token_parameters.user_id as id
+    data:
+      - select * from users                    where id = bucket.id
+      - select * from notification_preferences where user_id = bucket.id
+      - select * from parent_check_ins         where user_id = bucket.id
+      - select * from parent_reflections       where user_id = bucket.id
+
+  # -----------------------------------------------------------------------
+  # Global bucket — read-only reference data shared by everyone.
+  # -----------------------------------------------------------------------
+  global:
+    parameters: select 'global' as id
+    data:
+      - select * from support_resources
