@@ -14,12 +14,36 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// Simple in-memory rate limiter (per Edge Function instance — resets on cold
+// start). Tune for production: 5 attempts per caller per 60 seconds.
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_ATTEMPTS = 5;
+const rateMap = new Map<string, { count: number; resetAt: number }>();
+
+function rateLimit(clientIp: string): boolean {
+  const now = Date.now();
+  const entry = rateMap.get(clientIp);
+  if (!entry || now > entry.resetAt) {
+    rateMap.set(clientIp, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_MAX_ATTEMPTS) return false;
+  entry.count += 1;
+  return true;
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
 
 Deno.serve(async (req) => {
   try {
+    // Rate-limit by caller IP to prevent brute-force code guessing
+    const clientIp = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+    if (!rateLimit(clientIp)) {
+      return json({ error: "Too many attempts. Try again later." }, 429);
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Missing authorization." }, 401);
 

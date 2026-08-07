@@ -13,6 +13,7 @@ supplying credentials is a step only you can do (it needs your accounts).
 | `sync-rules.yaml` | PowerSync buckets: shared `family`, private `user_private`, read-only `global`. |
 | `functions/redeem-invite/` | Edge Function — redeems a single-use invite, enforces the 2-seat cap, joins the family, consumes the token. |
 | `functions/delete-account/` | Edge Function — transfer-then-scrub account deletion (promote partner / delete sole-owner family / hard-delete PII). |
+| `tests/` | pgTAP suite — verifies RLS enforcement and the invite lifecycle at the database layer. |
 
 ## Design decisions encoded
 
@@ -37,6 +38,39 @@ supplying credentials is a step only you can do (it needs your accounts).
    EXPO_PUBLIC_POWERSYNC_URL=...
    ```
 5. The prototype's `src/data/supabaseRepository.ts` is the adapter skeleton that reads from these once configured; swap it in for `mockRepository` via `src/data/repository.ts`.
+
+## Testing the security layer (pgTAP)
+
+The RLS policies and invite lifecycle are verified at the database layer with
+pgTAP — RLS cannot be meaningfully tested through the TypeScript adapter
+because the adapter operates on the local SQLite, not the Postgres policies.
+
+```bash
+# Needs PostgreSQL + the pgTAP extension for your server version:
+#   apt install postgresql postgresql-client postgresql-<ver>-pgtap
+sudo -u postgres ./tests/run-pgtap.sh
+```
+
+The runner creates a throwaway database, applies `tests/00-mock-auth.sql` (a
+local stand-in for the Supabase `auth` schema, since plain Postgres has no
+`auth.users`/`auth.uid()`), then the production `schema.sql` + `rls.sql`, then
+runs `tests/01-rls-security.sql`. Pass with `PGDATABASE=name ./run-pgtap.sh` to
+override the database name.
+
+What the suite covers (41 assertions):
+
+- A non-member cannot read family events, families, memberships, invite
+  tokens, the audit log, or other users' profiles.
+- The `members_self_join` hole is closed: a client-side insert into an
+  existing family is rejected by RLS (0 rows).
+- Onboarding still works: a user can create a family and take the owner seat
+  (`members_owner_first` policy), and no one else can use that path.
+- Invite issuance is owner-only; partners see no tokens and cannot issue them.
+- `token_is_active()` gates redemption: used, revoked, and expired codes are
+  rejected; exactly one redeemable code survives per family.
+- The two-seat cap trigger rejects a third member even via the service role.
+- Private check-ins/reflections are invisible to co-caregivers and to
+  non-members.
 
 ## Edge Functions
 

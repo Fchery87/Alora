@@ -72,9 +72,26 @@ create policy members_read on family_members
   for select using (is_family_member(family_id));
 create policy members_owner_manage on family_members
   for all using (is_family_owner(family_id)) with check (is_family_owner(family_id));
--- allow a user to insert their own membership when redeeming an invite (server fn also gates this)
-create policy members_self_join on family_members
-  for insert with check (user_id = auth.uid());
+-- Onboarding path: a user may insert themselves as the FIRST member (owner)
+-- of a family they just created. Every other seat comes exclusively through
+-- redeem-invite (service role). An arbitrary user still cannot self-join an
+-- existing family: the check requires the family to be created_by the caller
+-- AND to have zero members, and unique (family_id, user_id) means the creator
+-- can never end up with two owner rows — one family, one owner.
+create policy members_owner_first on family_members
+  for insert with check (
+    role = 'owner'
+    and exists (
+      select 1 from families f
+      where f.id = family_id
+        and f.created_by = auth.uid()
+        and not exists (select 1 from family_members m where m.family_id = f.id)
+    )
+  );
+-- Membership insertion for every other seat is performed exclusively by the
+-- redeem-invite Edge Function (service role, which bypasses RLS). Direct
+-- client inserts are blocked to prevent self-joining any family without a
+-- valid invite.
 
 -- ---------------------------------------------------------------------------
 -- Babies + events + edits: any family member, scoped to their family
