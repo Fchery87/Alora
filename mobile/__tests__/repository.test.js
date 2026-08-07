@@ -368,6 +368,7 @@ function runRepositoryContractTests(repo, label) {
     assert.ok(typeof status.name === "string");
     assert.ok(typeof status.ageLabel === "string");
     assert.ok(typeof status.asleep === "boolean");
+    assert.ok(status.birthDate instanceof Date, "birth date exposed for growth chart ages");
     if (status.asleep) {
       assert.ok(status.asleepSince instanceof Date);
     }
@@ -544,6 +545,15 @@ function runRepositoryContractTests(repo, label) {
     assert.ok(invite.code.length > 0);
     assert.ok(invite.expiresAt instanceof Date);
     assert.equal(invite.revoked, false);
+  });
+
+  test(`${label}: growth measurements round-trip with quantity`, async () => {
+    await repo.createEvent({ type: "growth", subtype: "Weight", quantity: "3.4" });
+    const events = await repo.getTimeline();
+    const growth = events.find((e) => e.type === "growth");
+    assert.ok(growth, "growth event appears on the timeline");
+    assert.equal(growth.subtype, "Weight");
+    assert.equal(growth.quantity, "3.4");
   });
 
   test(`${label}: deleteAccount does not throw`, async () => {

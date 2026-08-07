@@ -23,7 +23,7 @@ create extension if not exists "pgcrypto";
 -- Enums
 -- ---------------------------------------------------------------------------
 create type family_role as enum ('owner', 'partner', 'limited');
-create type event_type as enum ('feed', 'diaper', 'sleep');
+create type event_type as enum ('feed', 'diaper', 'sleep', 'growth');
 create type mood_level as enum ('low', 'tired', 'okay', 'good', 'great');
 
 -- ---------------------------------------------------------------------------

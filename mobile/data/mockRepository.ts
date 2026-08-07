@@ -29,7 +29,7 @@ const LATENCY = 650;
 let nextEventId = events.length + 1;
 let nextCheckInId = 1;
 let nextInviteId = 1;
-let babyProfileStore: BabyProfile = { name: baby.name, ageLabel: baby.ageLabel };
+let babyProfileStore: BabyProfile = { name: baby.name, ageLabel: baby.ageLabel, birthDate: baby.birthDate };
 let eventStore: CareEvent[] = sortNewest(events);
 let careEventsHydrated = false;
 const deletedEventIds = new Set<string>();
@@ -277,10 +277,16 @@ export const mockRepository: AloraRepository = {
     const openSleep = activeSleep();
     const status: BabyStatus =
       s === "empty"
-        ? { name: babyProfileStore.name, ageLabel: babyProfileStore.ageLabel, asleep: false }
+        ? {
+            name: babyProfileStore.name,
+            ageLabel: babyProfileStore.ageLabel,
+            birthDate: babyProfileStore.birthDate,
+            asleep: false,
+          }
         : {
             name: babyProfileStore.name,
             ageLabel: babyProfileStore.ageLabel,
+            birthDate: babyProfileStore.birthDate,
             asleep: Boolean(openSleep),
             activeSleepId: openSleep?.id,
             asleepSince: openSleep?.at,
@@ -335,8 +341,10 @@ export const mockRepository: AloraRepository = {
   async saveBabyProfile(profile: BabyProfile) {
     const s = currentScenario();
     const nextProfile = {
+      ...babyProfileStore,
       name: profile.name.trim() || baby.name,
       ageLabel: profile.ageLabel,
+      ...(profile.birthDate ? { birthDate: profile.birthDate } : {}),
     };
     await delay<void>(undefined, s);
     babyProfileStore = nextProfile;
@@ -355,6 +363,7 @@ export const mockRepository: AloraRepository = {
       at: input.at ?? new Date(),
       endAt: input.endAt,
       detail: buildDetail(input),
+      quantity: input.quantity,
       sync: "pending",
     };
     eventStore = sortNewest([event, ...eventStore]);

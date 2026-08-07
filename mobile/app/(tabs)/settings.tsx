@@ -13,6 +13,7 @@ import {
   CheckInIcon,
   ChevronRight,
   PlusIcon,
+  GrowthIcon,
   TimelineIcon,
 } from "../../components/icons";
 import {
@@ -23,6 +24,8 @@ import {
   useSeatLimit,
 } from "../../data/useData";
 import { sinceLabel } from "../../data/mock";
+import * as Print from "expo-print";
+import { buildPediatricReportHTML } from "../../lib/pediatricReport";
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -30,6 +33,29 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  async function sharePediatricReport() {
+    if (exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const data = await exportMyData();
+      const { uri } = await Print.printToFileAsync({ html: buildPediatricReportHTML(data) });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          dialogTitle: "Alora pediatrician report",
+          mimeType: "application/pdf",
+          UTI: "com.adobe.pdf",
+        });
+      } else {
+        await Share.share({ title: "Alora pediatrician report", message: uri });
+      }
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Couldn't prepare the report.");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const baby = useBabyStatus();
   const members = useFamilyMembers();
@@ -176,6 +202,16 @@ export default function SettingsScreen() {
         <Divider />
         <Row
           iconBg={theme.color.surface2}
+          iconFg={theme.color.accent}
+          Icon={GrowthIcon}
+          label="Growth charts"
+          value="WHO reference"
+          chevron
+          onPress={() => router.push("/growth")}
+        />
+        <Divider />
+        <Row
+          iconBg={theme.color.surface2}
           iconFg={theme.color.inkSoft}
           Icon={TimelineIcon}
           label="View intro again"
@@ -208,6 +244,16 @@ export default function SettingsScreen() {
             />
             <Divider />
             <Row
+              iconBg={theme.color.surface2}
+              iconFg={theme.color.inkSoft}
+              Icon={DocIcon}
+              label="Pediatrician report"
+              value={exporting ? "Preparing..." : "PDF"}
+              chevron
+              onPress={sharePediatricReport}
+            />
+            <Divider />
+            <Row
               danger
               iconBg={theme.color.danger + "22"}
               iconFg={theme.color.danger}
@@ -227,7 +273,8 @@ export default function SettingsScreen() {
       )}
 
       <AppText variant="caption" color="inkFaint" style={{ marginTop: 24, textAlign: "center", lineHeight: 17 }}>
-        Baby data is shared with your family. Check-ins are private to you.{"\n"}Alora · Quiet Dawn
+        Baby data is shared with your family. Check-ins are private to you.{"\n"}
+        No ads. No data selling. Export and leave anytime.{"\n"}Alora · Quiet Dawn
       </AppText>
     </ScreenScroll>
   );
@@ -335,6 +382,21 @@ function TrashIcon({ size = 18, color = "#000" }: { size?: number; color?: strin
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </Svg>
+  );
+}
+
+function DocIcon({ size = 18, color = "#000" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M7 3.5h7L19 8.5V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
+        stroke={color}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path d="M14 3.5V9h5M9.5 13h6M9.5 16.5h6" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
     </Svg>
   );
 }

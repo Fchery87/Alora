@@ -23,9 +23,12 @@ import {
   startSleep,
   stopSleep,
   useBabyStatus,
+  useFamilyMembers,
   useRecentActivity,
   useTimeline,
 } from "../../data/useData";
+import { buildHandoffBrief } from "../../lib/handoff";
+import { getStoredHandoff, saveStoredHandoff } from "../../data/localHandoffStore";
 import { Reveal } from "../../components/Reveal";
 import { BreathingOrb, LiveDot } from "../../components/Motion";
 
@@ -42,6 +45,20 @@ export default function HomeScreen() {
   const status = useBabyStatus();
   const activity = useRecentActivity(3);
   const timeline = useTimeline();
+  const members = useFamilyMembers();
+  const [handoffMarker, setHandoffMarker] = useState<Date | null | undefined>(undefined);
+  const selfName = members.status === "ready" ? members.data.find((m) => m.isSelf)?.displayName : undefined;
+  const greetingName = selfName ?? "there";
+
+  useEffect(() => {
+    let cancelled = false;
+    getStoredHandoff().then((marker) => {
+      if (!cancelled) setHandoffMarker(marker);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // reload fns are stable (useCallback in useAsync); destructure so the focus
   // effect depends on the functions, not the recreated hook result objects.
   const { reload: reloadStatus } = status;
@@ -134,7 +151,8 @@ export default function HomeScreen() {
     <ScreenScroll>
       <Reveal index={0}>
         <AppText display variant="display" weight="medium" style={{ marginTop: 8, lineHeight: 33 }}>
-          Good morning,{"\n"}Alex.
+          Good morning,{"\n"}
+          {greetingName}.
         </AppText>
         <AppText variant="body" color="inkSoft" style={{ marginTop: 5, marginBottom: 18 }}>
           {s.putDownBy ? `${s.putDownBy} handed off 14m ago · all calm.` : "Your shift · all calm."}
@@ -214,8 +232,23 @@ export default function HomeScreen() {
         </Card>
       </Reveal>
 
-      {/* Quick log */}
+      {/* Shift-handoff briefing */}
       <Reveal index={2}>
+        <HandoffCard
+          events={timeline.data ?? []}
+          marker={handoffMarker}
+          baby={s}
+          onMarked={() => {
+            setHandoffMarker(new Date());
+            reloadStatus();
+            reloadActivity();
+            reloadTimeline();
+          }}
+        />
+      </Reveal>
+
+      {/* Quick log */}
+      <Reveal index={3}>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
           <QuickButton
             tint={theme.color.feedTint}
@@ -533,5 +566,115 @@ function HomeSkeleton() {
         ))}
       </View>
     </ScreenScroll>
+  );
+}
+
+function HandoffCard({
+  events,
+  marker,
+  baby,
+  onMarked,
+}: {
+  events: CareEvent[];
+  marker: Date | null | undefined;
+  baby: NonNullable<ReturnType<typeof useBabyStatus>["data"]>;
+  onMarked: () => void;
+}) {
+  const theme = useTheme();
+  const [, tick] = useState(0);
+  const [marking, setMarking] = useState(false);
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const brief = buildHandoffBrief(events, marker ?? null, new Date());
+
+  async function markHandoff() {
+    if (marking) return;
+    setMarking(true);
+    try {
+      await saveStoredHandoff(new Date());
+      onMarked();
+    } finally {
+      setMarking(false);
+    }
+  }
+
+  const rows: ({ dot: string; label: string; value: string } | null)[] = [
+    brief.lastFeed
+      ? {
+          dot: theme.color.feed,
+          label: "Feed",
+          value: `${brief.lastFeed.subtype} · ${brief.lastFeed.by} · ${sinceLabel(brief.lastFeed.at)}`,
+        }
+      : null,
+    brief.lastDiaper
+      ? {
+          dot: theme.color.diaper,
+          label: "Diaper",
+          value: `${brief.lastDiaper.subtype} · ${brief.lastDiaper.by} · ${sinceLabel(brief.lastDiaper.at)}`,
+        }
+      : null,
+    brief.openSleep
+      ? {
+          dot: theme.color.sleep,
+          label: "Sleeping",
+          value: `${baby.name} is down · since ${clockLabel(brief.openSleep.at)}`,
+        }
+      : null,
+  ];
+  const visibleRows = rows.filter((row): row is { dot: string; label: string; value: string } => row !== null);
+
+  const sinceLabelText = marker ? `Since the handoff at ${clockLabel(marker)}` : "Since the last 24 hours";
+
+  return (
+    <Card style={{ marginTop: 16, padding: 16, borderStyle: "dashed", borderColor: theme.color.lineStrong }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <AppText variant="label" weight="bold" color="inkFaint" style={{ letterSpacing: 0.6, flex: 1 }}>
+          CARE BRIEFING
+        </AppText>
+        <PressableScale
+          scale={0.96}
+          disabled={marking}
+          onPress={markHandoff}
+          style={{
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 999,
+            backgroundColor: theme.color.surface2,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: theme.color.line,
+            opacity: marking ? 0.6 : 1,
+          }}
+        >
+          <AppText weight="bold" variant="label">
+            {marker ? "Mark shift start" : "Start my shift"}
+          </AppText>
+        </PressableScale>
+      </View>
+      <AppText variant="caption" color="inkSoft" style={{ marginTop: 4 }}>
+        {sinceLabelText} · {brief.eventsSince} event{brief.eventsSince === 1 ? "" : "s"} logged
+      </AppText>
+      <View style={{ marginTop: 10, gap: 8 }}>
+        {visibleRows.length === 0 ? (
+          <AppText variant="body" color="inkSoft">
+            Nothing logged yet since then — all quiet.
+          </AppText>
+        ) : (
+          visibleRows.map((row) => (
+            <View key={row.label} style={{ flexDirection: "row", alignItems: "center", gap: 9 }}>
+              <View style={{ width: 7, height: 7, borderRadius: 999, backgroundColor: row.dot }} />
+              <AppText variant="body" weight="semibold" style={{ width: 76 }}>
+                {row.label}
+              </AppText>
+              <AppText variant="caption" color="inkSoft" style={{ flex: 1 }}>
+                {row.value}
+              </AppText>
+            </View>
+          ))
+        )}
+      </View>
+    </Card>
   );
 }

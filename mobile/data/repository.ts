@@ -54,6 +54,7 @@ export interface CheckInRecord extends NewCheckIn {
 export interface BabyProfile {
   name: string;
   ageLabel: string;
+  birthDate?: Date;
 }
 
 export interface DataExport {
@@ -100,6 +101,7 @@ export type InviteRole = "partner" | "limited";
 export interface BabyStatus {
   name: string;
   ageLabel: string;
+  birthDate?: Date;
   asleep: boolean;
   activeSleepId?: string;
   asleepSince?: Date;

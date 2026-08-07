@@ -3,21 +3,33 @@ import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../theme/ThemeProvider";
 import { AppText, Card, PressableScale, ScreenScroll } from "../../components/Themed";
-import { FeedIcon, DiaperIcon, SleepIcon, ChevronRight, type IconProps } from "../../components/icons";
+import { FeedIcon, DiaperIcon, SleepIcon, GrowthIcon, ChevronRight, type IconProps } from "../../components/icons";
 import type { EventType } from "../../data/repository";
 import { createCareEvent, useRecentActivity } from "../../data/useData";
 import { sinceLabel } from "../../data/mock";
 
-const TYPES: { id: EventType; label: string; Icon: ComponentType<IconProps>; colorKey: "feed" | "diaper" | "sleep" }[] =
-  [
-    { id: "feed", label: "Feed", Icon: FeedIcon, colorKey: "feed" },
-    { id: "diaper", label: "Diaper", Icon: DiaperIcon, colorKey: "diaper" },
-    { id: "sleep", label: "Sleep", Icon: SleepIcon, colorKey: "sleep" },
-  ];
+const TYPES: {
+  id: EventType;
+  label: string;
+  Icon: ComponentType<IconProps>;
+  colorKey: "feed" | "diaper" | "sleep" | "accent";
+}[] = [
+  { id: "feed", label: "Feed", Icon: FeedIcon, colorKey: "feed" },
+  { id: "diaper", label: "Diaper", Icon: DiaperIcon, colorKey: "diaper" },
+  { id: "sleep", label: "Sleep", Icon: SleepIcon, colorKey: "sleep" },
+  { id: "growth", label: "Growth", Icon: GrowthIcon, colorKey: "accent" },
+];
 const SUBTYPES: Record<EventType, string[]> = {
   feed: ["Breast", "Bottle", "Pumping"],
   diaper: ["Wet", "Dirty", "Mixed"],
   sleep: ["Nap", "Night"],
+  growth: ["Weight", "Length", "Head circumference"],
+};
+// Growth measurement defaults (weight in grams; length/head in mm).
+const DEFAULT_MEASURE: Record<string, number> = {
+  Weight: 3500,
+  Length: 500,
+  "Head circumference": 360,
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -31,6 +43,7 @@ export default function LogScreen() {
   const [sub, setSub] = useState("Bottle");
   const [quantityMl, setQuantityMl] = useState(120);
   const [durationMinutes, setDurationMinutes] = useState(15);
+  const [measureValue, setMeasureValue] = useState(3500);
   const [saving, setSaving] = useState(false);
   const [repeatSaving, setRepeatSaving] = useState(false);
   const recentActivity = useRecentActivity(10);
@@ -39,6 +52,11 @@ export default function LogScreen() {
   const accent = theme.color[active.colorKey];
   const showsQuantity = type === "feed" && (sub === "Bottle" || sub === "Pumping");
   const showsDuration = type === "sleep" || (type === "feed" && sub === "Breast");
+  const isGrowth = type === "growth";
+  const growthStep = sub === "Weight" ? 100 : 5; // g / mm
+  const growthMin = sub === "Weight" ? 1000 : 400; // 1.0 kg / 40 cm
+  const growthMax = sub === "Weight" ? 20000 : 1000; // 20 kg / 100 cm
+  const growthFormat = (v: number) => (sub === "Weight" ? `${(v / 1000).toFixed(1)} kg` : `${(v / 10).toFixed(1)} cm`);
 
   function updateType(nextType: EventType) {
     setType(nextType);
@@ -53,7 +71,14 @@ export default function LogScreen() {
       subtype: sub,
       at,
       endAt: type === "sleep" ? endAt : undefined,
-      quantity: showsQuantity ? `${quantityMl} ml` : undefined,
+      quantity:
+        type === "growth"
+          ? sub === "Weight"
+            ? (measureValue / 1000).toFixed(1)
+            : (measureValue / 10).toFixed(1)
+          : showsQuantity
+            ? `${quantityMl} ml`
+            : undefined,
       durationMinutes: showsDuration ? durationMinutes : undefined,
     };
   }
@@ -205,7 +230,7 @@ export default function LogScreen() {
         color="inkFaint"
         style={{ letterSpacing: 0.6, marginTop: 24, marginBottom: 11, marginHorizontal: 2 }}
       >
-        {type === "diaper" ? "TYPE" : type === "sleep" ? "KIND" : "METHOD"}
+        {type === "diaper" ? "TYPE" : type === "sleep" ? "KIND" : type === "growth" ? "MEASURE" : "METHOD"}
       </AppText>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 9 }}>
         {SUBTYPES[type].map((s) => {
@@ -215,7 +240,10 @@ export default function LogScreen() {
               key={s}
               scale={0.95}
               haptic="selection"
-              onPress={() => setSub(s)}
+              onPress={() => {
+                setSub(s);
+                setMeasureValue(DEFAULT_MEASURE[s] ?? 3500);
+              }}
               style={{
                 paddingHorizontal: 17,
                 paddingVertical: 11,
@@ -233,12 +261,23 @@ export default function LogScreen() {
         })}
       </View>
 
-      {(showsQuantity || showsDuration) && (
+      {(showsQuantity || showsDuration || isGrowth) && (
         <Card style={{ marginTop: 18, padding: 16 }}>
           <AppText variant="label" weight="bold" color="inkFaint" style={{ letterSpacing: 0.6, marginBottom: 12 }}>
-            {showsQuantity ? "AMOUNT" : "DURATION"}
+            {showsQuantity || isGrowth ? "AMOUNT" : "DURATION"}
           </AppText>
-          {showsQuantity ? (
+          {isGrowth ? (
+            <Stepper
+              value={measureValue}
+              unit=""
+              step={growthStep}
+              min={growthMin}
+              max={growthMax}
+              onChange={(value) => setMeasureValue(clamp(value, growthMin, growthMax))}
+              accent={accent}
+              format={growthFormat}
+            />
+          ) : showsQuantity ? (
             <Stepper
               value={quantityMl}
               unit="ml"
@@ -300,6 +339,7 @@ function Stepper({
   max,
   onChange,
   accent,
+  format,
 }: {
   value: number;
   unit: string;
@@ -308,8 +348,10 @@ function Stepper({
   max: number;
   onChange: (value: number) => void;
   accent: string;
+  format?: (value: number) => string;
 }) {
   const theme = useTheme();
+  const display = format ? format(value) : `${value} ${unit}`;
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
       <PressableScale
@@ -343,7 +385,7 @@ function Stepper({
         }}
       >
         <AppText display variant="title" weight="medium">
-          {value} {unit}
+          {display}
         </AppText>
         <AppText variant="caption" color="inkSoft" style={{ marginTop: 2 }}>
           {value === min ? "Minimum" : value === max ? "Maximum" : `Tap + / − to adjust`}

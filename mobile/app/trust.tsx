@@ -1,4 +1,4 @@
-import { View, StyleSheet } from "react-native";
+import { Linking, View, StyleSheet } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
@@ -7,9 +7,11 @@ import { Reveal } from "../components/Reveal";
 import { sinceLabel } from "../data/mock";
 import type { AuditLogEntry, SupportResource } from "../data/repository";
 import { useAuditLog, useBabyStatus, useFamilyMembers, useSupportResources } from "../data/useData";
+import { env } from "../config/env";
 import type { ColorTokens } from "../theme/tokens";
 
 export default function TrustScreen() {
+  const theme = useTheme();
   const resources = useSupportResources();
   const auditLog = useAuditLog();
   const baby = useBabyStatus();
@@ -24,7 +26,7 @@ export default function TrustScreen() {
   return (
     <ModalScreen title="Who can see what">
       <AppText variant="body" color="inkSoft" style={{ marginBottom: 6 }}>
-        Two simple boundaries — here’s exactly where everything lives.
+        No ads. No data selling. Export and leave anytime — here’s exactly where everything lives.
       </AppText>
 
       <Reveal index={0}>
@@ -86,8 +88,28 @@ export default function TrustScreen() {
       </Reveal>
 
       <Reveal index={5}>
+        {env.privacyPolicyUrl ? (
+          <PressableScale
+            scale={0.99}
+            onPress={() => Linking.openURL(env.privacyPolicyUrl)}
+            style={{
+              marginTop: 18,
+              paddingVertical: 13,
+              borderRadius: theme.radius.lg,
+              backgroundColor: theme.color.surface,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: theme.color.line,
+              alignItems: "center",
+            }}
+          >
+            <AppText variant="body" weight="semibold" style={{ color: theme.color.inkSoft }}>
+              Privacy policy
+            </AppText>
+          </PressableScale>
+        ) : null}
         <AppText variant="caption" color="inkFaint" style={{ marginTop: 20, textAlign: "center", lineHeight: 17 }}>
-          Your check-ins are stored privately and never sync to another caregiver’s device.
+          Your check-ins are stored privately and never sync to another caregiver’s device.{"\n"}
+          No ads. No data selling. Export and leave anytime.
         </AppText>
       </Reveal>
     </ModalScreen>

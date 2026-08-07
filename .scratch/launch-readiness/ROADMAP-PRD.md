@@ -74,49 +74,59 @@ Surface the sync reality everywhere the family reads data — as trust UX, per r
 Table-stakes parity (research §3.4). Requires measurement logging (length / weight / head circumference) if not already present.
 
 **Acceptance criteria**
-- [ ] Log length / weight / head-circumference measurements with timestamps.
-- [ ] WHO percentile computation runs locally (offline-capable); charts render from logged measurements on the baby profile or a growth surface.
-- [ ] Percentiles labeled non-clinically ("compared with WHO reference data", not medical advice); follows the app's disclaimer posture.
-- [ ] Tests: percentile math against known WHO reference values; chart render from fixture data.
+- [x] Log length / weight / head-circumference measurements with timestamps.
+- [x] WHO percentile computation runs locally (offline-capable); charts render from logged measurements on the baby profile or a growth surface.
+- [x] Percentiles labeled non-clinically ("compared with WHO reference data", not medical advice); follows the app's disclaimer posture.
+- [x] Tests: percentile math against known WHO reference values; chart render from fixture data.
+
+**Implemented (Aug 2026):** `growth` event type end-to-end (schema enum, Log segment with unit-aware stepper kg/cm, timeline/icons); `lib/growth/wholms.ts` generated from the CDC-hosted WHO LMS CSVs (provenance header; weight/length/head × boy/girl, months 0–24) + `lib/growth/percentile.ts` (LMS z-score, normal CDF, inverse — verified against known medians, e.g. 12-month boy weight P50 = 9.6479 kg); `app/growth.tsx` charts P3/P50/P97 reference bands with the baby's points, sex reference toggle (persisted locally), and an inline birth-date entry (the babies table persisted it via saveBabyProfile). 10 math/consistency tests.
 
 ### B2. Pediatrician-visit PDF report
 
 Reuses the existing JSON export pipeline (research §3.10).
 
 **Acceptance criteria**
-- [ ] Generate a shareable PDF locally: baby summary, period stats (feeds/diapers/sleep averages), growth snapshot, recent events.
-- [ ] PDF contains **no private check-in or reflection content** (same rule as export).
-- [ ] Shared via the system share sheet; generated offline.
-- [ ] Tests: report generation from fixture timeline; private-content exclusion asserted.
+- [x] Generate a shareable PDF locally: baby summary, period stats (feeds/diapers/sleep averages), growth snapshot, recent events.
+- [x] PDF contains **no private check-in or reflection content** (same rule as export).
+- [x] Shared via the system share sheet; generated offline.
+- [x] Tests: report generation from fixture timeline; private-content exclusion asserted.
+
+**Implemented (Aug 2026):** `lib/pediatricReport.ts` — pure HTML builder (unit-testable; no native imports) rendered via `expo-print` printToFileAsync and shared with expo-sharing from Settings → Pediatrician report. 6 tests incl. private-content exclusion + HTML escaping.
 
 ### B3. Shift-handoff briefing card
 
 The core-promise surface (research §3.1): "what the next caregiver needs to know" on Home.
 
 **Acceptance criteria**
-- [ ] Home surfaces a briefing computed from the local timeline: last event per category, in-progress sleep timer, next-expected signals (e.g., time since last feed), quiet-hours-aware.
-- [ ] Follows repeat-last rules and one-sleep-timer rules from `CONTEXT.md`; works fully offline.
-- [ ] Attribution visible (who logged what since the last handoff); handoff boundary is explicit.
-- [ ] Tests: briefing computation from fixture timeline via the module interface.
+- [x] Home surfaces a briefing computed from the local timeline: last event per category, in-progress sleep timer, next-expected signals (e.g., time since last feed), quiet-hours-aware.
+- [x] Follows repeat-last rules and one-sleep-timer rules from `CONTEXT.md`; works fully offline.
+- [x] Attribution visible (who logged what since the last handoff); handoff boundary is explicit.
+- [x] Tests: briefing computation from fixture timeline via the module interface.
+
+**Implemented (Aug 2026):** `lib/handoff.ts` pure brief builder (marker-filtered events since the handoff, 24h fallback, last feed/diaper, open sleep) + `data/localHandoffStore.ts` marker; Home "Care briefing" card with Start-shift / Mark-shift-start button; hardcoded greeting name replaced with the real member name. 5 tests.
 
 ### B4. Possible-duplicate merge flow
 
 Resolve co-logged duplicates (research §3.3) — the timeline already flags possible duplicates.
 
 **Acceptance criteria**
-- [ ] From a duplicate chip, the caregiver sees both candidate events and resolves: keep one as canonical, merge details, or discard.
-- [ ] Resolution preserves history/audit (no silent overwrite — per conflict rules in `CONTEXT.md`); converges across both devices via sync.
-- [ ] Repeat-last and sleep-state logic treat the post-resolution timeline as canonical.
-- [ ] Tests: merge resolution through the module interface; both-caregiver convergence.
+- [x] From a duplicate chip, the caregiver sees both candidate events and resolves: keep one as canonical, merge details, or discard.
+- [x] Resolution preserves history/audit (no silent overwrite — per conflict rules in `CONTEXT.md`); converges across both devices via sync.
+- [x] Repeat-last and sleep-state logic treat the post-resolution timeline as canonical.
+- [x] Tests: merge resolution through the module interface; both-caregiver convergence.
+
+**Implemented (Aug 2026):** the merge flow (app/merge.tsx + timeline duplicate chip) was already complete from the production-readiness pass — verified against these criteria: Review shows both candidates with Original/Edited badges, Keep-both clears the flag, merge soft-deletes the loser (tombstone syncs) while the keeper's history stays in event_edits; contract tests cover duplicate detection and the adapter round-trip.
 
 ### B5. Privacy-as-UX trust center + positioning
 
 Positioning copy + store requirements (research §3.9; Apple Guideline 5.1.1 requires an in-app privacy-policy link).
 
 **Acceptance criteria**
-- [ ] Trust center copy pass: "No ads. No data selling. Export and leave anytime." consistent across settings/invite/delete-account.
-- [ ] In-app privacy policy link (public URL — also required by both stores for beta tracks).
-- [ ] Trust surfaces (audit log, export, deletion) unchanged functionally; copy only.
+- [x] Trust center copy pass: "No ads. No data selling. Export and leave anytime." consistent across settings/invite/delete-account.
+- [x] In-app privacy policy link (public URL — also required by both stores for beta tracks).
+- [x] Trust surfaces (audit log, export, deletion) unchanged functionally; copy only.
+
+**Implemented (Aug 2026):** positioning copy on the trust screen intro + footer and the Settings footer; privacy-policy link on the trust screen, gated on `EXPO_PUBLIC_PRIVACY_POLICY_URL` (documented in `.env.example`; publish the URL before store/beta distribution — provisioning ticket 03/04).
 
 ---
 

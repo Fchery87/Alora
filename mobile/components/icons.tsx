@@ -101,6 +101,17 @@ export const SleepIcon = ({ size, color, strokeWidth }: IconProps) => {
   );
 };
 
+export const GrowthIcon = ({ size, color, strokeWidth }: IconProps) => {
+  const c = useStroke(color);
+  return (
+    <Svg {...svg(size)}>
+      <Path d="M8.5 3v18" {...stroke(c, strokeWidth)} />
+      <Path d="M8.5 4h3.2M8.5 8h2.4M8.5 12h3.2M8.5 16h2.4M8.5 20h3.2" {...stroke(c, strokeWidth)} />
+      <Path d="M16.5 6.5V8l-3.5 8v1.5H20V16l-3.5-8V6.5h-1Z" {...stroke(c, strokeWidth)} />
+    </Svg>
+  );
+};
+
 export const MoonIcon = SleepIcon;
 
 export const SunIcon = ({ size, color, strokeWidth }: IconProps) => {
@@ -178,15 +189,18 @@ export const eventIcon = {
   feed: FeedIcon,
   diaper: DiaperIcon,
   sleep: SleepIcon,
+  growth: GrowthIcon,
 } as const;
 
-export const eventColorKey: Record<"feed" | "diaper" | "sleep", keyof ColorTokens> = {
+export const eventColorKey: Record<"feed" | "diaper" | "sleep" | "growth", keyof ColorTokens> = {
   feed: "feed",
   diaper: "diaper",
   sleep: "sleep",
+  growth: "accent",
 };
-export const eventTintKey: Record<"feed" | "diaper" | "sleep", keyof ColorTokens> = {
+export const eventTintKey: Record<"feed" | "diaper" | "sleep" | "growth", keyof ColorTokens> = {
   feed: "feedTint",
   diaper: "diaperTint",
   sleep: "sleepTint",
+  growth: "surface2",
 };

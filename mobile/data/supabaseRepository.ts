@@ -118,7 +118,11 @@ async function memberNames(): Promise<Record<string, { name: string; initial: st
 
 function detailFor(r: EventRow): string | undefined {
   const bits: string[] = [];
-  if (r.quantity != null) bits.push(r.event_type === "feed" ? `${r.quantity} ml` : `${r.quantity} min`);
+  if (r.quantity != null) {
+    if (r.event_type === "feed") bits.push(`${r.quantity} ml`);
+    else if (r.event_type === "sleep") bits.push(`${r.quantity} min`);
+    else if (r.event_type === "growth") bits.push(`${r.quantity} ${r.sub_type === "Weight" ? "kg" : "cm"}`);
+  }
   if (r.notes) bits.push(r.notes);
   return bits.length ? bits.join(" · ") : undefined;
 }
@@ -140,6 +144,7 @@ function toEvent(
     at: new Date(r.start_at ?? Date.now()),
     endAt: r.end_at ? new Date(r.end_at) : undefined,
     detail: detailFor(r),
+    quantity: r.quantity != null ? String(r.quantity) : undefined,
     sync: "synced",
   };
 }
@@ -196,6 +201,7 @@ export const supabaseRepository: AloraRepository = {
     return {
       name: baby?.name ?? "Baby",
       ageLabel: baby?.birth_date ? ageLabel(baby.birth_date) : "",
+      birthDate: baby?.birth_date ? new Date(baby.birth_date) : undefined,
       asleep: !!openSleep,
       asleepSince: openSleep?.start_at ? new Date(openSleep.start_at) : undefined,
       putDownBy: openSleep
@@ -325,13 +331,19 @@ export const supabaseRepository: AloraRepository = {
       `SELECT id FROM babies WHERE family_id = ? ORDER BY created_at ASC LIMIT 1`,
       [fid],
     );
+    const birthIso = profile.birthDate ? profile.birthDate.toISOString().slice(0, 10) : null;
     if (existing) {
-      await db.execute(`UPDATE babies SET name = ? WHERE id = ?`, [profile.name, existing.id]);
+      await db.execute(`UPDATE babies SET name = ?, birth_date = ? WHERE id = ?`, [
+        profile.name,
+        birthIso,
+        existing.id,
+      ]);
     } else {
-      await db.execute(`INSERT INTO babies (id, family_id, name, created_at) VALUES (?, ?, ?, ?)`, [
+      await db.execute(`INSERT INTO babies (id, family_id, name, birth_date, created_at) VALUES (?, ?, ?, ?, ?)`, [
         generateId(),
         fid,
         profile.name,
+        birthIso,
         new Date().toISOString(),
       ]);
     }

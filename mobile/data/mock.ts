@@ -1,4 +1,4 @@
-export type EventType = "feed" | "diaper" | "sleep";
+export type EventType = "feed" | "diaper" | "sleep" | "growth";
 export type SyncState = "synced" | "pending" | "edited";
 
 export interface CareEvent {
@@ -10,6 +10,8 @@ export interface CareEvent {
   at: Date;
   endAt?: Date;
   detail?: string;
+  /** Raw numeric value as logged (e.g. "3.4" for kg, "120" for ml). */
+  quantity?: string;
   sync: SyncState;
   duplicateOf?: string;
 }
@@ -20,10 +22,55 @@ const min = (m: number) => new Date(now.getTime() - m * 60_000);
 export const baby = {
   name: "Maya",
   ageLabel: "4 mo · 12 days",
+  birthDate: min(190080), // ~132 days ago
   asleepSince: min(72),
 };
 
 export const events: CareEvent[] = [
+  {
+    id: "g1",
+    type: "growth",
+    subtype: "Weight",
+    by: "You",
+    byInitial: "Y",
+    at: min(190080), // ~4 months ago (birth-ish)
+    detail: "3.3 kg",
+    quantity: "3.3",
+    sync: "synced",
+  },
+  {
+    id: "g2",
+    type: "growth",
+    subtype: "Length",
+    by: "Sam",
+    byInitial: "S",
+    at: min(103680), // ~2 months ago
+    detail: "57.5 cm",
+    quantity: "57.5",
+    sync: "synced",
+  },
+  {
+    id: "g3",
+    type: "growth",
+    subtype: "Weight",
+    by: "You",
+    byInitial: "Y",
+    at: min(43200), // ~1 month ago
+    detail: "6.1 kg",
+    quantity: "6.1",
+    sync: "synced",
+  },
+  {
+    id: "g4",
+    type: "growth",
+    subtype: "Head circumference",
+    by: "You",
+    byInitial: "Y",
+    at: min(1440), // yesterday
+    detail: "40.2 cm",
+    quantity: "40.2",
+    sync: "synced",
+  },
   {
     id: "e1",
     type: "sleep",
