@@ -13,3 +13,10 @@ Following `backend/PROVISIONING.md` (and the stack decision from *Free-tier infr
 Resolved when a live-mode install on a dev build signs in, syncs events between two devices, and reports to Sentry. Record resulting facts (project URLs, DSN location, region, any limits hit) in the Answer.
 
 Note: account signups can start immediately; only the **schema/RLS application step** waits on *Seat limit configuration* (08) — the two-seat cap in `backend/schema.sql` may be reworked by that decision.
+
+## Comments
+
+### 2026-08 (founder prep delivered)
+- Founder checklist delivered: `.scratch/launch-readiness/provisioning-checklist.md` — layers onto `backend/PROVISIONING.md` with the Phase A deltas (seat-limit + scoped-role live checks, `generate-invite` deploy, Sentry DSN step, privacy-policy URL env).
+- Status stays `open` until the signups + tracer test are done (founder's hands); the checklist is ~45–60 min of console work.
+- On completion, record: project URLs, DSN location, region, any free-tier limits hit.
