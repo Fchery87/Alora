@@ -89,10 +89,13 @@ export interface AuditLogEntry {
 export interface FamilyMember {
   userId: string;
   displayName: string;
-  role: "owner" | "partner";
+  role: "owner" | "partner" | "limited";
   isSelf: boolean;
   joinedAt: Date;
 }
+
+/** Seat roles an invite can grant: partner (full access) or limited (grandparent/nanny). */
+export type InviteRole = "partner" | "limited";
 
 export interface BabyStatus {
   name: string;
@@ -114,6 +117,11 @@ export interface AloraRepository {
   getSupportResources(): Promise<SupportResource[]>;
   getAuditLog(): Promise<AuditLogEntry[]>;
   getFamilyMembers(): Promise<FamilyMember[]>;
+  /** The family's caregiver seat limit — null = unlimited. */
+  getSeatLimit(): Promise<number | null>;
+  /** Set the family's caregiver seat limit (null = unlimited). Any non-limited
+   *  caregiver may call this; the change is audit-logged server-side. */
+  setSeatLimit(limit: number | null): Promise<void>;
   saveBabyProfile(profile: BabyProfile): Promise<void>;
   createEvent(input: NewCareEvent): Promise<string>;
   startSleep(at?: Date): Promise<string>;
@@ -123,7 +131,7 @@ export interface AloraRepository {
   createCheckIn(input: NewCheckIn): Promise<string>;
   setReminder(kind: ReminderKind, config: ReminderConfig, enabled: boolean): Promise<void>;
   revokeInvite(): Promise<InviteCode>;
-  generateInvite(): Promise<InviteCode>;
+  generateInvite(role?: InviteRole): Promise<InviteCode>;
   deleteAccount(): Promise<void>;
   exportMyData(): Promise<DataExport>;
 }

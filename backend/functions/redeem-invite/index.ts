@@ -64,12 +64,20 @@ Deno.serve(async (req) => {
       return json({ error: "This invite code is no longer valid." }, 410);
     }
 
-    // Enforce the two-seat MVP cap.
+    // Enforce the family's CONFIGURED seat limit (null = unlimited).
     const { count } = await admin
       .from("family_members")
       .select("*", { count: "exact", head: true })
       .eq("family_id", token.family_id);
-    if ((count ?? 0) >= 2) return json({ error: "This family is already full." }, 409);
+    const { data: family } = await admin
+      .from("families")
+      .select("seat_limit")
+      .eq("id", token.family_id)
+      .maybeSingle();
+    const seatLimit = (family?.seat_limit as number | null) ?? null;
+    if (seatLimit != null && (count ?? 0) >= seatLimit) {
+      return json({ error: `This family is at its caregiver limit (${seatLimit}).` }, 409);
+    }
 
     const displayName = (user.user_metadata?.display_name as string | undefined) ?? "Caregiver";
 

@@ -5,7 +5,7 @@ import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
 import { AppText, PressableScale } from "../components/Themed";
 import { ChevronRight } from "../components/icons";
-import type { InviteCode } from "../data/repository";
+import type { InviteCode, InviteRole } from "../data/repository";
 import { generateInvite, revokeInvite, useBabyStatus, useInvite } from "../data/useData";
 
 type InviteAction = null | "share" | "revoke" | "generate";
@@ -18,6 +18,7 @@ export default function InviteScreen() {
   const [invite, setInvite] = useState<InviteCode | null>(null);
   const [action, setAction] = useState<InviteAction>(null);
   const [error, setError] = useState<string | null>(null);
+  const [inviteRole, setInviteRole] = useState<InviteRole>("partner");
 
   const loadedInvite = inviteState.status === "ready" ? inviteState.data : null;
 
@@ -61,7 +62,7 @@ export default function InviteScreen() {
     setAction("generate");
     setError(null);
     try {
-      setInvite(await generateInvite());
+      setInvite(await generateInvite(inviteRole));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't generate a new code.");
     } finally {
@@ -74,6 +75,24 @@ export default function InviteScreen() {
       <AppText variant="body" color="inkSoft">
         Share this code with someone you trust to add them to {familyName}.
       </AppText>
+
+      <View style={{ marginTop: 16, gap: 10 }}>
+        <RoleOption
+          selected={inviteRole === "partner"}
+          onPress={() => setInviteRole("partner")}
+          title="Partner — full access"
+          caption="Sees and logs everything, like you"
+        />
+        <RoleOption
+          selected={inviteRole === "limited"}
+          onPress={() => setInviteRole("limited")}
+          title="Limited — grandparent or nanny"
+          caption="Care events and timeline only — no check-ins, invites, or trust actions"
+        />
+        <AppText variant="caption" color="inkFaint">
+          Applies to the next code you generate.
+        </AppText>
+      </View>
 
       {inviteState.status === "error" ? (
         <View
@@ -222,6 +241,59 @@ export default function InviteScreen() {
         Invite codes are single-use and time-limited. You can revoke an unused code at any time.
       </AppText>
     </ModalScreen>
+  );
+}
+
+function RoleOption({
+  selected,
+  onPress,
+  title,
+  caption,
+}: {
+  selected: boolean;
+  onPress: () => void;
+  title: string;
+  caption: string;
+}) {
+  const theme = useTheme();
+  return (
+    <PressableScale
+      scale={0.99}
+      onPress={onPress}
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderRadius: theme.radius.lg,
+        backgroundColor: selected ? theme.color.accent + "18" : theme.color.surface,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: selected ? theme.color.accent : theme.color.line,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+      }}
+    >
+      <View
+        style={{
+          width: 20,
+          height: 20,
+          borderRadius: 999,
+          borderWidth: 2,
+          borderColor: selected ? theme.color.accent : theme.color.inkFaint,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {selected && <View style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: theme.color.accent }} />}
+      </View>
+      <View style={{ flex: 1 }}>
+        <AppText variant="body" weight="semibold">
+          {title}
+        </AppText>
+        <AppText variant="caption" color="inkSoft">
+          {caption}
+        </AppText>
+      </View>
+    </PressableScale>
   );
 }
 

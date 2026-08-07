@@ -39,6 +39,10 @@ echo "==> applying local auth mock + schema + RLS"
 # Mirror Supabase grants (authenticated has broad table grants; RLS is the
 # fine-grained gate). Applied after the tables exist.
 "${PSQL[@]}" -d "${DB}" -c "grant usage on schema public to authenticated; grant select, insert, update, delete on all tables in schema public to authenticated;"
+# Column-level restriction on families (see rls.sql): generic UPDATE is
+# revoked for clients; only seat_limit is updatable — and only through the
+# families_member_seat_limit RLS policy (non-limited members).
+"${PSQL[@]}" -d "${DB}" -c "revoke update on families from authenticated; grant update (seat_limit) on families to authenticated;"
 
 echo "==> running pgTAP suite"
 psql -X -q -d "${DB}" -v ON_ERROR_STOP=0 -f "${HERE}/01-rls-security.sql"

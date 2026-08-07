@@ -44,17 +44,29 @@ Deno.serve(async (req) => {
       .eq("role", "owner");
 
     for (const { family_id } of owned ?? []) {
+      // Transfer ownership to a non-limited member first (a grandparent/nanny
+      // seat must not silently become owner while a partner exists). If only
+      // limited seats remain, promote one rather than delete the family.
       const { data: others } = await admin
         .from("family_members")
         .select("user_id")
         .eq("family_id", family_id)
         .neq("user_id", userId)
+        .neq("role", "limited")
         .limit(1);
 
-      if (others && others.length > 0) {
+      const fallback = others && others.length === 0 ? await admin
+        .from("family_members")
+        .select("user_id")
+        .eq("family_id", family_id)
+        .neq("user_id", userId)
+        .limit(1) : null;
+      const successor = (others && others.length > 0 ? others : (fallback?.data ?? []) as { user_id: string }[])[0];
+
+      if (successor) {
         // Transfer ownership; shared history stays (events reattributed on delete).
-        await admin.from("family_members").update({ role: "owner" }).eq("family_id", family_id).eq("user_id", others[0].user_id);
-        await admin.from("audit_logs").insert({ family_id, actor_id: userId, action: "owner.transferred", detail: { to: others[0].user_id } });
+        await admin.from("family_members").update({ role: "owner" }).eq("family_id", family_id).eq("user_id", successor.user_id);
+        await admin.from("audit_logs").insert({ family_id, actor_id: userId, action: "owner.transferred", detail: { to: successor.user_id } });
       } else {
         // Sole member → remove the whole family (cascade deletes babies/events/etc.).
         await admin.from("families").delete().eq("id", family_id);

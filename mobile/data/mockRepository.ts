@@ -13,6 +13,7 @@ import {
   type EventPatch,
   type FamilyMember,
   type InviteCode,
+  type InviteRole,
   type NewCareEvent,
   type NewCheckIn,
   type ReminderConfig,
@@ -41,7 +42,8 @@ let reminderStore: ReminderPreference[] = [
 ];
 let inviteStore = makeInvite("A7-K9P");
 let accountDeletedAt: Date | null = null;
-// Demo family: the current user + their co-caregiver (mirrors the demo events).
+// Demo family: the current user + their co-caregiver (mirrors the demo events),
+// plus a limited (grandparent) seat to exercise scoped roles.
 const familyMembersStore: FamilyMember[] = [
   {
     userId: "demo-you",
@@ -57,7 +59,16 @@ const familyMembersStore: FamilyMember[] = [
     isSelf: false,
     joinedAt: new Date(Date.now() - 21 * 24 * 60 * 60_000),
   },
+  {
+    userId: "demo-grandma",
+    displayName: "Grandma",
+    role: "limited",
+    isSelf: false,
+    joinedAt: new Date(Date.now() - 7 * 24 * 60 * 60_000),
+  },
 ];
+// Seat limit — null = unlimited (family setting).
+let seatLimitStore: number | null = null;
 const supportResources: SupportResource[] = [
   {
     id: "postpartum-support",
@@ -309,6 +320,18 @@ export const mockRepository: AloraRepository = {
       s,
     );
   },
+  async getSeatLimit() {
+    const s = currentScenario();
+    return delay<number | null>(seatLimitStore, s);
+  },
+  async setSeatLimit(limit: number | null) {
+    const s = currentScenario();
+    if (limit !== null && (!Number.isInteger(limit) || limit < 1)) {
+      throw new Error("Seat limit must be a whole number of at least 1, or no limit.");
+    }
+    await delay<void>(undefined, s);
+    seatLimitStore = limit;
+  },
   async saveBabyProfile(profile: BabyProfile) {
     const s = currentScenario();
     const nextProfile = {
@@ -425,7 +448,7 @@ export const mockRepository: AloraRepository = {
     inviteStore = { ...inviteStore, revoked: true };
     return cloneInvite(inviteStore);
   },
-  async generateInvite() {
+  async generateInvite(role: InviteRole = "partner") {
     const s = currentScenario();
     await delay<void>(undefined, s);
     inviteStore = makeInvite(nextInviteCode());

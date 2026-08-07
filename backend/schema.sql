@@ -3,7 +3,12 @@
 -- into the Supabase SQL editor. RLS policies live in rls.sql (apply after this).
 --
 -- Locked decisions encoded here:
---  * Two MVP roles (owner, partner); role enum is extensible (limited = Phase 2).
+--  * Three caregiver roles (owner, partner, limited); the enum is
+--    extensible. 'limited' = grandparent/nanny seat (care events + timeline
+--    only — no trust actions, no private check-ins).
+--  * Seat limits are a FAMILY SETTING, not a hard-coded cap: families.
+--    seat_limit is nullable; NULL = unlimited. Any non-limited caregiver can
+--    change it; changes are audit-logged (trigger below).
 --  * baby_events carries NO sync-status column — sync state is a CLIENT concern
 --    managed by PowerSync's local queue. Server is authoritative state only.
 --  * Soft delete via deleted_at on baby_events (propagates as a sync tombstone).
@@ -17,7 +22,7 @@ create extension if not exists "pgcrypto";
 -- ---------------------------------------------------------------------------
 -- Enums
 -- ---------------------------------------------------------------------------
-create type family_role as enum ('owner', 'partner');      -- 'limited' added in Phase 2
+create type family_role as enum ('owner', 'partner', 'limited');
 create type event_type as enum ('feed', 'diaper', 'sleep');
 create type mood_level as enum ('low', 'tired', 'okay', 'good', 'great');
 
@@ -38,6 +43,10 @@ create table families (
   id          uuid primary key default gen_random_uuid(),
   name        text not null default 'Our family',
   created_by  uuid references users (id) on delete set null,
+  -- Caregiver seat limit — NULL = unlimited. A family setting, not a
+  -- hard-coded cap: any non-limited caregiver may change it (RLS), and the
+  -- trigger below audit-logs every change. Enforced on member insert.
+  seat_limit  int,
   created_at  timestamptz not null default now()
 );
 
@@ -57,18 +66,39 @@ create table family_members (
 create index on family_members (user_id);
 create index on family_members (family_id);
 
--- Enforce the two-seat MVP cap (owner + one partner).
+-- Enforce the family's CONFIGURED seat limit (families.seat_limit).
+-- NULL seat_limit = unlimited: the trigger is a no-op for that family.
 create or replace function enforce_seat_cap() returns trigger
 language plpgsql as $$
+declare
+  cap int;
 begin
-  if (select count(*) from family_members where family_id = new.family_id) >= 2 then
-    raise exception 'Family is full (MVP cap is 2 caregivers)';
+  select seat_limit into cap from families where id = new.family_id;
+  if cap is not null
+     and (select count(*) from family_members where family_id = new.family_id) >= cap then
+    raise exception 'Family is at its caregiver limit (%)', cap;
   end if;
   return new;
 end;
 $$;
 create trigger trg_seat_cap before insert on family_members
   for each row execute function enforce_seat_cap();
+
+-- Audit every seat-limit change (trust action). Runs as definer so the audit
+-- insert isn't subject to audit_logs' read-only RLS for the caller.
+create or replace function audit_seat_limit_change() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.seat_limit is distinct from old.seat_limit then
+    insert into audit_logs (family_id, actor_id, action, detail)
+    values (old.id, auth.uid(), 'seat_limit.changed',
+            jsonb_build_object('from', old.seat_limit, 'to', new.seat_limit));
+  end if;
+  return new;
+end;
+$$;
+create trigger trg_seat_limit_audit before update on families
+  for each row execute function audit_seat_limit_change();
 
 -- ---------------------------------------------------------------------------
 -- Babies

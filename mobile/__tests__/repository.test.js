@@ -235,6 +235,15 @@ function createFakePowerSyncDb(seed = {}) {
 function loadSupabaseRepository() {
   const now = Date.now();
   const seed = {
+    families: [
+      {
+        id: "family-1",
+        name: "Test Family",
+        created_by: "test-user",
+        seat_limit: null,
+        created_at: new Date(now - 60 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
     family_members: [
       {
         user_id: "test-user",
@@ -249,6 +258,13 @@ function loadSupabaseRepository() {
         role: "partner",
         display_name: "Partner Person",
         joined_at: new Date(now - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        user_id: "limited-user",
+        family_id: "family-1",
+        role: "limited",
+        display_name: "Grandma Person",
+        joined_at: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
       },
     ],
     babies: [
@@ -504,7 +520,30 @@ function runRepositoryContractTests(repo, label) {
       assert.ok(typeof m.displayName === "string");
       assert.ok(m.displayName.length > 0);
       assert.ok(typeof m.userId === "string");
+      assert.ok(["owner", "partner", "limited"].includes(m.role), `role maps to a known value (got ${m.role})`);
     }
+    // Both adapters ship a limited (grandparent/nanny) seat in their fixtures.
+    const limited = members.find((m) => m.role === "limited");
+    assert.ok(limited, "a limited seat maps its role");
+  });
+
+  test(`${label}: getSeatLimit returns null when unset`, async () => {
+    assert.strictEqual(await repo.getSeatLimit(), null);
+  });
+
+  test(`${label}: setSeatLimit persists and can be reset to no limit`, async () => {
+    await repo.setSeatLimit(4);
+    assert.strictEqual(await repo.getSeatLimit(), 4);
+    await repo.setSeatLimit(null);
+    assert.strictEqual(await repo.getSeatLimit(), null);
+  });
+
+  test(`${label}: generateInvite accepts a seat role (partner | limited)`, async () => {
+    const invite = await repo.generateInvite("limited");
+    assert.ok(invite);
+    assert.ok(invite.code.length > 0);
+    assert.ok(invite.expiresAt instanceof Date);
+    assert.equal(invite.revoked, false);
   });
 
   test(`${label}: deleteAccount does not throw`, async () => {

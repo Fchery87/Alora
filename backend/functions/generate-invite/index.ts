@@ -1,11 +1,13 @@
 // Supabase Edge Function: generate-invite
 // ---------------------------------------------------------------------------
 // Generates a single-use, time-limited, revocable invite code for the caller's
-// family. Only the family owner may issue invites.
+// family. Only the family owner may issue invites. The inviter chooses the
+// seat role: 'partner' (full access, default) or 'limited' (grandparent/nanny
+// seat — care events + timeline only).
 //
 // Deploy:  supabase functions deploy generate-invite
 //
-// Request:  POST {}  with Authorization: Bearer <user JWT>
+// Request:  POST { "role": "partner" | "limited" }  with Authorization: Bearer <user JWT>
 // Response: { ok: true, code, expires_at } | { error }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -74,13 +76,17 @@ Deno.serve(async (req) => {
     }
     if (!code) return json({ error: "Could not generate a unique invite code. Try again." }, 500);
 
+    const { role } = await req.json().catch(() => ({}));
+    // Only two seat roles can be invited: partner (full) or limited.
+    const inviteRole: "partner" | "limited" = role === "limited" ? "limited" : "partner";
+
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     const { error: insertErr } = await admin.from("invitation_tokens").insert({
       family_id: membership.family_id,
       created_by: user.id,
       code,
-      role: "partner",
+      role: inviteRole,
       expires_at: expiresAt,
     });
 
@@ -91,7 +97,7 @@ Deno.serve(async (req) => {
       family_id: membership.family_id,
       actor_id: user.id,
       action: "invite.generated",
-      detail: { code },
+      detail: { code, role: inviteRole },
     });
 
     return json({ ok: true, code, expires_at: expiresAt });

@@ -294,10 +294,29 @@ export const supabaseRepository: AloraRepository = {
     return rows.map((r) => ({
       userId: r.user_id,
       displayName: r.display_name ?? "Caregiver",
-      role: r.role === "owner" ? "owner" : "partner",
+      role: r.role === "owner" ? "owner" : r.role === "limited" ? "limited" : "partner",
       isSelf: r.user_id === me,
       joinedAt: new Date(r.joined_at),
     }));
+  },
+
+  async getSeatLimit(): Promise<number | null> {
+    const fid = await requireFamilyId();
+    const row = await db.getOptional<{ seat_limit: number | null }>(`SELECT seat_limit FROM families WHERE id = ?`, [
+      fid,
+    ]);
+    return row?.seat_limit ?? null;
+  },
+
+  async setSeatLimit(limit: number | null): Promise<void> {
+    if (limit !== null && (!Number.isInteger(limit) || limit < 1)) {
+      throw new Error("Seat limit must be a whole number of at least 1, or no limit.");
+    }
+    const fid = await requireFamilyId();
+    // Local-first write: PowerSync uploads it; the server RLS (non-limited
+    // members only) and the audit trigger (audit_logs.seat_limit.changed)
+    // enforce + record it there.
+    await db.execute(`UPDATE families SET seat_limit = ? WHERE id = ?`, [limit, fid]);
   },
 
   async saveBabyProfile(profile: BabyProfile): Promise<void> {
@@ -501,7 +520,7 @@ export const supabaseRepository: AloraRepository = {
     return { code: row.code, link: "", expiresAt: new Date(0), revoked: true };
   },
 
-  async generateInvite(): Promise<InviteCode> {
+  async generateInvite(role: "partner" | "limited" = "partner"): Promise<InviteCode> {
     const fid = await requireFamilyId();
     const uid = await requireUserId();
 
@@ -523,14 +542,14 @@ export const supabaseRepository: AloraRepository = {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     await db.execute(
       `INSERT INTO invitation_tokens (id, family_id, created_by, code, role, expires_at, created_at)
-       VALUES (?, ?, ?, ?, 'partner', ?, ?)`,
-      [generateId(), fid, uid, code, expiresAt, new Date().toISOString()],
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [generateId(), fid, uid, code, role, expiresAt, new Date().toISOString()],
     );
     // Audit
     await db.execute(
       `INSERT INTO audit_logs (id, family_id, actor_id, action, detail, created_at)
        VALUES (?, ?, ?, 'invite.generated', ?, ?)`,
-      [generateId(), fid, uid, JSON.stringify({ code }), new Date().toISOString()],
+      [generateId(), fid, uid, JSON.stringify({ code, role }), new Date().toISOString()],
     );
     return { code, link: `https://alora.app/invite/${code}`, expiresAt: new Date(expiresAt), revoked: false };
   },

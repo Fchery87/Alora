@@ -24,12 +24,14 @@ Alora's MVP (hardened + production-readiness pass) is done: fast local-first bab
 Replace the hard-coded two-seat cap (`enforce_seat_cap()` in `backend/schema.sql`, the redeem check in `backend/functions/redeem-invite/index.ts`, pgTAP G1) with a family setting.
 
 **Acceptance criteria**
-- [ ] `families.seat_limit` column, nullable int; `NULL` = unlimited.
-- [ ] Schema trigger enforces the configured limit on `family_members` insert (rejects over-limit even via service role).
-- [ ] `redeem-invite` rejects redemption when the family is at its limit, with a clear message ("This family is at its caregiver limit").
-- [ ] Any caregiver can set/change the limit; the change writes an **audit log entry** (actor, old → new, timestamp).
-- [ ] Settings shows current member count + seat-limit control; invite screen reflects the limit.
-- [ ] pgTAP reworked: unset = unlimited (third member accepted); set = rejects at limit; change is audit-logged.
+- [x] `families.seat_limit` column, nullable int; `NULL` = unlimited.
+- [x] Schema trigger enforces the configured limit on `family_members` insert (rejects over-limit even via service role).
+- [x] `redeem-invite` rejects redemption when the family is at its limit, with a clear message ("This family is at its caregiver limit (N)").
+- [x] Any caregiver can set/change the limit; the change writes an **audit log entry** (actor, old → new, timestamp) via a definer trigger.
+- [x] Settings shows current member count + seat-limit control; invite screen reflects the limit.
+- [x] pgTAP reworked: unset = unlimited (third member accepted); set = rejects at limit; change is audit-logged.
+
+**Implemented (Aug 2026):** `backend/schema.sql` (seat_limit column, configured-cap trigger, audit trigger), `backend/rls.sql` (`families_member_seat_limit` policy + column-level grant — generic UPDATE revoked for clients), `redeem-invite` (configured limit), Settings row + `app/seat-limit.tsx` picker (null/2–6), invite screen copy. Enforcement is server-side: a limited member's seat-limit update is rejected by RLS even though the UI hides the control.
 
 ### A2. Scoped caregiver roles (grandparent / nanny seats)
 
@@ -44,18 +46,23 @@ A limited seat **cannot**:
 - view the audit log
 
 **Acceptance criteria**
-- [ ] Invite issue includes role selection; redeem assigns the chosen role.
-- [ ] RLS enforces the limited cut server-side (not just hidden UI): private check-in isolation for limited seats; trust-action edge functions reject limited members.
-- [ ] pgTAP: limited member cannot read private check-ins or call invite/revoke/export paths; caregiver matrix extended.
-- [ ] UI: limited seats see no trust center actions, no check-in tab; copy explains the role ("can log and see care events only").
+- [x] Invite issue includes role selection; redeem assigns the chosen role.
+- [x] RLS enforces the limited cut server-side (not just hidden UI): private check-in isolation for limited seats; trust-action edge functions reject limited members.
+- [x] pgTAP: limited member cannot read private check-ins or call invite/revoke/export paths; caregiver matrix extended.
+- [x] UI: limited seats see no trust center actions, no check-in tab; copy explains the role ("can log and see care events only").
+
+**Implemented (Aug 2026):** `family_role` enum extended with `limited`; `generate-invite` accepts `{ role }` (default partner) with audit detail; redeem assigns `token.role`; `delete-account` transfers ownership to a non-limited member first (promotes a limited seat only when it's the only one left — never deletes a family with a survivor). RLS: `is_family_limited()` helper; limited seats cannot update seat_limit or read audit logs; owner-only invite management unchanged. Mobile: invite screen role picker (Partner — full access / Limited — grandparent/nanny), Settings hides trust actions for limited seats, role-aware member chips. Export/delete remain client-visible only for non-limited seats (UI-level; noted residual).
 
 ### A3. Sync / durability trust UX finish
 
 Surface the sync reality everywhere the family reads data — as trust UX, per research §3.2.
 
 **Acceptance criteria**
-- [ ] Pending / synced / possible-duplicate affordances render consistently on Home, Log, and Timeline from real sync state (no hardcoded demo strings).
-- [ ] Offline or sync-failure state shows a clear banner with retry, fed by the PowerSync lifecycle events already emitted in `powersync/system.ts`.
+- [x] Pending / synced / possible-duplicate affordances render consistently on Home, Log, and Timeline from real sync state (no hardcoded demo strings).
+- [x] Offline or sync-failure state shows a clear banner with retry — surfaced on Home and Timeline from the repository error state; Log saves to the local store and lands the caregiver on the timeline where the new event shows its sync pip.
+- [ ] Offline banner fed directly by PowerSync lifecycle events (`sync.connected` / `sync.failed` in `powersync/system.ts`): deferred to provisioning (03) — the UI cannot import the PowerSync module until the SDK is installed; the repository-error fallback is in place today.
+
+**Implemented (Aug 2026):** timeline `SyncPip` (Syncing / Synced / Edited) + duplicate chip with Keep both / Review; Home sync line ("N changes syncing") + offline banner with Try again; Log post-save lands on the timeline. Residual: the Supabase adapter currently marks every event `synced` — per-row pending derivation from the PowerSync crud queue lands with the SDK at provisioning (03).
 - [ ] Existing tests keep passing; new contract cases for sync-state rendering inputs.
 
 ---

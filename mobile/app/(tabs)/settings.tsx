@@ -15,7 +15,13 @@ import {
   PlusIcon,
   TimelineIcon,
 } from "../../components/icons";
-import { exportMyData, useBabyStatus, useFamilyMembers, useReminderPreferences } from "../../data/useData";
+import {
+  exportMyData,
+  useBabyStatus,
+  useFamilyMembers,
+  useReminderPreferences,
+  useSeatLimit,
+} from "../../data/useData";
 import { sinceLabel } from "../../data/mock";
 
 export default function SettingsScreen() {
@@ -28,10 +34,14 @@ export default function SettingsScreen() {
   const baby = useBabyStatus();
   const members = useFamilyMembers();
   const prefs = useReminderPreferences();
+  const seatLimitState = useSeatLimit();
   const babyName = baby.status === "ready" && baby.data.name ? baby.data.name : null;
   const memberCount = members.status === "ready" ? members.data.length : 0;
   const quietHours = prefs.status === "ready" ? prefs.data.find((p) => p.kind === "quietHours") : undefined;
   const familyLabel = babyName ? `${babyName}’s family` : "Your family";
+  const myRole = members.status === "ready" ? members.data.find((m) => m.isSelf)?.role : undefined;
+  const isLimited = myRole === "limited";
+  const seatLimit = seatLimitState.status === "ready" ? seatLimitState.data : undefined;
 
   async function shareDataExport() {
     if (exporting) return;
@@ -79,18 +89,30 @@ export default function SettingsScreen() {
       <List>
         {members.status === "ready" &&
           members.data.map((member, index) => {
-            const owner = member.role === "owner";
+            const roleLabel = member.role === "owner" ? "Owner" : member.role === "limited" ? "Limited" : "Partner";
+            const roleColor =
+              member.role === "owner"
+                ? theme.color.feed
+                : member.role === "limited"
+                  ? theme.color.diaper
+                  : theme.color.sleep;
+            const roleBg =
+              member.role === "owner"
+                ? theme.color.feedTint
+                : member.role === "limited"
+                  ? theme.color.diaperTint
+                  : theme.color.sleepTint;
             return (
               <View key={member.userId}>
                 {index > 0 && <Divider />}
                 <Member
                   initial={(member.displayName.charAt(0) || "C").toUpperCase()}
-                  color={owner ? theme.color.feed : theme.color.sleep}
+                  color={roleColor}
                   name={member.isSelf ? `${member.displayName} (you)` : member.displayName}
-                  sub={`${owner ? "Owner" : "Partner"} · joined ${sinceLabel(member.joinedAt)}`}
-                  role={owner ? "Owner" : "Partner"}
-                  roleBg={owner ? theme.color.feedTint : theme.color.sleepTint}
-                  roleFg={owner ? theme.color.feed : theme.color.sleep}
+                  sub={`${roleLabel}${member.role === "limited" ? " · grandparent/nanny" : ""} · joined ${sinceLabel(member.joinedAt)}`}
+                  role={roleLabel}
+                  roleBg={roleBg}
+                  roleFg={roleColor}
                 />
               </View>
             );
@@ -106,15 +128,29 @@ export default function SettingsScreen() {
             roleFg={theme.color.inkFaint}
           />
         )}
-        <Divider />
-        <Row
-          iconBg={theme.color.surface2}
-          iconFg={theme.color.accent}
-          Icon={PlusIcon}
-          label="Invite a caregiver"
-          chevron
-          onPress={() => router.push("/invite")}
-        />
+        {!isLimited && (
+          <>
+            <Divider />
+            <Row
+              iconBg={theme.color.surface2}
+              iconFg={theme.color.accent}
+              Icon={PlusIcon}
+              label="Invite a caregiver"
+              chevron
+              onPress={() => router.push("/invite")}
+            />
+            <Divider />
+            <Row
+              iconBg={theme.color.surface2}
+              iconFg={theme.color.inkSoft}
+              Icon={SeatIcon}
+              label="Caregiver seat limit"
+              value={seatLimit == null ? "No limit" : String(seatLimit)}
+              chevron
+              onPress={() => router.push("/seat-limit")}
+            />
+          </>
+        )}
       </List>
 
       <GroupLabel>Preferences</GroupLabel>
@@ -150,34 +186,38 @@ export default function SettingsScreen() {
 
       <GroupLabel>Privacy & trust</GroupLabel>
       <List>
-        <Row
-          iconBg={theme.color.diaperTint}
-          iconFg={theme.color.diaper}
-          Icon={CheckInIcon}
-          label="Who can see what"
-          chevron
-          onPress={() => router.push("/trust")}
-        />
-        <Divider />
-        <Row
-          iconBg={theme.color.surface2}
-          iconFg={theme.color.inkSoft}
-          Icon={CloudIcon}
-          label="Export my data"
-          value={exporting ? "Preparing..." : "JSON"}
-          chevron
-          onPress={shareDataExport}
-        />
-        <Divider />
-        <Row
-          danger
-          iconBg={theme.color.danger + "22"}
-          iconFg={theme.color.danger}
-          Icon={TrashIcon}
-          label="Delete account"
-          chevron
-          onPress={() => router.push("/delete-account")}
-        />
+        {!isLimited && (
+          <>
+            <Row
+              iconBg={theme.color.diaperTint}
+              iconFg={theme.color.diaper}
+              Icon={CheckInIcon}
+              label="Who can see what"
+              chevron
+              onPress={() => router.push("/trust")}
+            />
+            <Divider />
+            <Row
+              iconBg={theme.color.surface2}
+              iconFg={theme.color.inkSoft}
+              Icon={CloudIcon}
+              label="Export my data"
+              value={exporting ? "Preparing..." : "JSON"}
+              chevron
+              onPress={shareDataExport}
+            />
+            <Divider />
+            <Row
+              danger
+              iconBg={theme.color.danger + "22"}
+              iconFg={theme.color.danger}
+              Icon={TrashIcon}
+              label="Delete account"
+              chevron
+              onPress={() => router.push("/delete-account")}
+            />
+          </>
+        )}
       </List>
 
       {exportError && (
@@ -294,6 +334,20 @@ function TrashIcon({ size = 18, color = "#000" }: { size?: number; color?: strin
         strokeWidth={1.7}
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function SeatIcon({ size = 18, color = "#000" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
+      <Path
+        d="M2.5 19c.6-2.6 3-4.5 6.5-4.5s5.9 1.9 6.5 4.5M16 5.5a3 3 0 0 1 0 5.6M17.5 14.7c2 .6 3.4 2.2 4 4.3"
+        stroke={color}
+        strokeWidth={1.7}
+        strokeLinecap="round"
       />
     </Svg>
   );

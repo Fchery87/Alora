@@ -22,6 +22,14 @@ language sql security definer stable set search_path = public as $$
   );
 $$;
 
+create or replace function is_family_limited(fid uuid) returns boolean
+language sql security definer stable set search_path = public as $$
+  select exists (
+    select 1 from family_members
+    where family_id = fid and user_id = auth.uid() and role = 'limited'
+  );
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Enable RLS on every table
 -- ---------------------------------------------------------------------------
@@ -64,6 +72,15 @@ create policy families_owner_write on families
   for update using (is_family_owner(id)) with check (is_family_owner(id));
 create policy families_insert_self on families
   for insert with check (created_by = auth.uid());
+-- Any non-limited caregiver may change the family's seat limit (trust action,
+-- audit-logged by the schema trigger). Limited seats cannot.
+create policy families_member_seat_limit on families
+  for update using (is_family_member(id) and not is_family_limited(id))
+  with check (is_family_member(id) and not is_family_limited(id));
+-- Column-level restriction: the member update policy above must not become a
+-- full-column update path. Revoke generic UPDATE; grant only seat_limit.
+revoke update on families from anon, authenticated;
+grant update (seat_limit) on families to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Family members
@@ -137,7 +154,7 @@ create policy invites_owner_manage on invitation_tokens
 -- Audit logs: family members read; writes happen server-side only.
 -- ---------------------------------------------------------------------------
 create policy audit_member_read on audit_logs
-  for select using (is_family_member(family_id));
+  for select using (is_family_member(family_id) and not is_family_limited(family_id));
 
 -- ---------------------------------------------------------------------------
 -- Subscription status: family members read.

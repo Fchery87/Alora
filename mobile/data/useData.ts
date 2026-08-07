@@ -9,6 +9,7 @@ import type {
   DataExport,
   EventPatch,
   InviteCode,
+  InviteRole,
   NewCareEvent,
   NewCheckIn,
   ReminderConfig,
@@ -163,6 +164,8 @@ export const useInvite = () => useAsync<InviteCode>(() => repository.getInvite()
 export const useSupportResources = () => useAsync<SupportResource[]>(() => repository.getSupportResources());
 export const useAuditLog = () => useAsync<AuditLogEntry[]>(() => repository.getAuditLog());
 export const useFamilyMembers = () => useAsync<FamilyMember[]>(() => repository.getFamilyMembers());
+export const useSeatLimit = () => useAsync<number | null>(() => repository.getSeatLimit());
+export const setSeatLimit = (limit: number | null): Promise<void> => repository.setSeatLimit(limit);
 export const saveBabyProfile = (profile: BabyProfile): Promise<void> => repository.saveBabyProfile(profile);
 export const createCareEvent = (input: NewCareEvent) => repository.createEvent(input);
 export const startSleep = (at?: Date): Promise<string> => repository.startSleep(at);
@@ -173,6 +176,6 @@ export const createCheckIn = (input: NewCheckIn) => repository.createCheckIn(inp
 export const setReminder = (kind: ReminderKind, config: ReminderConfig, enabled: boolean) =>
   repository.setReminder(kind, config, enabled);
 export const revokeInvite = (): Promise<InviteCode> => repository.revokeInvite();
-export const generateInvite = (): Promise<InviteCode> => repository.generateInvite();
+export const generateInvite = (role?: InviteRole): Promise<InviteCode> => repository.generateInvite(role);
 export const deleteAccount = (): Promise<void> => repository.deleteAccount();
 export const exportMyData = (): Promise<DataExport> => repository.exportMyData();
