@@ -19,12 +19,7 @@
       "bundler": "metro",
       "output": "single"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font",
-      "expo-secure-store",
-      "expo-sqlite"
-    ],
+    "plugins": ["expo-router", "expo-font", "expo-secure-store", "expo-sqlite", "@sentry/react-native"],
     "experiments": {
       "typedRoutes": true
     }

@@ -7,12 +7,15 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --check .",
     "test": "node --test __tests__/*.test.js"
   },
   "dependencies": {
     "@expo-google-fonts/fraunces": "^0.4.1",
     "@expo-google-fonts/hanken-grotesk": "^0.4.1",
+    "@sentry/react-native": "~7.2.0",
     "@supabase/supabase-js": "^2.108.1",
     "expo": "~54.0.0",
     "expo-constants": "~18.0.8",
@@ -40,6 +43,11 @@
     "@babel/core": "^7.25.2",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "~14.0.0",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "prettier": "^3.9.6",
     "typescript": "~5.9.2"
   },
   "private": true
