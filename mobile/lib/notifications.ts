@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import * as Notifications from "expo-notifications";
+import type * as Notifications from "expo-notifications";
 import type { ReminderKind, ReminderPreference } from "../data/repository";
 import { reminderSchedulePlans, type ReminderSchedulePlan } from "./reminderSchedule";
 import { repository } from "../data/useData";
@@ -7,16 +7,43 @@ import { repository } from "../data/useData";
 const CHANNEL_ID = "alora-reminders";
 const SCHEDULABLE_REMINDERS: ReminderKind[] = ["feed", "diaper", "bedtime"];
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+/**
+ * expo-notifications throws at IMPORT time inside Expo Go on SDK 53+ (the
+ * module detects the Expo Go runtime and errors out). A static import would
+ * crash the whole app there, so the module is loaded lazily and guarded:
+ * when it can't load, every reminder function degrades to a no-op and the
+ * app keeps running. Notifications require a development build
+ * (`npx expo run:android` / EAS Build).
+ */
+let notificationsModule: typeof import("expo-notifications") | null | undefined;
+
+async function loadNotifications(): Promise<typeof import("expo-notifications") | null> {
+  if (notificationsModule !== undefined) return notificationsModule;
+  try {
+    const mod = await import("expo-notifications");
+    mod.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+    notificationsModule = mod;
+  } catch (err) {
+    console.warn(
+      "[notifications] expo-notifications is unavailable in this runtime (Expo Go on SDK 53+?) — reminders will not schedule.",
+      err,
+    );
+    notificationsModule = null;
+  }
+  return notificationsModule;
+}
 
 export async function syncReminderNotifications(preferences: ReminderPreference[]) {
+  const Notifications = await loadNotifications();
+  if (!Notifications) return "unsupported";
+
   const quietHours = preferences.find((reminder) => reminder.kind === "quietHours");
   const quietHoursEnabled = quietHours?.enabled ?? false;
   const enabledReminders = preferences.filter(
@@ -27,7 +54,7 @@ export async function syncReminderNotifications(preferences: ReminderPreference[
     return "off";
   }
 
-  const permissionGranted = await ensureNotificationPermission();
+  const permissionGranted = await ensureNotificationPermission(Notifications);
   if (!permissionGranted)
     throw new Error("Notifications are off. Enable them in system settings to schedule reminders.");
 
@@ -47,10 +74,19 @@ export async function syncReminderNotification(reminder: ReminderPreference, ena
 }
 
 export async function cancelReminderNotification(kind: ReminderKind) {
+  const Notifications = await loadNotifications();
+  if (!Notifications) return;
   await Promise.all(requestIdentifiersFor(kind).map((id) => Notifications.cancelScheduledNotificationAsync(id)));
 }
 
+/** True when the notifications module loaded (dev builds); false in Expo Go. */
+export async function isNotificationsSupported(): Promise<boolean> {
+  return (await loadNotifications()) !== null;
+}
+
 async function cancelAllReminderNotifications() {
+  const Notifications = await loadNotifications();
+  if (!Notifications) return;
   await Promise.all(
     SCHEDULABLE_REMINDERS.flatMap(requestIdentifiersFor).map((id) =>
       Notifications.cancelScheduledNotificationAsync(id),
@@ -58,7 +94,7 @@ async function cancelAllReminderNotifications() {
   );
 }
 
-async function ensureNotificationPermission() {
+async function ensureNotificationPermission(Notifications: typeof import("expo-notifications")) {
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
       name: "Alora reminders",
@@ -94,14 +130,21 @@ function triggerForPlan(
 ): Notifications.NotificationTriggerInput {
   if (plan.kind === "timeInterval") {
     return {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      // String-literal triggers: the enum is a runtime value, so it can't
+      // come from the type-only import — the literals are its exact values.
+      type: "timeInterval" as Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
       seconds: plan.seconds,
       repeats: plan.repeats,
       channelId,
     };
   }
 
-  return { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: plan.hour, minute: plan.minute, channelId };
+  return {
+    type: "daily" as Notifications.SchedulableTriggerInputTypes.DAILY,
+    hour: plan.hour,
+    minute: plan.minute,
+    channelId,
+  };
 }
 
 function requestIdentifiersFor(kind: ReminderKind) {

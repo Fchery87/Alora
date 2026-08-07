@@ -1,4 +1,4 @@
-import { useState, type ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { View, StyleSheet } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
@@ -7,7 +7,7 @@ import { Reveal } from "../components/Reveal";
 import { MoonIcon, FeedIcon, DiaperIcon, SleepIcon, WarnIcon, RetryIcon, type IconProps } from "../components/icons";
 import { setReminder, useReminderPreferences } from "../data/useData";
 import type { ReminderKind, ReminderPreference } from "../data/repository";
-import { syncReminderNotifications } from "../lib/notifications";
+import { isNotificationsSupported, syncReminderNotifications } from "../lib/notifications";
 
 const REMINDER_ORDER: ReminderKind[] = ["feed", "diaper", "bedtime"];
 
@@ -17,6 +17,17 @@ export default function RemindersScreen() {
   const [saving, setSaving] = useState<ReminderKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Partial<Record<ReminderKind, boolean>>>({});
+  const [notificationsSupported, setNotificationsSupported] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    isNotificationsSupported().then((supported) => {
+      if (!cancelled) setNotificationsSupported(supported);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function toggleReminder(reminder: ReminderPreference) {
     if (saving || reminders.status !== "ready") return;
@@ -233,6 +244,11 @@ export default function RemindersScreen() {
           Alora uses on-device notifications only. With quiet hours off, feed and diaper repeat every 3 hours and
           bedtime repeats daily; quiet hours schedule the next safe reminder after 6:00 AM.
         </AppText>
+        {notificationsSupported === false && (
+          <AppText variant="caption" color="warning" style={{ marginTop: 8, textAlign: "center", lineHeight: 17 }}>
+            Notifications aren’t available in Expo Go — they need a development build (npx expo run:android).
+          </AppText>
+        )}
       </Reveal>
     </ModalScreen>
   );
