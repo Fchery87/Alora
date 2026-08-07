@@ -6,26 +6,34 @@ import { AppText, PressableScale, Skeleton } from "../components/Themed";
 import { Reveal } from "../components/Reveal";
 import { sinceLabel } from "../data/mock";
 import type { AuditLogEntry, SupportResource } from "../data/repository";
-import { useAuditLog, useSupportResources } from "../data/useData";
+import { useAuditLog, useBabyStatus, useFamilyMembers, useSupportResources } from "../data/useData";
 import type { ColorTokens } from "../theme/tokens";
 
 export default function TrustScreen() {
   const resources = useSupportResources();
   const auditLog = useAuditLog();
+  const baby = useBabyStatus();
+  const members = useFamilyMembers();
+  const babyName = baby.status === "ready" ? baby.data.name : "your baby";
+  const partnerName =
+    members.status === "ready"
+      ? (members.data.find((m) => !m.isSelf)?.displayName ?? "your caregiver")
+      : "your caregiver";
+  const sharedWho = `You + ${partnerName}`;
 
   return (
     <ModalScreen title="Who can see what">
       <AppText variant="body" color="inkSoft" style={{ marginBottom: 6 }}>
-        Two simple boundaries — here's exactly where everything lives.
+        Two simple boundaries — here’s exactly where everything lives.
       </AppText>
 
       <Reveal index={0}>
         <Group label="Shared with your family" labelColor="feed">
-          <TrustRow tone="feed" title="Feeds, diapers & sleep" sub="Every logged event" who="You + Sam" />
+          <TrustRow tone="feed" title="Feeds, diapers & sleep" sub="Every logged event" who={sharedWho} />
           <Divider />
-          <TrustRow tone="feed" title="Timeline & history" sub="Who did what, when" who="You + Sam" />
+          <TrustRow tone="feed" title="Timeline & history" sub="Who did what, when" who={sharedWho} />
           <Divider />
-          <TrustRow tone="feed" title="Maya's profile" sub="Name, age, basics" who="You + Sam" />
+          <TrustRow tone="feed" title={`${babyName}'s profile`} sub="Name, age, basics" who="You + caregiver" />
         </Group>
       </Reveal>
 
@@ -79,21 +87,41 @@ export default function TrustScreen() {
 
       <Reveal index={5}>
         <AppText variant="caption" color="inkFaint" style={{ marginTop: 20, textAlign: "center", lineHeight: 17 }}>
-          Your check-ins are stored privately and never sync to another caregiver's device — not even Sam's.
+          Your check-ins are stored privately and never sync to another caregiver’s device.
         </AppText>
       </Reveal>
     </ModalScreen>
   );
 }
 
-function Group({ label, labelColor, children }: { label: string; labelColor: keyof ColorTokens; children: React.ReactNode }) {
+function Group({
+  label,
+  labelColor,
+  children,
+}: {
+  label: string;
+  labelColor: keyof ColorTokens;
+  children: React.ReactNode;
+}) {
   const theme = useTheme();
   return (
     <View style={{ marginTop: 20 }}>
-      <AppText variant="label" weight="bold" style={{ color: theme.color[labelColor], letterSpacing: 0.6, marginBottom: 10, marginHorizontal: 4 }}>
+      <AppText
+        variant="label"
+        weight="bold"
+        style={{ color: theme.color[labelColor], letterSpacing: 0.6, marginBottom: 10, marginHorizontal: 4 }}
+      >
         {label.toUpperCase()}
       </AppText>
-      <View style={{ backgroundColor: theme.color.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.color.line, borderRadius: theme.radius.lg, overflow: "hidden" }}>
+      <View
+        style={{
+          backgroundColor: theme.color.surface,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: theme.color.line,
+          borderRadius: theme.radius.lg,
+          overflow: "hidden",
+        }}
+      >
         {children}
       </View>
     </View>
@@ -105,7 +133,17 @@ function Divider() {
   return <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.color.line }} />;
 }
 
-function TrustRow({ tone, title, sub, who }: { tone: "feed" | "diaper" | "neutral"; title: string; sub: string; who: string }) {
+function TrustRow({
+  tone,
+  title,
+  sub,
+  who,
+}: {
+  tone: "feed" | "diaper" | "neutral";
+  title: string;
+  sub: string;
+  who: string;
+}) {
   const theme = useTheme();
   const map = {
     feed: { bg: theme.color.feedTint, fg: theme.color.feed },
@@ -114,15 +152,36 @@ function TrustRow({ tone, title, sub, who }: { tone: "feed" | "diaper" | "neutra
   }[tone];
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 15 }}>
-      <View style={{ width: 34, height: 34, borderRadius: theme.radius.sm, backgroundColor: map.bg, alignItems: "center", justifyContent: "center" }}>
-        {tone === "diaper" ? <Lock color={map.fg} /> : tone === "feed" ? <Users color={map.fg} /> : <Key color={map.fg} />}
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: theme.radius.sm,
+          backgroundColor: map.bg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {tone === "diaper" ? (
+          <Lock color={map.fg} />
+        ) : tone === "feed" ? (
+          <Users color={map.fg} />
+        ) : (
+          <Key color={map.fg} />
+        )}
       </View>
       <View style={{ flex: 1 }}>
-        <AppText variant="body" weight="semibold">{title}</AppText>
-        <AppText variant="caption" color="inkSoft">{sub}</AppText>
+        <AppText variant="body" weight="semibold">
+          {title}
+        </AppText>
+        <AppText variant="caption" color="inkSoft">
+          {sub}
+        </AppText>
       </View>
       <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: map.bg }}>
-        <AppText weight="bold" style={{ color: map.fg, fontSize: 10, letterSpacing: 0.3 }}>{who.toUpperCase()}</AppText>
+        <AppText weight="bold" style={{ color: map.fg, fontSize: 10, letterSpacing: 0.3 }}>
+          {who.toUpperCase()}
+        </AppText>
       </View>
     </View>
   );
@@ -132,16 +191,33 @@ function AuditRow({ entry }: { entry: AuditLogEntry }) {
   const theme = useTheme();
   return (
     <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingVertical: 15 }}>
-      <View style={{ width: 34, height: 34, borderRadius: theme.radius.sm, backgroundColor: theme.color.feedTint, alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: theme.radius.sm,
+          backgroundColor: theme.color.feedTint,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <Key color={theme.color.feed} />
       </View>
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <AppText variant="body" weight="semibold" style={{ flex: 1 }}>{entry.action}</AppText>
-          <AppText variant="caption" color="inkFaint">{sinceLabel(entry.at)}</AppText>
+          <AppText variant="body" weight="semibold" style={{ flex: 1 }}>
+            {entry.action}
+          </AppText>
+          <AppText variant="caption" color="inkFaint">
+            {sinceLabel(entry.at)}
+          </AppText>
         </View>
-        <AppText variant="caption" color="inkSoft" style={{ marginTop: 3, lineHeight: 17 }}>{entry.detail}</AppText>
-        <AppText weight="bold" style={{ color: theme.color.feed, fontSize: 10, letterSpacing: 0.3, marginTop: 7 }}>{entry.actor.toUpperCase()}</AppText>
+        <AppText variant="caption" color="inkSoft" style={{ marginTop: 3, lineHeight: 17 }}>
+          {entry.detail}
+        </AppText>
+        <AppText weight="bold" style={{ color: theme.color.feed, fontSize: 10, letterSpacing: 0.3, marginTop: 7 }}>
+          {entry.actor.toUpperCase()}
+        </AppText>
       </View>
     </View>
   );
@@ -151,10 +227,26 @@ function ResourceRow({ resource }: { resource: SupportResource }) {
   const theme = useTheme();
   return (
     <View style={{ paddingHorizontal: 16, paddingVertical: 15 }}>
-      <AppText variant="body" weight="semibold">{resource.title}</AppText>
-      <AppText variant="caption" color="inkSoft" style={{ marginTop: 3, lineHeight: 17 }}>{resource.description}</AppText>
-      <PressableScale scale={0.98} style={{ alignSelf: "flex-start", marginTop: 10, paddingHorizontal: 11, paddingVertical: 6, borderRadius: 999, backgroundColor: theme.color.sleepTint }}>
-        <AppText weight="bold" style={{ color: theme.color.sleep, fontSize: 11 }}>{resource.actionLabel}</AppText>
+      <AppText variant="body" weight="semibold">
+        {resource.title}
+      </AppText>
+      <AppText variant="caption" color="inkSoft" style={{ marginTop: 3, lineHeight: 17 }}>
+        {resource.description}
+      </AppText>
+      <PressableScale
+        scale={0.98}
+        style={{
+          alignSelf: "flex-start",
+          marginTop: 10,
+          paddingHorizontal: 11,
+          paddingVertical: 6,
+          borderRadius: 999,
+          backgroundColor: theme.color.sleepTint,
+        }}
+      >
+        <AppText weight="bold" style={{ color: theme.color.sleep, fontSize: 11 }}>
+          {resource.actionLabel}
+        </AppText>
       </PressableScale>
     </View>
   );
@@ -163,8 +255,12 @@ function ResourceRow({ resource }: { resource: SupportResource }) {
 function ErrorRow({ title, message }: { title: string; message: string }) {
   return (
     <View style={{ paddingHorizontal: 16, paddingVertical: 15 }}>
-      <AppText variant="body" weight="semibold" color="danger">{title}</AppText>
-      <AppText variant="caption" color="inkSoft" style={{ marginTop: 4 }}>{message}</AppText>
+      <AppText variant="body" weight="semibold" color="danger">
+        {title}
+      </AppText>
+      <AppText variant="caption" color="inkSoft" style={{ marginTop: 4 }}>
+        {message}
+      </AppText>
     </View>
   );
 }
@@ -187,7 +283,13 @@ function Users({ color }: { color: string }) {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Circle cx="9" cy="8" r="3" stroke={color} strokeWidth={1.7} />
-      <Path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.2a3 3 0 0 1 0 5.6M17.5 19a5.5 5.5 0 0 0-2.3-4.5" stroke={color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
+      <Path
+        d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.2a3 3 0 0 1 0 5.6M17.5 19a5.5 5.5 0 0 0-2.3-4.5"
+        stroke={color}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Svg>
   );
 }
@@ -195,7 +297,17 @@ function Users({ color }: { color: string }) {
 function Lock({ color }: { color: string }) {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-      <Rect x="5" y="11" width="14" height="9" rx="2" stroke={color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
+      <Rect
+        x="5"
+        y="11"
+        width="14"
+        height="9"
+        rx="2"
+        stroke={color}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <Path d="M8 11V8a4 4 0 0 1 8 0v3" stroke={color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
@@ -205,7 +317,13 @@ function Key({ color }: { color: string }) {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Circle cx="8" cy="15" r="3.5" stroke={color} strokeWidth={1.7} />
-      <Path d="M10.5 12.5 19 4M16 7l2 2M14 9l1.5 1.5" stroke={color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
+      <Path
+        d="M10.5 12.5 19 4M16 7l2 2M14 9l1.5 1.5"
+        stroke={color}
+        strokeWidth={1.7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Svg>
   );
 }

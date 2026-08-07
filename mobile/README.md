@@ -54,23 +54,24 @@ data-driven showcases), and the six **flow modals** below.
 
 **Flow modals** (root Stack, native sheet presentation — see `app/_layout.tsx`):
 
-| Route | Presentation | Opened from |
-|---|---|---|
-| `onboarding` | fullScreenModal | Settings → "View intro again" |
-| `invite` | modal | Settings → "Invite a caregiver" |
-| `trust` | modal | Settings → "Who can see what" |
-| `reminders` | modal | Settings → "Reminders & quiet hours" |
-| `delete-account` | modal | Settings → "Delete account" |
-| `merge` | modal | Timeline → duplicate chip "Review" |
+| Route            | Presentation    | Opened from                          |
+| ---------------- | --------------- | ------------------------------------ |
+| `onboarding`     | fullScreenModal | Settings → "View intro again"        |
+| `invite`         | modal           | Settings → "Invite a caregiver"      |
+| `trust`          | modal           | Settings → "Who can see what"        |
+| `reminders`      | modal           | Settings → "Reminders & quiet hours" |
+| `delete-account` | modal           | Settings → "Delete account"          |
+| `merge`          | modal           | Timeline → duplicate chip "Review"   |
 
 Bespoke motion: onboarding step transitions (`SlideInRight`), hold-to-delete
 (reanimated `scaleX` fill, 2s linear hold / 200ms release), and spring confirm badges.
 `components/ModalScreen.tsx` gives the shared title + close chrome.
 
 **Pending (carry over from the prototype / backlog):**
+
 - Gradients (hero aurora, onboarding orb) via `expo-linear-gradient`.
 - Going live: install PowerSync, set env, swap the repository (see Backend below).
-- Wire the flow modals' *actions* to the backend (invite → redeem-invite, delete →
+- Wire the flow modals' _actions_ to the backend (invite → redeem-invite, delete →
   delete-account Edge Functions); the UIs are done and mock-backed today.
 
 ## Backend integration (scaffolded, demo-mode by default)
@@ -93,6 +94,19 @@ mock data, no auth, straight to the tabs (today's behavior). Wiring real data:
    swap `export const repository = supabaseRepository`. Screens don't change — they
    already consume the repository via `useAsync`.
 
+## Crash reporting (Sentry)
+
+Production builds capture unhandled errors and sync-boundary failures when a DSN
+is configured:
+
+1. Create a Sentry project and copy its DSN.
+2. Add it to your env: `EXPO_PUBLIC_SENTRY_DSN=<dsn>` (see `.env.example`).
+3. Build with EAS — the `@sentry/react-native` config plugin (already in
+   `app.json`) uploads debug symbols automatically.
+
+Without a DSN (or in dev) every call degrades to a console log, so the app never
+depends on Sentry being present.
+
 What's already written and ready: `config/env.ts`, `lib/supabase.ts` (SecureStore
 session), `lib/useAuth.tsx` (gate), `app/(auth)/*`, `powersync/{schema,system}.ts`,
 and `data/supabaseRepository.ts` (reads local SQLite, attribution incl. "former
@@ -102,14 +116,17 @@ caregiver").
 
 Ported from the prototype's Framer Motion, driven by the curves/durations in `tokens.ts`:
 
-| Motion | Where | Implementation |
-|---|---|---|
-| Staggered card reveals | Home blocks, Timeline rows | `components/Reveal.tsx` — `FadeInDown.delay(i*50)` |
-| Breathing orb | Home hero status | `components/Motion.tsx` `BreathingOrb` — `withRepeat` yoyo scale+opacity, ease-in-out |
-| "Live" pulse dot | Home napping label | `components/Motion.tsx` `LiveDot` — expanding/fading ring loop |
-| Spring tab indicator | Floating tab bar | `FloatingTabBar` — pill `translateX` via `withSpring` to the active slot |
-| Interruptible press | every `PressableScale` | shared-value `scale` via `withTiming` on the Emil ease-out curve |
+| Motion                 | Where                      | Implementation                                                                        |
+| ---------------------- | -------------------------- | ------------------------------------------------------------------------------------- |
+| Staggered card reveals | Home blocks, Timeline rows | `components/Reveal.tsx` — `FadeInDown.delay(i*50)`                                    |
+| Breathing orb          | Home hero status           | `components/Motion.tsx` `BreathingOrb` — `withRepeat` yoyo scale+opacity, ease-in-out |
+| "Live" pulse dot       | Home napping label         | `components/Motion.tsx` `LiveDot` — expanding/fading ring loop                        |
+| Spring tab indicator   | Floating tab bar           | `FloatingTabBar` — pill `translateX` via `withSpring` to the active slot              |
+| Interruptible press    | every `PressableScale`     | shared-value `scale` via `withTiming` on the Emil ease-out curve                      |
 
 `babel.config.js` includes the `react-native-worklets/plugin` (Reanimated 4) — it must
 stay last in the plugins list.
+
+```
+
 ```

@@ -1,4 +1,4 @@
-import Svg, { Circle, Path, Rect } from "react-native-svg";
+import Svg, { Circle, Path } from "react-native-svg";
 import { useTheme } from "../theme/ThemeProvider";
 import type { ColorTokens } from "../theme/tokens";
 
@@ -63,7 +63,10 @@ export const SettingsIcon = ({ size, color, strokeWidth }: IconProps) => {
   return (
     <Svg {...svg(size)}>
       <Circle cx="12" cy="12" r="3" {...stroke(c, strokeWidth)} />
-      <Path d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M17.8 6.2l-1.4 1.4M7.6 16.4l-1.4 1.4M17.8 17.8l-1.4-1.4M7.6 7.6 6.2 6.2" {...stroke(c, strokeWidth)} />
+      <Path
+        d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M17.8 6.2l-1.4 1.4M7.6 16.4l-1.4 1.4M17.8 17.8l-1.4-1.4M7.6 7.6 6.2 6.2"
+        {...stroke(c, strokeWidth)}
+      />
     </Svg>
   );
 };
@@ -105,7 +108,10 @@ export const SunIcon = ({ size, color, strokeWidth }: IconProps) => {
   return (
     <Svg {...svg(size)}>
       <Circle cx="12" cy="12" r="4" {...stroke(c, strokeWidth)} />
-      <Path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2 5.6 5.6" {...stroke(c, strokeWidth)} />
+      <Path
+        d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2 5.6 5.6"
+        {...stroke(c, strokeWidth)}
+      />
     </Svg>
   );
 };

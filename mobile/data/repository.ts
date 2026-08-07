@@ -86,6 +86,14 @@ export interface AuditLogEntry {
   detail: string;
 }
 
+export interface FamilyMember {
+  userId: string;
+  displayName: string;
+  role: "owner" | "partner";
+  isSelf: boolean;
+  joinedAt: Date;
+}
+
 export interface BabyStatus {
   name: string;
   ageLabel: string;
@@ -98,13 +106,14 @@ export interface BabyStatus {
 }
 
 export interface AloraRepository {
-  getTimeline(): Promise<CareEvent[]>;
+  getTimeline(offset?: number, limit?: number): Promise<CareEvent[]>;
   getBabyStatus(): Promise<BabyStatus>;
   getRecentActivity(limit: number): Promise<CareEvent[]>;
   getReminderPreferences(): Promise<ReminderPreference[]>;
   getInvite(): Promise<InviteCode>;
   getSupportResources(): Promise<SupportResource[]>;
   getAuditLog(): Promise<AuditLogEntry[]>;
+  getFamilyMembers(): Promise<FamilyMember[]>;
   saveBabyProfile(profile: BabyProfile): Promise<void>;
   createEvent(input: NewCareEvent): Promise<string>;
   startSleep(at?: Date): Promise<string>;
@@ -127,4 +136,36 @@ export type Scenario = "ok" | "empty" | "error" | "loading";
  */
 export function currentScenario(): Scenario {
   return "ok";
+}
+
+/**
+ * Detect overlapping same-type events from different caregivers within a
+ * 15-minute window. Called after fetching events so the timeline can surface
+ * a "possible duplicate" chip with merge/dismiss options.
+ */
+export function detectDuplicates(events: CareEvent[]): CareEvent[] {
+  const DUPLICATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+  const result = [...events];
+
+  for (let i = 0; i < result.length; i++) {
+    if (result[i].duplicateOf) continue; // already flagged
+    for (let j = i + 1; j < result.length; j++) {
+      if (result[j].duplicateOf) continue;
+      if (result[i].type !== result[j].type) continue;
+      if (result[i].by === result[j].by) continue; // same caregiver — not a conflict
+
+      const timeA = result[i].at.getTime();
+      const timeB = result[j].at.getTime();
+      if (Math.abs(timeA - timeB) > DUPLICATE_WINDOW_MS) continue;
+
+      // Flag the later one as a possible duplicate of the earlier
+      if (timeA <= timeB) {
+        result[j] = { ...result[j], duplicateOf: result[i].id };
+      } else {
+        result[i] = { ...result[i], duplicateOf: result[j].id };
+      }
+    }
+  }
+
+  return result;
 }

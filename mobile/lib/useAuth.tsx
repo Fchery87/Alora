@@ -3,6 +3,7 @@ import { useRouter, useSegments } from "expo-router";
 import type { Session } from "@supabase/supabase-js";
 import { isBackendConfigured } from "../config/env";
 import { getSupabase } from "./supabase";
+import { setRepositoryMode } from "../data/useData";
 
 /**
  * Auth states:
@@ -30,19 +31,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase();
 
     supabase.auth.getSession().then(({ data }) => {
+      const newStatus: AuthStatus = data.session ? "signedIn" : "signedOut";
       setSession(data.session);
-      setStatus(data.session ? "signedIn" : "signedOut");
+      setStatus(newStatus);
+      void setRepositoryMode(newStatus);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      const newStatus: AuthStatus = next ? "signedIn" : "signedOut";
       setSession(next);
-      setStatus(next ? "signedIn" : "signedOut");
+      setStatus(newStatus);
+      void setRepositoryMode(newStatus);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
-    if (isBackendConfigured) await getSupabase().auth.signOut();
+    if (isBackendConfigured) {
+      // Stop PowerSync and clear local state before signing out
+      try {
+        const { stopSync } = await import("../powersync/system");
+        await stopSync();
+      } catch {
+        // PowerSync deps may not be installed — that's fine
+      }
+      await getSupabase().auth.signOut();
+    }
   };
 
   return <AuthContext.Provider value={{ status, session, signOut }}>{children}</AuthContext.Provider>;

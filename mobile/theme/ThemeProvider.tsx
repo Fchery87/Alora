@@ -10,13 +10,7 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({
-  children,
-  initial = "dawn",
-}: {
-  children: ReactNode;
-  initial?: ColorScheme;
-}) {
+export function ThemeProvider({ children, initial = "dawn" }: { children: ReactNode; initial?: ColorScheme }) {
   const [scheme, setScheme] = useState<ColorScheme>(initial);
   const value = useMemo<ThemeContextValue>(
     () => ({

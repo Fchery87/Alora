@@ -1,11 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import {
-  useFonts,
-  Fraunces_400Regular,
-  Fraunces_500Medium,
-} from "@expo-google-fonts/fraunces";
+import { useFonts, Fraunces_400Regular, Fraunces_500Medium } from "@expo-google-fonts/fraunces";
 import {
   HankenGrotesk_400Regular,
   HankenGrotesk_500Medium,
@@ -14,6 +10,9 @@ import {
 } from "@expo-google-fonts/hanken-grotesk";
 import { ThemeProvider, useThemeContext } from "../theme/ThemeProvider";
 import { AuthProvider, useProtectedRoute } from "../lib/useAuth";
+import { ErrorBoundaryClass } from "../components/ErrorBoundary";
+// Initialize crash reporting (Sentry) before anything renders — no-op in dev.
+import "../lib/crashReporting";
 
 function ThemedStack() {
   const { theme, scheme } = useThemeContext();
@@ -56,7 +55,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider initial="dawn">
         <AuthProvider>
-          <ThemedStack />
+          <ErrorBoundaryClass>
+            <ThemedStack />
+          </ErrorBoundaryClass>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

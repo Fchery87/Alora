@@ -11,6 +11,7 @@ import {
   type CheckInRecord,
   type DataExport,
   type EventPatch,
+  type FamilyMember,
   type InviteCode,
   type NewCareEvent,
   type NewCheckIn,
@@ -20,6 +21,7 @@ import {
   type Scenario,
   type SupportResource,
   currentScenario,
+  detectDuplicates,
 } from "./repository";
 
 const LATENCY = 650;
@@ -39,15 +41,65 @@ let reminderStore: ReminderPreference[] = [
 ];
 let inviteStore = makeInvite("A7-K9P");
 let accountDeletedAt: Date | null = null;
+// Demo family: the current user + their co-caregiver (mirrors the demo events).
+const familyMembersStore: FamilyMember[] = [
+  {
+    userId: "demo-you",
+    displayName: "You",
+    role: "owner",
+    isSelf: true,
+    joinedAt: new Date(Date.now() - 90 * 24 * 60 * 60_000),
+  },
+  {
+    userId: "demo-sam",
+    displayName: "Sam",
+    role: "partner",
+    isSelf: false,
+    joinedAt: new Date(Date.now() - 21 * 24 * 60 * 60_000),
+  },
+];
 const supportResources: SupportResource[] = [
-  { id: "postpartum-support", title: "Postpartum Support International", description: "Warmline and local support for mood, anxiety, and overwhelm.", actionLabel: "Find support" },
-  { id: "safe-sleep", title: "AAP safe sleep basics", description: "A quick refresher on safe sleep setup for naps and nights.", actionLabel: "Read guide" },
-  { id: "urgent-help", title: "If you feel unsafe", description: "If you might hurt yourself or someone else, call emergency services now.", actionLabel: "Get urgent help" },
+  {
+    id: "postpartum-support",
+    title: "Postpartum Support International",
+    description: "Warmline and local support for mood, anxiety, and overwhelm.",
+    actionLabel: "Find support",
+  },
+  {
+    id: "safe-sleep",
+    title: "AAP safe sleep basics",
+    description: "A quick refresher on safe sleep setup for naps and nights.",
+    actionLabel: "Read guide",
+  },
+  {
+    id: "urgent-help",
+    title: "If you feel unsafe",
+    description: "If you might hurt yourself or someone else, call emergency services now.",
+    actionLabel: "Get urgent help",
+  },
 ];
 const auditLog: AuditLogEntry[] = [
-  { id: "audit-1", action: "Invite code generated", actor: "You", at: new Date(Date.now() - 22 * 60_000), detail: "A single-use caregiver invite was created." },
-  { id: "audit-2", action: "Export prepared", actor: "You", at: new Date(Date.now() - 2 * 60 * 60_000), detail: "Personal data export was shared from this device." },
-  { id: "audit-3", action: "Caregiver role confirmed", actor: "Sam", at: new Date(Date.now() - 26 * 60 * 60_000), detail: "Sam remains a caregiver on Maya's family record." },
+  {
+    id: "audit-1",
+    action: "Invite code generated",
+    actor: "You",
+    at: new Date(Date.now() - 22 * 60_000),
+    detail: "A single-use caregiver invite was created.",
+  },
+  {
+    id: "audit-2",
+    action: "Export prepared",
+    actor: "You",
+    at: new Date(Date.now() - 2 * 60 * 60_000),
+    detail: "Personal data export was shared from this device.",
+  },
+  {
+    id: "audit-3",
+    action: "Caregiver role confirmed",
+    actor: "Sam",
+    at: new Date(Date.now() - 26 * 60 * 60_000),
+    detail: "Sam remains a caregiver on Maya's family record.",
+  },
 ];
 
 function sortNewest(items: CareEvent[]): CareEvent[] {
@@ -59,7 +111,9 @@ function activeEvents(): CareEvent[] {
 }
 
 function lastByType(t: CareEvent["type"]): CareEvent | undefined {
-  return activeEvents().filter((e) => e.type === t).sort((a, b) => b.at.getTime() - a.at.getTime())[0];
+  return activeEvents()
+    .filter((e) => e.type === t)
+    .sort((a, b) => b.at.getTime() - a.at.getTime())[0];
 }
 
 function activeSleep(): CareEvent | undefined {
@@ -128,9 +182,7 @@ function buildDetail(input: NewCareEvent): string | undefined {
 }
 
 function updateReminder(kind: ReminderKind, config: ReminderConfig, enabled: boolean) {
-  reminderStore = reminderStore.map((reminder) =>
-    reminder.kind === kind ? { kind, config, enabled } : reminder,
-  );
+  reminderStore = reminderStore.map((reminder) => (reminder.kind === kind ? { kind, config, enabled } : reminder));
 }
 
 async function hydrateReminderPreferences() {
@@ -196,15 +248,17 @@ function delay<T>(value: T, scenario: Scenario): Promise<T> {
 }
 
 export const mockRepository: AloraRepository = {
-  async getTimeline() {
+  async getTimeline(offset = 0, limit?: number) {
     const s = currentScenario();
     await hydrateActiveSleep();
-    return delay<CareEvent[]>(s === "empty" ? [] : sortNewest(activeEvents()), s);
+    const all = s === "empty" ? [] : detectDuplicates(sortNewest(activeEvents()));
+    const page = limit !== undefined ? all.slice(offset, offset + limit) : all;
+    return delay<CareEvent[]>(page, s);
   },
   async getRecentActivity(limit: number) {
     const s = currentScenario();
     await hydrateActiveSleep();
-    return delay<CareEvent[]>(s === "empty" ? [] : sortNewest(activeEvents()).slice(0, limit), s);
+    return delay<CareEvent[]>(s === "empty" ? [] : detectDuplicates(sortNewest(activeEvents())).slice(0, limit), s);
   },
   async getBabyStatus() {
     const s = currentScenario();
@@ -236,11 +290,24 @@ export const mockRepository: AloraRepository = {
   },
   async getSupportResources() {
     const s = currentScenario();
-    return delay<SupportResource[]>(supportResources.map((resource) => ({ ...resource })), s);
+    return delay<SupportResource[]>(
+      supportResources.map((resource) => ({ ...resource })),
+      s,
+    );
   },
   async getAuditLog() {
     const s = currentScenario();
-    return delay<AuditLogEntry[]>(auditLog.map((entry) => ({ ...entry, at: new Date(entry.at) })), s);
+    return delay<AuditLogEntry[]>(
+      auditLog.map((entry) => ({ ...entry, at: new Date(entry.at) })),
+      s,
+    );
+  },
+  async getFamilyMembers() {
+    const s = currentScenario();
+    return delay<FamilyMember[]>(
+      familyMembersStore.map((m) => ({ ...m, joinedAt: new Date(m.joinedAt) })),
+      s,
+    );
   },
   async saveBabyProfile(profile: BabyProfile) {
     const s = currentScenario();
@@ -298,16 +365,18 @@ export const mockRepository: AloraRepository = {
     await hydrateActiveSleep();
     const stoppedAt = endAt ?? new Date();
     let stoppedEvent: CareEvent | null = null;
-    eventStore = sortNewest(eventStore.map((event) => {
-      if (event.id !== id) return event;
-      stoppedEvent = {
-        ...event,
-        endAt: stoppedAt,
-        detail: sleepDurationDetail(event.at, stoppedAt),
-        sync: "edited",
-      };
-      return stoppedEvent;
-    }));
+    eventStore = sortNewest(
+      eventStore.map((event) => {
+        if (event.id !== id) return event;
+        stoppedEvent = {
+          ...event,
+          endAt: stoppedAt,
+          detail: sleepDurationDetail(event.at, stoppedAt),
+          sync: "edited",
+        };
+        return stoppedEvent;
+      }),
+    );
     if (!stoppedEvent) throw new Error("Couldn't find that sleep timer.");
     await saveStoredCareEvent(stoppedEvent);
     await clearStoredSleepTimer();
@@ -317,11 +386,13 @@ export const mockRepository: AloraRepository = {
     await delay<void>(undefined, s);
     await hydrateCareEvents();
     let updatedEvent: CareEvent | null = null;
-    eventStore = sortNewest(eventStore.map((event) => {
-      if (event.id !== id) return event;
-      updatedEvent = applyEventPatch(event, patch);
-      return updatedEvent;
-    }));
+    eventStore = sortNewest(
+      eventStore.map((event) => {
+        if (event.id !== id) return event;
+        updatedEvent = applyEventPatch(event, patch);
+        return updatedEvent;
+      }),
+    );
     if (!updatedEvent) throw new Error("Couldn't find that event.");
     await saveStoredCareEvent(updatedEvent);
   },

@@ -5,14 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useTheme } from "../theme/ThemeProvider";
 import { AppText, PressableScale } from "./Themed";
-import {
-  HomeIcon,
-  LogIcon,
-  TimelineIcon,
-  CheckInIcon,
-  SettingsIcon,
-  type IconProps,
-} from "./icons";
+import { HomeIcon, LogIcon, TimelineIcon, CheckInIcon, SettingsIcon, type IconProps } from "./icons";
 
 const TABS: Record<string, { label: string; Icon: ComponentType<IconProps> }> = {
   index: { label: "Home", Icon: HomeIcon },
@@ -46,7 +39,12 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       onLayout={onLayout}
       style={[
         styles.bar,
-        { bottom: insets.bottom + 10, backgroundColor: theme.color.surface, borderColor: theme.color.line, borderRadius: theme.radius.pill },
+        {
+          bottom: insets.bottom + 10,
+          backgroundColor: theme.color.surface,
+          borderColor: theme.color.line,
+          borderRadius: theme.radius.pill,
+        },
         styles.shadow,
       ]}
     >
@@ -54,7 +52,15 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
         <Animated.View
           pointerEvents="none"
           style={[
-            { position: "absolute", left: PAD_H, top: 7, bottom: 7, width: slot, borderRadius: theme.radius.pill, backgroundColor: theme.color.surface2 },
+            {
+              position: "absolute",
+              left: PAD_H,
+              top: 7,
+              bottom: 7,
+              width: slot,
+              borderRadius: theme.radius.pill,
+              backgroundColor: theme.color.surface2,
+            },
             pillStyle,
           ]}
         />
@@ -75,7 +81,11 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
             style={styles.tab}
           >
             <meta.Icon size={21} color={color} strokeWidth={active ? 1.9 : 1.6} />
-            <AppText variant="caption" weight={active ? "semibold" : "medium"} style={{ color, fontSize: 10, marginTop: 3 }}>
+            <AppText
+              variant="caption"
+              weight={active ? "semibold" : "medium"}
+              style={{ color, fontSize: 10, marginTop: 3 }}
+            >
               {meta.label}
             </AppText>
           </PressableScale>

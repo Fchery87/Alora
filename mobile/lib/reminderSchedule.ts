@@ -1,8 +1,7 @@
 import type { ReminderKind } from "../data/repository";
 
 export type ReminderSchedulePlan =
-  | { kind: "timeInterval"; seconds: number; repeats: true }
-  | { kind: "daily"; hour: number; minute: number };
+  { kind: "timeInterval"; seconds: number; repeats: true } | { kind: "daily"; hour: number; minute: number };
 
 const QUIET_ALLOWED_HOURS = [6, 9, 12, 15, 18, 21];
 

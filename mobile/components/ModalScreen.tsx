@@ -22,11 +22,22 @@ export function ModalScreen({
 
   const header = (
     <View style={styles.bar}>
-      <AppText display variant="title" weight="medium">{title}</AppText>
+      <AppText display variant="title" weight="medium">
+        {title}
+      </AppText>
       <PressableScale
         scale={0.9}
         onPress={() => router.back()}
-        style={{ width: 36, height: 36, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: theme.color.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.color.line }}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 999,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.color.surface,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: theme.color.line,
+        }}
       >
         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
           <Path d="M6 6l12 12M18 6 6 18" stroke={theme.color.ink} strokeWidth={2} strokeLinecap="round" />
@@ -40,7 +51,10 @@ export function ModalScreen({
       <Backdrop />
       {header}
       {scroll ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 30 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 30 }}
+        >
           {children}
         </ScrollView>
       ) : (

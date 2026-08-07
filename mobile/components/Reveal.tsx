@@ -7,15 +7,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
  * Plays on mount — Expo Router remounts screens on tab switch, so it
  * replays each visit.
  */
-export function Reveal({
-  index = 0,
-  children,
-  style,
-}: {
-  index?: number;
-  children: ReactNode;
-  style?: ViewStyle;
-}) {
+export function Reveal({ index = 0, children, style }: { index?: number; children: ReactNode; style?: ViewStyle }) {
   return (
     <Animated.View style={style} entering={FadeInDown.duration(420).delay(40 + index * 50)}>
       {children}

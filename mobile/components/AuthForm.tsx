@@ -7,6 +7,21 @@ import { AppText, PressableScale } from "./Themed";
 import { Backdrop } from "./Backdrop";
 import { getSupabase } from "../lib/supabase";
 
+const MIN_PASSWORD_LENGTH = 8;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateEmail(email: string): string | null {
+  if (!email.trim()) return "Email is required.";
+  if (!EMAIL_RE.test(email.trim())) return "Enter a valid email address.";
+  return null;
+}
+
+function validatePassword(password: string): string | null {
+  if (!password) return "Password is required.";
+  if (password.length < MIN_PASSWORD_LENGTH) return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+  return null;
+}
+
 export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const theme = useTheme();
   const router = useRouter();
@@ -21,6 +36,21 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const submit = async () => {
     setBusy(true);
     setError(null);
+
+    // Client-side validation before submission
+    const emailErr = validateEmail(email);
+    if (emailErr) {
+      setError(emailErr);
+      setBusy(false);
+      return;
+    }
+    const passwordErr = validatePassword(password);
+    if (passwordErr) {
+      setError(passwordErr);
+      setBusy(false);
+      return;
+    }
+
     try {
       const supabase = getSupabase();
       if (signUp) {
@@ -59,7 +89,9 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.color.bg }}>
       <Backdrop />
       <View style={{ flex: 1, paddingHorizontal: 26, justifyContent: "center" }}>
-        <AppText display variant="hero" weight="medium" style={{ fontSize: 44, lineHeight: 46 }}>Alora</AppText>
+        <AppText display variant="hero" weight="medium" style={{ fontSize: 44, lineHeight: 46 }}>
+          Alora
+        </AppText>
         <AppText variant="heading" color="inkSoft" style={{ marginTop: 8, marginBottom: 26 }}>
           {signUp ? "Create your family's calm, shared home." : "Welcome back."}
         </AppText>
@@ -94,15 +126,30 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         />
 
         {error && (
-          <AppText variant="caption" style={{ color: theme.color.danger, marginTop: 12 }}>{error}</AppText>
+          <AppText variant="caption" style={{ color: theme.color.danger, marginTop: 12 }}>
+            {error}
+          </AppText>
         )}
 
         <PressableScale
           onPress={submit}
-          disabled={busy || !email || !password}
-          style={{ marginTop: 22, paddingVertical: 17, borderRadius: theme.radius.lg, backgroundColor: theme.color.accent, alignItems: "center", opacity: busy || !email || !password ? 0.6 : 1 }}
+          disabled={busy || !email.trim() || !password}
+          style={{
+            marginTop: 22,
+            paddingVertical: 17,
+            borderRadius: theme.radius.lg,
+            backgroundColor: theme.color.accent,
+            alignItems: "center",
+            opacity: busy || !email.trim() || !password ? 0.6 : 1,
+          }}
         >
-          {busy ? <ActivityIndicator color="#fff" /> : <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>{signUp ? "Create account" : "Sign in"}</AppText>}
+          {busy ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+              {signUp ? "Create account" : "Sign in"}
+            </AppText>
+          )}
         </PressableScale>
 
         <PressableScale
@@ -112,7 +159,9 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         >
           <AppText variant="body" color="inkSoft">
             {signUp ? "Already have an account? " : "New to Alora? "}
-            <AppText variant="body" weight="bold" color="accent">{signUp ? "Sign in" : "Create one"}</AppText>
+            <AppText variant="body" weight="bold" color="accent">
+              {signUp ? "Sign in" : "Create one"}
+            </AppText>
           </AppText>
         </PressableScale>
       </View>

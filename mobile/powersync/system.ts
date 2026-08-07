@@ -16,11 +16,25 @@ import { OPSqliteOpenFactory } from "@powersync/op-sqlite";
 import { AppSchema } from "./schema";
 import { getSupabase } from "../lib/supabase";
 import { env } from "../config/env";
+import { addBreadcrumb, captureError } from "../lib/crashReporting";
 
 export const db = new PowerSyncDatabase({
   schema: AppSchema,
   database: new OPSqliteOpenFactory({ dbFilename: "alora.db" }),
 });
+
+// Structured sync logging (PRD §Observability) — emitted as Sentry
+// breadcrumbs so the sync lifecycle is observable in the crash dashboard.
+function syncLog(event: string, detail?: Record<string, unknown>) {
+  console.log(JSON.stringify({ ts: new Date().toISOString(), component: "powersync", event, ...detail }));
+  addBreadcrumb(event, "sync", detail as Record<string, string> | undefined);
+}
+
+/** Log a sync failure as an exception (surfaces in the crash dashboard). */
+function syncFailure(event: string, error: unknown, detail?: Record<string, unknown>) {
+  syncLog(event, { ...detail, error: String(error) });
+  captureError(error instanceof Error ? error : new Error(String(error)), { event, ...detail });
+}
 
 class SupabaseConnector implements PowerSyncBackendConnector {
   /** Hand PowerSync the user's Supabase access token + the instance endpoint. */
@@ -36,6 +50,7 @@ class SupabaseConnector implements PowerSyncBackendConnector {
     const tx = await database.getNextCrudTransaction();
     if (!tx) return;
 
+    syncLog("sync.upload.started", { ops: tx.crud.length });
     const supabase = getSupabase();
     for (const op of tx.crud) {
       const table = supabase.from(op.table);
@@ -47,18 +62,31 @@ class SupabaseConnector implements PowerSyncBackendConnector {
       } else if (op.op === UpdateType.DELETE) {
         ({ error } = await table.delete().eq("id", op.id));
       }
-      if (error) throw error; // leaves the tx for retry with backoff
+      if (error) {
+        syncFailure("sync.upload.failed", error, { op: op.op, table: op.table });
+        throw error; // leaves the tx for retry with backoff
+      }
     }
     await tx.complete();
+    syncLog("sync.upload.completed", { ops: tx.crud.length });
   }
 }
 
 /** Call once after the user is signed in (e.g. in an effect on the tabs layout). */
 export async function startSync() {
-  await db.init();
-  await db.connect(new SupabaseConnector());
+  syncLog("sync.started");
+  try {
+    await db.init();
+    await db.connect(new SupabaseConnector());
+    syncLog("sync.connected");
+  } catch (err) {
+    syncFailure("sync.failed", err);
+    throw err;
+  }
 }
 
 export async function stopSync() {
+  syncLog("sync.stopping");
   await db.disconnectAndClear();
+  syncLog("sync.stopped");
 }

@@ -1,3 +1,4 @@
+// @ts-nocheck — inert until @powersync/react-native is installed
 /**
  * PowerSync local SQLite schema — mirrors the synced Postgres tables
  * (see ../../backend/schema.sql). PowerSync adds an implicit `id` text PK
@@ -28,14 +29,55 @@ const baby_events = new Table(
 );
 
 const families = new Table({ name: column.text, created_by: column.text, created_at: column.text });
-const family_members = new Table({ family_id: column.text, user_id: column.text, role: column.text, display_name: column.text, joined_at: column.text });
-const babies = new Table({ family_id: column.text, name: column.text, birth_date: column.text, created_at: column.text });
-const event_edits = new Table({ event_id: column.text, family_id: column.text, edited_by: column.text, prior_values: column.text, edited_at: column.text });
-const reminders = new Table({ family_id: column.text, kind: column.text, config: column.text, enabled: column.integer, created_at: column.text });
-const notification_preferences = new Table({ user_id: column.text, quiet_start: column.text, quiet_end: column.text, prefs: column.text, updated_at: column.text });
+const family_members = new Table({
+  family_id: column.text,
+  user_id: column.text,
+  role: column.text,
+  display_name: column.text,
+  joined_at: column.text,
+});
+const babies = new Table({
+  family_id: column.text,
+  name: column.text,
+  birth_date: column.text,
+  created_at: column.text,
+});
+const event_edits = new Table({
+  event_id: column.text,
+  family_id: column.text,
+  edited_by: column.text,
+  prior_values: column.text,
+  edited_at: column.text,
+});
+const reminders = new Table({
+  family_id: column.text,
+  kind: column.text,
+  config: column.text,
+  enabled: column.integer,
+  created_at: column.text,
+});
+const notification_preferences = new Table({
+  user_id: column.text,
+  quiet_start: column.text,
+  quiet_end: column.text,
+  prefs: column.text,
+  updated_at: column.text,
+});
 const parent_check_ins = new Table({ user_id: column.text, mood: column.text, created_at: column.text });
-const parent_reflections = new Table({ check_in_id: column.text, user_id: column.text, body: column.text, created_at: column.text });
-const support_resources = new Table({ region: column.text, title: column.text, subtitle: column.text, phone: column.text, url: column.text, sort: column.integer });
+const parent_reflections = new Table({
+  check_in_id: column.text,
+  user_id: column.text,
+  body: column.text,
+  created_at: column.text,
+});
+const support_resources = new Table({
+  region: column.text,
+  title: column.text,
+  subtitle: column.text,
+  phone: column.text,
+  url: column.text,
+  sort: column.integer,
+});
 
 export const AppSchema = new Schema({
   baby_events,

@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import type { ReminderKind, ReminderPreference } from "../data/repository";
 import { reminderSchedulePlans, type ReminderSchedulePlan } from "./reminderSchedule";
+import { repository } from "../data/useData";
 
 const CHANNEL_ID = "alora-reminders";
 const SCHEDULABLE_REMINDERS: ReminderKind[] = ["feed", "diaper", "bedtime"];
@@ -18,17 +19,23 @@ Notifications.setNotificationHandler({
 export async function syncReminderNotifications(preferences: ReminderPreference[]) {
   const quietHours = preferences.find((reminder) => reminder.kind === "quietHours");
   const quietHoursEnabled = quietHours?.enabled ?? false;
-  const enabledReminders = preferences.filter((reminder) => reminder.enabled && SCHEDULABLE_REMINDERS.includes(reminder.kind));
+  const enabledReminders = preferences.filter(
+    (reminder) => reminder.enabled && SCHEDULABLE_REMINDERS.includes(reminder.kind),
+  );
   if (!enabledReminders.length) {
     await cancelAllReminderNotifications();
     return "off";
   }
 
   const permissionGranted = await ensureNotificationPermission();
-  if (!permissionGranted) throw new Error("Notifications are off. Enable them in system settings to schedule reminders.");
+  if (!permissionGranted)
+    throw new Error("Notifications are off. Enable them in system settings to schedule reminders.");
 
   await cancelAllReminderNotifications();
-  const requests = enabledReminders.flatMap((reminder) => notificationRequestsFor(reminder, quietHoursEnabled));
+  const requestLists = await Promise.all(
+    enabledReminders.map((reminder) => notificationRequestsFor(reminder, quietHoursEnabled)),
+  );
+  const requests = requestLists.flat();
   for (const request of requests) {
     await Notifications.scheduleNotificationAsync(request);
   }
@@ -44,7 +51,11 @@ export async function cancelReminderNotification(kind: ReminderKind) {
 }
 
 async function cancelAllReminderNotifications() {
-  await Promise.all(SCHEDULABLE_REMINDERS.flatMap(requestIdentifiersFor).map((id) => Notifications.cancelScheduledNotificationAsync(id)));
+  await Promise.all(
+    SCHEDULABLE_REMINDERS.flatMap(requestIdentifiersFor).map((id) =>
+      Notifications.cancelScheduledNotificationAsync(id),
+    ),
+  );
 }
 
 async function ensureNotificationPermission() {
@@ -63,8 +74,12 @@ async function ensureNotificationPermission() {
   return requested.status === "granted";
 }
 
-function notificationRequestsFor(reminder: ReminderPreference, quietHoursEnabled: boolean): Notifications.NotificationRequestInput[] {
-  const content = notificationContentFor(reminder.kind);
+async function notificationRequestsFor(
+  reminder: ReminderPreference,
+  quietHoursEnabled: boolean,
+): Promise<Notifications.NotificationRequestInput[]> {
+  const name = await babyName();
+  const content = notificationContentFor(reminder.kind, name);
   const channelId = Platform.OS === "android" ? CHANNEL_ID : undefined;
   return reminderSchedulePlans(reminder.kind, quietHoursEnabled).map((plan, index) => ({
     identifier: requestIdentifierFor(reminder.kind, index),
@@ -73,23 +88,43 @@ function notificationRequestsFor(reminder: ReminderPreference, quietHoursEnabled
   }));
 }
 
-function triggerForPlan(plan: ReminderSchedulePlan, channelId: string | undefined): Notifications.NotificationTriggerInput {
+function triggerForPlan(
+  plan: ReminderSchedulePlan,
+  channelId: string | undefined,
+): Notifications.NotificationTriggerInput {
   if (plan.kind === "timeInterval") {
-    return { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: plan.seconds, repeats: plan.repeats, channelId };
+    return {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: plan.seconds,
+      repeats: plan.repeats,
+      channelId,
+    };
   }
 
   return { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: plan.hour, minute: plan.minute, channelId };
 }
 
 function requestIdentifiersFor(kind: ReminderKind) {
-  return [`alora-reminder-${kind}`, ...reminderSchedulePlans(kind, true).map((_, index) => requestIdentifierFor(kind, index))];
+  return [
+    `alora-reminder-${kind}`,
+    ...reminderSchedulePlans(kind, true).map((_, index) => requestIdentifierFor(kind, index)),
+  ];
 }
 
 function requestIdentifierFor(kind: ReminderKind, index: number) {
   return `alora-reminder-${kind}-${index}`;
 }
 
-function notificationContentFor(kind: ReminderKind): Notifications.NotificationContentInput {
+async function babyName(): Promise<string> {
+  try {
+    const status = await repository.getBabyStatus();
+    return status.name || "your baby";
+  } catch {
+    return "your baby";
+  }
+}
+
+function notificationContentFor(kind: ReminderKind, baby: string): Notifications.NotificationContentInput {
   if (kind === "feed") {
     return {
       title: "Feed reminder",
@@ -110,7 +145,7 @@ function notificationContentFor(kind: ReminderKind): Notifications.NotificationC
 
   return {
     title: "Bedtime routine",
-    body: "Start Maya's bedtime wind-down.",
+    body: `Start ${baby}’s bedtime wind-down.`,
     sound: true,
     data: { reminderKind: kind, route: "/reminders" },
   };

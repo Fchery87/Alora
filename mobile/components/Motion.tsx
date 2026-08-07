@@ -36,8 +36,19 @@ export function BreathingOrb({
 
   return (
     <View style={{ width: 60, height: 60, alignItems: "center", justifyContent: "center" }}>
-      <Animated.View style={[{ position: "absolute", width: 50, height: 50, borderRadius: 999, backgroundColor: ringColor }, ring]} />
-      <View style={{ width: 46, height: 46, borderRadius: 999, backgroundColor: coreColor, alignItems: "center", justifyContent: "center" }}>
+      <Animated.View
+        style={[{ position: "absolute", width: 50, height: 50, borderRadius: 999, backgroundColor: ringColor }, ring]}
+      />
+      <View
+        style={{
+          width: 46,
+          height: 46,
+          borderRadius: 999,
+          backgroundColor: coreColor,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {children}
       </View>
     </View>
@@ -58,7 +69,9 @@ export function LiveDot({ color, size = 7 }: { color: string; size?: number }) {
 
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-      <Animated.View style={[{ position: "absolute", width: size, height: size, borderRadius: 999, backgroundColor: color }, ring]} />
+      <Animated.View
+        style={[{ position: "absolute", width: size, height: size, borderRadius: 999, backgroundColor: color }, ring]}
+      />
       <View style={{ width: size, height: size, borderRadius: 999, backgroundColor: color }} />
     </View>
   );

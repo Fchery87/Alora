@@ -14,12 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Backdrop } from "./Backdrop";
-import Reanimated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { playHaptic, type HapticFeedback } from "../lib/haptics";
 import { useTheme } from "../theme/ThemeProvider";
 import type { ColorTokens } from "../theme/tokens";
@@ -52,7 +47,9 @@ export function CenterState({ children }: { children?: ReactNode }) {
     <View style={{ flex: 1, backgroundColor: theme.color.bg }}>
       <Backdrop />
       <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 30, paddingBottom: 80 }}>
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 30, paddingBottom: 80 }}
+        >
           {children}
         </View>
       </SafeAreaView>
@@ -186,10 +183,7 @@ export function Skeleton({ style }: { style?: ViewStyle }) {
   }, [pulse]);
   return (
     <Animated.View
-      style={[
-        { backgroundColor: theme.color.surface2, borderRadius: theme.radius.sm, opacity: pulse },
-        style,
-      ]}
+      style={[{ backgroundColor: theme.color.surface2, borderRadius: theme.radius.sm, opacity: pulse }, style]}
     />
   );
 }
