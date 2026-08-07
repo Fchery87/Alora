@@ -21,6 +21,7 @@ A private beta running live — provisioned Supabase + PowerSync on free tiers, 
 
 - [Competitor feature landscape](issues/01-competitor-feature-landscape.md) — 13 comparable apps matrixed; 10 feature ideas (5 gaps: handoff briefing, sync trust UX, duplicate merge, milk-stash, pediatrician report; 5 parity: growth charts, non-clinical sleep suggestions, local photos, third seat, privacy-as-UX); verified corrections: Nara free, Huckleberry $119.99/yr, Baby Connect subscription, Amila no auto-sync.
 - [Free-tier infra and distribution research](issues/02-free-tier-infra-and-distribution.md) — $0/mo + $124 one-time stack verified: Supabase Free, PowerSync Cloud Free (2 GB/mo, 50 concurrent), Sentry Free, EAS Free (30 builds/15 iOS), Apple $99 + Play $25; Google gate is 12 testers/14 days (not 20); public privacy-policy URL required for external TestFlight.
+- [Seat limit configuration](issues/08-seat-limit-configuration.md) — seat limit is a family setting: unlimited default, any caregiver can change it (audit-logged), enforced at redeem; scoped roles (grandparent/nanny) restored into the feature per founder; rework deltas recorded for schema/redeem/pgTAP/Settings.
 
 ## Not yet specified
 

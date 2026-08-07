@@ -13,6 +13,8 @@
 - **Reflection** — optional private text attached to a private daily check-in.
 - **Caregiver** — a parent or trusted adult participating in the shared baby-care context.
 - **Co-caregiver** — the other caregiver in the shared baby-care context.
+- **Seat limit** — a family-configurable cap on caregiver seats; when unset, the family has no cap. Changing it is a trust action (audit-logged).
+- **Scoped caregiver role** — a caregiver seat with restricted permissions, e.g. a grandparent/nanny seat that sees care events but not the private daily check-in.
 - **Caregiver trust** — the user-visible trust actions and promises around invite, revoke, role display, audit, export, and account deletion.
 - **Invite** — a single-use, time-limited, revocable way to add a co-caregiver.
 - **Audit log** — the record of trust-sensitive actions such as invite, revoke, export, and account deletion.
@@ -64,7 +66,8 @@
 
 ## Caregiver trust rules
 
-- The current role model is **owner** and **caregiver**.
+- The current role model is **owner** and **caregiver**; scoped caregiver roles (grandparent/nanny) extend it with restricted permissions.
+- **Seat limits are a family setting, not a hard-coded product cap**; redemption enforces the configured limit, and an unset limit means unlimited.
 - The caregiver trust module owns invite issue, redeem, revoke, expire, and audit behavior.
 - Account deletion transfers ownership if a co-caregiver exists; otherwise it deletes family data. It always scrubs the deleting caregiver's private data.
 - Audit log entries are required for invite issue/redeem/revoke, role or ownership transfer, export, and account deletion.
