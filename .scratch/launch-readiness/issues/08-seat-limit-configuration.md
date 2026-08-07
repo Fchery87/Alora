@@ -1,7 +1,7 @@
 # 08 — Seat limit configuration
 
 Type: grilling
-Status: claimed
+Status: resolved
 Blocked by: —
 
 ## Question
