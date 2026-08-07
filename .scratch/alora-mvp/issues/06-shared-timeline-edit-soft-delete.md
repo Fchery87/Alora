@@ -1,6 +1,6 @@
 # 06 — Shared timeline + edit/soft-delete
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build

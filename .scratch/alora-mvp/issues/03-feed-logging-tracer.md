@@ -1,6 +1,6 @@
 # 03 — Feed logging tracer
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build
@@ -22,3 +22,9 @@ Note: `syncStatus` is a **client-only** concern (PowerSync manages the upload qu
 ## Blocked by
 
 - 02-local-first-pipeline-family-baby-setup.md
+
+## Comments
+
+### 2025-07-16
+- Client-side implementation complete: repository methods, tests, and UI wiring.
+- Backend provisioning (W0) still required for end-to-end live-path verification.

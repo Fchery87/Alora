@@ -1,6 +1,6 @@
 # 11 — Privacy/trust center + full JSON export + audit
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build

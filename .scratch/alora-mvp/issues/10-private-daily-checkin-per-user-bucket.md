@@ -1,6 +1,6 @@
 # 10 — Private daily check-in + per-user bucket
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build

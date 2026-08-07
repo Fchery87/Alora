@@ -1,6 +1,6 @@
 # 05 — Handoff dashboard (Home)
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build

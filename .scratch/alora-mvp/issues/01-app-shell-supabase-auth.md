@@ -1,6 +1,6 @@
 # 01 — App shell + Supabase Auth
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build
@@ -16,8 +16,14 @@ End-to-end behavior: a new user can sign up, sign in, and on relaunch (including
 - [ ] User can sign up, sign in, and trigger account recovery via Supabase Auth
 - [ ] Session is stored in secure storage and survives app kill
 - [ ] Cold-start while offline restores the authenticated session (no forced re-login)
-- [ ] Tests cover the auth state machine (signed out / signed in / restoring) and offline session restore
+- [x] Tests cover the auth state machine (signed out / signed in / restoring) and offline session restore
 
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+### 2025-07-16
+- Client-side implementation complete: repository methods, tests, and UI wiring.
+- Backend provisioning (W0) still required for end-to-end live-path verification.

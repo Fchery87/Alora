@@ -1,6 +1,6 @@
 # 07 — Caregiver invite + two-role RLS
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build

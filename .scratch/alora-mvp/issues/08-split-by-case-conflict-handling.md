@@ -1,6 +1,6 @@
 # 08 — Split-by-case conflict handling
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build
@@ -24,3 +24,9 @@ Requires two caregivers to exercise, so it builds on the invite flow and the tim
 
 - 06-shared-timeline-edit-soft-delete.md
 - 07-caregiver-invite-two-role-rls.md
+
+## Comments
+
+### 2025-07-16
+- Client-side implementation complete: repository methods, tests, and UI wiring.
+- Backend provisioning (W0) still required for end-to-end live-path verification.

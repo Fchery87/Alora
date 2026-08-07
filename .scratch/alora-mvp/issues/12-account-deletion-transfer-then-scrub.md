@@ -1,6 +1,6 @@
 # 12 — Account deletion: transfer-then-scrub
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build

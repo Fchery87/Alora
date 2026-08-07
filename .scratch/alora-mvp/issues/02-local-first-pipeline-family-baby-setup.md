@@ -1,6 +1,6 @@
 # 02 — Local-first pipeline + family & baby setup
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build

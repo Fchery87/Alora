@@ -1,6 +1,6 @@
 # 04 — Diaper & sleep logging + durable timers
 
-Status: ready-for-agent
+Status: implemented
 Type: AFK
 
 ## What to build
