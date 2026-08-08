@@ -185,6 +185,44 @@ export const RetryIcon = ({ size, color, strokeWidth }: IconProps) => {
   );
 };
 
+export const TrashIcon = ({ size, color, strokeWidth }: IconProps) => {
+  const c = useStroke(color);
+  return (
+    <Svg {...svg(size)}>
+      <Path
+        d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"
+        {...stroke(c, strokeWidth ?? 1.7)}
+      />
+    </Svg>
+  );
+};
+
+export const DocIcon = ({ size, color, strokeWidth }: IconProps) => {
+  const c = useStroke(color);
+  return (
+    <Svg {...svg(size)}>
+      <Path
+        d="M7 3.5h7L19 8.5V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
+        {...stroke(c, strokeWidth ?? 1.7)}
+      />
+      <Path d="M14 3.5V9h5M9.5 13h6M9.5 16.5h6" {...stroke(c, strokeWidth ?? 1.7)} />
+    </Svg>
+  );
+};
+
+export const SeatIcon = ({ size, color, strokeWidth }: IconProps) => {
+  const c = useStroke(color);
+  return (
+    <Svg {...svg(size)}>
+      <Path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" {...stroke(c, strokeWidth ?? 1.7)} />
+      <Path
+        d="M2.5 19c.6-2.6 3-4.5 6.5-4.5s5.9 1.9 6.5 4.5M16 5.5a3 3 0 0 1 0 5.6M17.5 14.7c2 .6 3.4 2.2 4 4.3"
+        {...stroke(c, strokeWidth ?? 1.7)}
+      />
+    </Svg>
+  );
+};
+
 export const eventIcon = {
   feed: FeedIcon,
   diaper: DiaperIcon,

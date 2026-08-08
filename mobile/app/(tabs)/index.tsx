@@ -138,7 +138,7 @@ export default function HomeScreen() {
             borderRadius: 999,
           }}
         >
-          <AppText weight="bold" style={{ color: "#fff" }}>
+          <AppText weight="bold" style={{ color: theme.color.surface }}>
             Try again
           </AppText>
         </PressableScale>
@@ -183,9 +183,9 @@ export default function HomeScreen() {
               durationMs={s.asleep ? 2300 : 1500}
             >
               {s.asleep ? (
-                <SleepIcon size={22} color="#fff" strokeWidth={1.9} />
+                <SleepIcon size={22} color={theme.color.onAccent} strokeWidth={1.9} />
               ) : (
-                <FeedIcon size={22} color="#fff" strokeWidth={1.9} />
+                <FeedIcon size={22} color={theme.color.onAccent} strokeWidth={1.9} />
               )}
             </BreathingOrb>
             <View>
@@ -532,7 +532,7 @@ function ActivityRow({ e, first }: { e: CareEvent; first: boolean }) {
               justifyContent: "center",
             }}
           >
-            <AppText weight="bold" style={{ color: "#fff", fontSize: 8 }}>
+            <AppText weight="bold" style={{ color: theme.color.onAccent, fontSize: 8 }}>
               {e.byInitial}
             </AppText>
           </View>

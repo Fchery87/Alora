@@ -27,8 +27,13 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
 
   const x = useSharedValue(0);
   useEffect(() => {
-    if (slot > 0) x.value = withSpring(state.index * slot, { damping: 18, stiffness: 180, mass: 1 });
-  }, [state.index, slot, x]);
+    if (slot > 0)
+      x.value = withSpring(state.index * slot, {
+        damping: theme.motion.spring.damping,
+        stiffness: theme.motion.spring.stiffness,
+        mass: theme.motion.spring.mass,
+      });
+  }, [state.index, slot, x, theme]);
 
   const pillStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
 
@@ -40,12 +45,13 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       style={[
         styles.bar,
         {
-          bottom: insets.bottom + 10,
+          height: theme.layout.bottomNavHeight,
+          bottom: insets.bottom + theme.layout.bottomNavBottomInset,
           backgroundColor: theme.color.surface,
           borderColor: theme.color.line,
           borderRadius: theme.radius.pill,
+          ...shadowFor(theme.shadow.floating),
         },
-        styles.shadow,
       ]}
     >
       {slot > 0 && (
@@ -80,7 +86,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
             }}
             style={styles.tab}
           >
-            <meta.Icon size={21} color={color} strokeWidth={active ? 1.9 : 1.6} />
+            <meta.Icon size={22} color={color} strokeWidth={active ? 1.9 : 1.6} />
             <AppText
               variant="caption"
               weight={active ? "semibold" : "medium"}
@@ -93,6 +99,16 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       })}
     </View>
   );
+}
+
+function shadowFor({ y, blur, opacity }: { y: number; blur: number; opacity: number }) {
+  return {
+    shadowColor: "#000",
+    shadowOpacity: opacity,
+    shadowRadius: blur,
+    shadowOffset: { width: 0, height: y },
+    elevation: Math.max(1, Math.round(y / 2)),
+  };
 }
 
 const styles = StyleSheet.create({
@@ -111,12 +127,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 7,
-  },
-  shadow: {
-    shadowColor: "#321f0c",
-    shadowOpacity: 0.16,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 12,
   },
 });

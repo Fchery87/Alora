@@ -165,10 +165,10 @@ export default function CheckInScreen() {
             opacity: mood === null || saving ? 0.5 : 1,
           }}
         >
-          <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+          <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
             {saving ? "Saving..." : mood === null ? "Pick a mood to continue" : "Save check-in"}
           </AppText>
-          {mood !== null && <ChevronRight size={18} color="#fff" strokeWidth={2.4} />}
+          {mood !== null && <ChevronRight size={18} color={theme.color.onAccent} strokeWidth={2.4} />}
         </PressableScale>
       </Card>
 

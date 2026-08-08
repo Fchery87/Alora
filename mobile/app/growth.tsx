@@ -146,7 +146,11 @@ export default function GrowthScreen() {
                 backgroundColor: on ? theme.color.accent : "transparent",
               }}
             >
-              <AppText variant="label" weight="semibold" style={{ color: on ? "#fff" : theme.color.inkSoft }}>
+              <AppText
+                variant="label"
+                weight="semibold"
+                style={{ color: on ? theme.color.onAccent : theme.color.inkSoft }}
+              >
                 {m.label}
               </AppText>
             </PressableScale>

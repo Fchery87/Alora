@@ -3,10 +3,12 @@ import { Share, View, StyleSheet } from "react-native";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useRouter } from "expo-router";
-import Svg, { Path } from "react-native-svg";
 import { useTheme, useThemeContext } from "../../theme/ThemeProvider";
 import { AppText, PressableScale, ScreenScroll } from "../../components/Themed";
 import {
+  TrashIcon,
+  DocIcon,
+  SeatIcon,
   MoonIcon,
   BellIcon,
   CloudIcon,
@@ -146,7 +148,7 @@ export default function SettingsScreen() {
         {members.status === "loading" && (
           <Member
             initial="…"
-            color={theme.color.surfaceSunken}
+            color={theme.color.ink}
             name="Loading caregivers…"
             sub=""
             role=""
@@ -372,49 +374,6 @@ function Row({
   );
 }
 
-function TrashIcon({ size = 18, color = "#000" }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"
-        stroke={color}
-        strokeWidth={1.7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function DocIcon({ size = 18, color = "#000" }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M7 3.5h7L19 8.5V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
-        stroke={color}
-        strokeWidth={1.7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path d="M14 3.5V9h5M9.5 13h6M9.5 16.5h6" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-function SeatIcon({ size = 18, color = "#000" }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
-      <Path
-        d="M2.5 19c.6-2.6 3-4.5 6.5-4.5s5.9 1.9 6.5 4.5M16 5.5a3 3 0 0 1 0 5.6M17.5 14.7c2 .6 3.4 2.2 4 4.3"
-        stroke={color}
-        strokeWidth={1.7}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
 function Member({
   initial,
   color,
@@ -432,6 +391,7 @@ function Member({
   roleBg: string;
   roleFg: string;
 }) {
+  const theme = useTheme();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 15 }}>
       <View
@@ -444,7 +404,7 @@ function Member({
           justifyContent: "center",
         }}
       >
-        <AppText weight="bold" style={{ color: "#fff", fontSize: 14 }}>
+        <AppText weight="bold" style={{ color: theme.color.onAccent, fontSize: 14 }}>
           {initial}
         </AppText>
       </View>
@@ -486,7 +446,7 @@ function Switch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
           width: 22,
           height: 22,
           borderRadius: 999,
-          backgroundColor: "#fff",
+          backgroundColor: theme.scheme === "night" ? theme.color.ink : "#fff",
           transform: [{ translateX: on ? 18 : 0 }],
         }}
       />

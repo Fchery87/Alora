@@ -165,8 +165,12 @@ export default function LogScreen() {
                 backgroundColor: on ? theme.color[t.colorKey] : "transparent",
               }}
             >
-              <t.Icon size={22} color={on ? "#fff" : theme.color.inkSoft} strokeWidth={on ? 2 : 1.6} />
-              <AppText variant="label" weight="semibold" style={{ color: on ? "#fff" : theme.color.inkSoft }}>
+              <t.Icon size={22} color={on ? theme.color.onAccent : theme.color.inkSoft} strokeWidth={on ? 2 : 1.6} />
+              <AppText
+                variant="label"
+                weight="semibold"
+                style={{ color: on ? theme.color.onAccent : theme.color.inkSoft }}
+              >
                 {t.label}
               </AppText>
             </PressableScale>
@@ -322,10 +326,10 @@ export default function LogScreen() {
           opacity: saving || repeatSaving ? 0.75 : 1,
         }}
       >
-        <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+        <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
           {saving ? "Saving..." : `Save ${sub.toLowerCase()}`}
         </AppText>
-        <ChevronRight size={18} color="#fff" strokeWidth={2.4} />
+        <ChevronRight size={18} color={theme.color.onAccent} strokeWidth={2.4} />
       </PressableScale>
     </ScreenScroll>
   );

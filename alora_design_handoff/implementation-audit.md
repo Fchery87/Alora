@@ -72,9 +72,8 @@ Keep the existing **semantic key names** (screens depend on them); swap values, 
 | **add** `private`, `privateSoft` | `private` #6F9E86 / `privateSoft` #E4F0E9 (Check-In) |
 | **add** `growth`, `growthSoft` | `event.growth` #6373A7 / #E7EAF4 |
 | **add** `indigo`, `indigoSoft` | #2D3249/#E7E9F1 · #858FB9/#252A3A |
-| **add** `dangerSoft`, `warningSoft` | #F8E4DF / #3A211D etc. |
-| **add** `primaryPressed`, `overlay` | #B75A29/#CF7F46 · overlay #14111352/#0000007A |
-| **add** `onPrimary` | **Dawn: ivory #FFFDFC; Night: dark #141113** (design §10.5: Night = dark text on warm amber for contrast) |
+| **add** `dangerSoft`, `overlay` | #F8E4DF / #3A211D · overlay #14111352/#0000007A |
+| **add** `accentPressed`, `onAccent` | primaryPressed #B75A29/#CF7F46 · **onAccent = Dawn ivory #FFFDFC; Night dark #141113** (design §10.5: Night = dark text on warm amber for contrast) |
 
 Structural additions:
 - `fonts` → `playfairDisplay_400/500/600` (if needed), `inter_400/500/600/700`
@@ -100,7 +99,7 @@ Structural additions:
 
 ## 6. Visual-coupling risks found
 
-1. **~20 hardcoded `#fff` on colored buttons** (onboarding, checkin, log, timeline, index, growth, settings row icons, `AuthForm`, `ErrorBoundary`) → replace with `onPrimary` token; critical for Night where primary is light amber (design §10.5: dark text)
+1. **~20 hardcoded `#fff` on colored buttons** (onboarding, checkin, log, timeline, index, growth, settings row icons, `AuthForm`, `ErrorBoundary`) → replaced with `onAccent` token; two ink-pill retry buttons (`index`/`timeline`) now use `surface` text — **this also fixed two pre-existing Night white-on-white bugs**. Switch thumb is scheme-aware (ink in Night).
 2. **`settings.tsx` local icons default `#000`** → breaks Night; migrate to shared icons
 3. `Card` shadow (`shadowSm`) is hardcoded in Themed.tsx → move to `shadow` tokens
 4. `FloatingTabBar` shadow hardcoded → `shadow.floating`
@@ -119,6 +118,11 @@ Demo-mode caveats (mockRepository, no-op auth gating, no real sync) are document
 2. `app/_layout.tsx` font swap + `package.json`
 3. `AppText` variant retune (sizes/lineHeight/tracking), `Card` hairline, `PressableScale` 0.985
 4. New `PrimaryButton`/`SecondaryButton`/`ChoiceChip`/input primitives if screens need them (design §10.5–10.7) — reuse `PressableScale` + `AppText`
-5. `onPrimary` rollout across the ~20 `#fff` sites
+5. `onAccent` rollout across the ~20 `#fff` sites
 6. `FloatingTabBar` restyle
 7. typecheck + lint green before Phase 3
+
+Status: all items done (2026-08-08). Verification note: `npx expo export` fails on `main`
+because the inert `powersync/system.ts` dynamic import resolves `@powersync/react-native`,
+which is not installed by design (demo mode). Pre-existing, unrelated to this redesign;
+verify via `expo start` + Expo Go instead.

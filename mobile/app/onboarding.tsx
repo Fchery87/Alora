@@ -157,10 +157,10 @@ export default function Onboarding() {
             opacity: saving ? 0.75 : 1,
           }}
         >
-          <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+          <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
             {saving ? "Saving…" : step === 0 ? "Get started" : step === TOTAL - 1 ? "Enter Alora" : "Continue"}
           </AppText>
-          <ChevronRight size={18} color="#fff" strokeWidth={2.4} />
+          <ChevronRight size={18} color={theme.color.onAccent} strokeWidth={2.4} />
         </PressableScale>
         {step === TOTAL - 1 && (
           <PressableScale
@@ -351,7 +351,7 @@ function InviteStep() {
               justifyContent: "center",
             }}
           >
-            <AppText weight="bold" style={{ color: "#fff", fontSize: 24 }}>
+            <AppText weight="bold" style={{ color: theme.color.onAccent, fontSize: 24 }}>
               A
             </AppText>
           </View>
@@ -367,7 +367,7 @@ function InviteStep() {
               justifyContent: "center",
             }}
           >
-            <AppText weight="bold" style={{ color: "#fff", fontSize: 24 }}>
+            <AppText weight="bold" style={{ color: theme.color.onAccent, fontSize: 24 }}>
               +
             </AppText>
           </View>

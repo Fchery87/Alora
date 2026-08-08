@@ -144,9 +144,9 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           }}
         >
           {busy ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={theme.color.onAccent} />
           ) : (
-            <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+            <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
               {signUp ? "Create account" : "Sign in"}
             </AppText>
           )}

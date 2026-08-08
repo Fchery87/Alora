@@ -1,13 +1,8 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useFonts, Fraunces_400Regular, Fraunces_500Medium } from "@expo-google-fonts/fraunces";
-import {
-  HankenGrotesk_400Regular,
-  HankenGrotesk_500Medium,
-  HankenGrotesk_600SemiBold,
-  HankenGrotesk_700Bold,
-} from "@expo-google-fonts/hanken-grotesk";
+import { useFonts, PlayfairDisplay_400Regular, PlayfairDisplay_500Medium } from "@expo-google-fonts/playfair-display";
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
 import { ThemeProvider, useThemeContext } from "../theme/ThemeProvider";
 import { AuthProvider, useProtectedRoute } from "../lib/useAuth";
 import { ErrorBoundaryClass } from "../components/ErrorBoundary";
@@ -41,12 +36,12 @@ function ThemedStack() {
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    Fraunces_400Regular,
-    Fraunces_500Medium,
-    HankenGrotesk_400Regular,
-    HankenGrotesk_500Medium,
-    HankenGrotesk_600SemiBold,
-    HankenGrotesk_700Bold,
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_500Medium,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   if (!loaded) return null;

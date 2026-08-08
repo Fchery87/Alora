@@ -13,8 +13,8 @@
     "test": "node --test __tests__/*.test.js"
   },
   "dependencies": {
-    "@expo-google-fonts/fraunces": "^0.4.1",
-    "@expo-google-fonts/hanken-grotesk": "^0.4.1",
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/playfair-display": "^0.4.2",
     "@sentry/react-native": "~7.2.0",
     "@supabase/supabase-js": "^2.108.1",
     "expo": "~54.0.0",

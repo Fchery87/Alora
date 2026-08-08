@@ -85,8 +85,8 @@ export default function TimelineScreen() {
             borderRadius: 999,
           }}
         >
-          <RetryIcon size={16} color="#fff" />
-          <AppText weight="bold" style={{ color: "#fff" }}>
+          <RetryIcon size={16} color={theme.color.surface} />
+          <AppText weight="bold" style={{ color: theme.color.surface }}>
             Try again
           </AppText>
         </PressableScale>
@@ -126,7 +126,7 @@ export default function TimelineScreen() {
             borderRadius: 999,
           }}
         >
-          <AppText weight="bold" style={{ color: "#fff" }}>
+          <AppText weight="bold" style={{ color: theme.color.onAccent }}>
             Log the first event
           </AppText>
         </PressableScale>
@@ -250,7 +250,7 @@ function TimelineItem({ e }: { e: CareEvent }) {
               justifyContent: "center",
             }}
           >
-            <AppText weight="bold" style={{ color: "#fff", fontSize: 9 }}>
+            <AppText weight="bold" style={{ color: theme.color.onAccent, fontSize: 9 }}>
               {e.byInitial}
             </AppText>
           </View>
@@ -359,7 +359,7 @@ function DuplicateChip({ e, onResolved }: { e: CareEvent; onResolved: () => void
             opacity: saving ? 0.65 : 1,
           }}
         >
-          <AppText weight="bold" style={{ fontSize: 11, color: "#fff" }}>
+          <AppText weight="bold" style={{ fontSize: 11, color: theme.color.onAccent }}>
             Review
           </AppText>
         </PressableScale>

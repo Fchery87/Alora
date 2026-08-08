@@ -73,7 +73,7 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
               backgroundColor: theme.color.accent,
             }}
           >
-            <AppText variant="body" weight="bold" style={{ color: "#fff" }}>
+            <AppText variant="body" weight="bold" style={{ color: theme.color.onAccent }}>
               Try again
             </AppText>
           </PressableScale>

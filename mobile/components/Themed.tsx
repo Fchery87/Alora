@@ -5,7 +5,6 @@ import {
   type PressableProps,
   ScrollView,
   type StyleProp,
-  StyleSheet,
   Text,
   type TextProps,
   View,
@@ -31,7 +30,11 @@ export function ScreenScroll({ children }: { children?: ReactNode }) {
       <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, paddingBottom: 140 }}
+          contentContainerStyle={{
+            paddingHorizontal: theme.layout.screenHorizontalPadding,
+            paddingTop: 8,
+            paddingBottom: 140,
+          }}
         >
           {children}
         </ScrollView>
@@ -89,15 +92,17 @@ export function AppText({
   color?: keyof ColorTokens;
 }) {
   const theme = useTheme();
+  const t = theme.typeStyle[variant];
   return (
     <Text
       {...rest}
       style={[
         {
           fontFamily: familyFor(theme, display, weight),
-          fontSize: theme.fontSize[variant],
+          fontSize: t.size,
+          lineHeight: t.lineHeight,
           color: theme.color[color],
-          letterSpacing: display ? -0.3 : 0,
+          letterSpacing: t.tracking,
         },
         style,
       ]}
@@ -116,10 +121,10 @@ export function Card({ style, children, ...rest }: ViewProps & { children?: Reac
         {
           backgroundColor: theme.color.surface,
           borderColor: theme.color.line,
-          borderWidth: StyleSheet.hairlineWidth * 2,
+          borderWidth: theme.border.hairline,
           borderRadius: theme.radius.lg,
+          ...shadowFor(theme.shadow.sm),
         },
-        styles.shadowSm,
         style,
       ]}
     >
@@ -132,7 +137,7 @@ export function Card({ style, children, ...rest }: ViewProps & { children?: Reac
 export function PressableScale({
   style,
   children,
-  scale = 0.97,
+  scale = 0.985,
   onPressIn,
   onPressOut,
   haptic = "light",
@@ -144,6 +149,7 @@ export function PressableScale({
   haptic?: HapticFeedback;
   children?: ReactNode;
 }) {
+  const theme = useTheme();
   const s = useSharedValue(1);
   const animated = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   const isInteractive = Boolean(onPressIn || rest.onPress || rest.onLongPress);
@@ -153,11 +159,11 @@ export function PressableScale({
       disabled={disabled}
       onPressIn={(e) => {
         if (!disabled && isInteractive) playHaptic(haptic);
-        s.value = withTiming(scale, { duration: 140, easing: PRESS_EASE });
+        s.value = withTiming(scale, { duration: theme.motion.duration.fast, easing: PRESS_EASE });
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        s.value = withTiming(1, { duration: 160, easing: PRESS_EASE });
+        s.value = withTiming(1, { duration: theme.motion.duration.fast, easing: PRESS_EASE });
         onPressOut?.(e);
       }}
       style={[style, animated]}
@@ -188,12 +194,12 @@ export function Skeleton({ style }: { style?: ViewStyle }) {
   );
 }
 
-const styles = StyleSheet.create({
-  shadowSm: {
-    shadowColor: "#3c2814",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-});
+function shadowFor({ y, blur, opacity }: { y: number; blur: number; opacity: number }) {
+  return {
+    shadowColor: "#141113",
+    shadowOpacity: opacity,
+    shadowRadius: blur,
+    shadowOffset: { width: 0, height: y },
+    elevation: Math.max(1, Math.round(y / 2)),
+  };
+}

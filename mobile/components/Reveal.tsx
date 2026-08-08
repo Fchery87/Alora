@@ -5,11 +5,11 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 /**
  * Staggered entrance for a column of cards (Emil: short 30–80ms stagger).
  * Plays on mount — Expo Router remounts screens on tab switch, so it
- * replays each visit.
+ * replays each visit. 360ms reveal, 45ms row stagger (Warm Editorial motion).
  */
 export function Reveal({ index = 0, children, style }: { index?: number; children: ReactNode; style?: ViewStyle }) {
   return (
-    <Animated.View style={style} entering={FadeInDown.duration(420).delay(40 + index * 50)}>
+    <Animated.View style={style} entering={FadeInDown.duration(360).delay(40 + index * 45)}>
       {children}
     </Animated.View>
   );
