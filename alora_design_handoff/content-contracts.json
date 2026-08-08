@@ -1,0 +1,46 @@
+{
+  "version": "1.2.0",
+  "branding": {
+    "productName": "Alora",
+    "brandLine": "The calm in the chaos.",
+    "settingsFooter": "Alora \u00b7 The calm in the chaos.",
+    "internalOnly": [
+      "Quiet Dawn",
+      "Alora AAA",
+      "Warm Editorial",
+      "Alora AAA \u2014 Warm Editorial"
+    ],
+    "themeOptionLabelsAllowed": [
+      "Dawn",
+      "Night"
+    ]
+  },
+  "supportResources": {
+    "sourceOfTruth": "repository",
+    "referenceArtworkCopyAuthoritative": false,
+    "hardcode988": false,
+    "preserveRepositoryOrdering": true,
+    "preserveRepositoryCopy": true,
+    "moodTriggeredContent": false,
+    "implementationNote": "Inspect the existing repository contract and mock/live data. Render returned records; reference images specify only layout and visual treatment."
+  },
+  "checkIn": {
+    "moods": [
+      "Low",
+      "Tired",
+      "Okay",
+      "Good",
+      "Great"
+    ],
+    "savedConfirmation": "Saved privately on this device."
+  },
+  "trust": {
+    "footer": "No ads. No data selling. Export and leave anytime.",
+    "respectCurrentTheme": true
+  },
+  "referenceImages": {
+    "copyAuthoritative": false,
+    "controlInventoryAuthoritative": false,
+    "purpose": "visual hierarchy, composition, surface treatment, typography and styling"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "package": "Alora AAA Design Handoff",
+  "version": "1.2.0",
+  "referenceOnly": [
+    "assets/reference/alora-aaa-design-board-16x9.png",
+    "assets/reference/design-system-panel.png",
+    "assets/reference/principles-strip.png",
+    "assets/reference/brand-lifestyle.png",
+    "assets/screens/home.png",
+    "assets/screens/log.png",
+    "assets/screens/timeline.png",
+    "assets/screens/check-in.png",
+    "assets/screens/invite-caregiver.png",
+    "assets/screens/quiet-hours.png",
+    "assets/screens/trust-privacy.png"
+  ],
+  "productionSafe": [
+    "assets/brand/alora-sun-mark.svg",
+    "assets/illustrations/invite-heart-shield.svg",
+    "assets/illustrations/moon-quiet-hours.svg",
+    "assets/illustrations/privacy-shield.svg",
+    "assets/illustrations/checkin-botanical.svg"
+  ],
+  "implementation": [
+    "design.md",
+    "design-tokens.json",
+    "alora-theme.ts",
+    "LLM_IMPLEMENTATION_PROMPT.md",
+    "content-contracts.json",
+    "IMPLEMENTED_BEHAVIOR_CONTRACT.md",
+    "screen-contracts.json",
+    "RECONCILIATION_MATRIX.md",
+    "CHANGELOG.md"
+  ]
+}

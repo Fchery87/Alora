@@ -1,0 +1,198 @@
+{
+  "version": "1.2.0",
+  "precedence": [
+    "existing_app_code_and_repository_contracts",
+    "IMPLEMENTED_BEHAVIOR_CONTRACT.md",
+    "content-contracts.json",
+    "design.md_and_tokens",
+    "reference_images_visual_only"
+  ],
+  "screens": {
+    "home": {
+      "mustPreserve": [
+        "current baby state",
+        "quick actions",
+        "next-feed/next-action row",
+        "caregiver attribution",
+        "Care Briefing",
+        "Start my shift / Mark shift start",
+        "locally persisted shift marker"
+      ]
+    },
+    "log": {
+      "mustPreserve": [
+        "Feed/Diaper/Sleep behavior",
+        "unit-aware fields",
+        "durable timers where implemented",
+        "Repeat Last row",
+        "dynamic repeat hint",
+        "local-first write"
+      ]
+    },
+    "timeline": {
+      "mustPreserve": [
+        "chronological ordering",
+        "actor attribution",
+        "pending/synced",
+        "edited relative state",
+        "possible duplicate",
+        "Merge Review",
+        "inline Keep both",
+        "Load earlier events"
+      ],
+      "doNotAddFromReferenceOnly": [
+        "event filter chips",
+        "caregiver filters",
+        "Today/Yesterday/date grouping"
+      ]
+    },
+    "checkin": {
+      "moods": [
+        "Low",
+        "Tired",
+        "Okay",
+        "Good",
+        "Great"
+      ],
+      "savedConfirmation": "Saved privately on this device.",
+      "supportResourcesSource": "repository",
+      "mustPreserve": [
+        "private per-user boundary",
+        "optional reflection",
+        "no scoring",
+        "no streaks",
+        "no inference",
+        "no mood-triggered support content"
+      ]
+    },
+    "invite": {
+      "roles": [
+        "Partner",
+        "Limited"
+      ],
+      "mustPreserve": [
+        "role picker",
+        "single-use token",
+        "time-limited token",
+        "revocation",
+        "role-specific permission explanation",
+        "configured seat-limit enforcement"
+      ]
+    },
+    "reminders": {
+      "rows": [
+        "Feed reminder",
+        "Diaper check",
+        "Bedtime routine"
+      ],
+      "mustPreserve": [
+        "Quiet Hours",
+        "on-device notification disclaimer",
+        "unsupported/Expo Go warning when applicable"
+      ]
+    },
+    "trust": {
+      "themeBehavior": "respect current appearance; never force Night",
+      "mustPreserve": [
+        "shared/private/owner matrix",
+        "role-gated audit log",
+        "support resources",
+        "privacy policy link",
+        "export",
+        "delete when permitted"
+      ],
+      "footer": "No ads. No data selling. Export and leave anytime."
+    },
+    "settings": {
+      "limitedHiddenSensitiveAreas": [
+        "invite/admin",
+        "seat limit",
+        "trust/admin",
+        "export",
+        "delete/admin"
+      ],
+      "footer": "Alora \u00b7 The calm in the chaos."
+    },
+    "seatLimit": {
+      "choices": [
+        "No limit",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "hiddenFor": [
+        "Limited"
+      ]
+    },
+    "auth": {
+      "screens": [
+        "Sign In",
+        "Sign Up"
+      ],
+      "recoveryNote": "No recovery/reset screen is currently implemented; do not invent one.",
+      "provider": "Supabase Auth",
+      "mustPreserve": [
+        "auth gating",
+        "secure session persistence",
+        "offline cold-start"
+      ]
+    },
+    "growth": {
+      "mustPreserve": [
+        "WHO data",
+        "P3/P50/P97",
+        "Boy/Girl picker",
+        "birth-date input",
+        "persisted reference selection",
+        "0\u201324 month reference"
+      ]
+    },
+    "pediatricianReport": {
+      "flow": "generate PDF directly then share",
+      "mustPreserve": [
+        "expo-print",
+        "native share",
+        "exclude private Check-In/reflections"
+      ],
+      "doNotInvent": [
+        "in-app PDF preview route"
+      ]
+    },
+    "merge": {
+      "mustPreserve": [
+        "Original/Edited/Duplicate badges where applicable",
+        "Merge into one entry",
+        "Keep both",
+        "Duplicate not found state"
+      ]
+    },
+    "deleteAccount": {
+      "branches": [
+        "owner_with_successor",
+        "sole_owner",
+        "partner_or_non_owner"
+      ],
+      "mustPreserve": [
+        "branch-specific consequences",
+        "three branch-specific success outcomes"
+      ]
+    },
+    "onboarding": {
+      "sequence": [
+        "Welcome",
+        "Privacy",
+        "Baby Setup",
+        "Invite"
+      ],
+      "babySetupFields": [
+        "name",
+        "age"
+      ],
+      "mustPreserve": [
+        "replay behavior"
+      ]
+    }
+  }
+}

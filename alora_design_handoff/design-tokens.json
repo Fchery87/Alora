@@ -1,0 +1,266 @@
+{
+  "meta": {
+    "name": "Alora AAA \u2014 Warm Editorial",
+    "version": "1.2.0",
+    "sourceReference": "assets/reference/alora-aaa-design-board-16x9.png",
+    "productPrinciples": [
+      "Coordination first",
+      "Fast before comprehensive",
+      "Local confidence, cloud coordination",
+      "Shared by default, private where needed",
+      "Calm, not clinical",
+      "Privacy as product UX"
+    ],
+    "publicProductName": "Alora",
+    "publicBrandLine": "The calm in the chaos.",
+    "settingsFooter": "Alora \u00b7 The calm in the chaos.",
+    "internalOnlyNames": [
+      "Quiet Dawn",
+      "Alora AAA",
+      "Warm Editorial",
+      "Alora AAA \u2014 Warm Editorial"
+    ],
+    "behaviorContract": "IMPLEMENTED_BEHAVIOR_CONTRACT.md",
+    "screenContracts": "screen-contracts.json",
+    "referenceImagesAreVisualOnly": true
+  },
+  "color": {
+    "brand": {
+      "warmSand": "#F2E7D9",
+      "ivory": "#FEFBF7",
+      "amber": "#D06C31",
+      "sage": "#83A18C",
+      "lavender": "#8F86C2",
+      "indigo": "#2D3249",
+      "charcoal": "#141113"
+    },
+    "light": {
+      "background": "#F6EFE6",
+      "backgroundDeep": "#EEE1D2",
+      "surface": "#FEFBF7",
+      "surfaceRaised": "#FFFDFC",
+      "surfaceMuted": "#F2E8DC",
+      "textPrimary": "#141113",
+      "textSecondary": "#6F6259",
+      "textTertiary": "#998B80",
+      "border": "#E6D7C6",
+      "borderStrong": "#D5C2AF",
+      "shadow": "#5D463326",
+      "primary": "#D06C31",
+      "primaryPressed": "#B75A29",
+      "primarySoft": "#F8E4D4",
+      "private": "#6F9E86",
+      "privateSoft": "#E4F0E9",
+      "sleep": "#8F86C2",
+      "sleepSoft": "#ECE9F8",
+      "indigo": "#2D3249",
+      "indigoSoft": "#E7E9F1",
+      "danger": "#C54E38",
+      "dangerSoft": "#F8E4DF",
+      "success": "#5F927A",
+      "warning": "#C88A2B",
+      "overlay": "#14111352"
+    },
+    "dark": {
+      "background": "#0F0D0E",
+      "backgroundDeep": "#090809",
+      "surface": "#181416",
+      "surfaceRaised": "#211B19",
+      "surfaceMuted": "#271F1B",
+      "textPrimary": "#FFF8F0",
+      "textSecondary": "#C3B5A8",
+      "textTertiary": "#897B71",
+      "border": "#382D29",
+      "borderStrong": "#4A3A33",
+      "shadow": "#00000066",
+      "primary": "#E89A61",
+      "primaryPressed": "#CF7F46",
+      "primarySoft": "#3B281F",
+      "private": "#86B29B",
+      "privateSoft": "#1E3029",
+      "sleep": "#A39ADC",
+      "sleepSoft": "#29263B",
+      "indigo": "#858FB9",
+      "indigoSoft": "#252A3A",
+      "danger": "#E06A55",
+      "dangerSoft": "#3A211D",
+      "success": "#7FB099",
+      "warning": "#D3A44A",
+      "overlay": "#0000007A"
+    },
+    "event": {
+      "feed": "#D06C31",
+      "feedSoft": "#F8E4D4",
+      "diaper": "#83A18C",
+      "diaperSoft": "#E4EFE8",
+      "sleep": "#8F86C2",
+      "sleepSoft": "#ECE9F8",
+      "growth": "#6373A7",
+      "growthSoft": "#E7EAF4",
+      "checkin": "#6F9E86",
+      "checkinSoft": "#E4F0E9",
+      "warning": "#C88A2B",
+      "danger": "#C54E38"
+    }
+  },
+  "typography": {
+    "displayFamily": "Playfair Display",
+    "uiFamily": "Inter",
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "styles": {
+      "displayXL": {
+        "size": 44,
+        "lineHeight": 50,
+        "weight": 500,
+        "tracking": -0.6
+      },
+      "displayL": {
+        "size": 36,
+        "lineHeight": 42,
+        "weight": 500,
+        "tracking": -0.45
+      },
+      "h1": {
+        "size": 30,
+        "lineHeight": 36,
+        "weight": 500,
+        "tracking": -0.35
+      },
+      "h2": {
+        "size": 24,
+        "lineHeight": 30,
+        "weight": 500,
+        "tracking": -0.2
+      },
+      "h3": {
+        "size": 20,
+        "lineHeight": 26,
+        "weight": 600,
+        "tracking": -0.1
+      },
+      "bodyL": {
+        "size": 17,
+        "lineHeight": 25,
+        "weight": 400,
+        "tracking": 0
+      },
+      "body": {
+        "size": 15,
+        "lineHeight": 22,
+        "weight": 400,
+        "tracking": 0
+      },
+      "bodyM": {
+        "size": 15,
+        "lineHeight": 22,
+        "weight": 500,
+        "tracking": 0
+      },
+      "label": {
+        "size": 13,
+        "lineHeight": 18,
+        "weight": 600,
+        "tracking": 0.1
+      },
+      "caption": {
+        "size": 12,
+        "lineHeight": 17,
+        "weight": 400,
+        "tracking": 0.1
+      },
+      "micro": {
+        "size": 11,
+        "lineHeight": 15,
+        "weight": 500,
+        "tracking": 0.2
+      }
+    }
+  },
+  "space": {
+    "1": 4,
+    "2": 8,
+    "3": 12,
+    "4": 16,
+    "5": 20,
+    "6": 24,
+    "8": 32,
+    "10": 40,
+    "12": 48
+  },
+  "radius": {
+    "sm": 10,
+    "md": 14,
+    "lg": 18,
+    "xl": 24,
+    "xxl": 30,
+    "pill": 999
+  },
+  "border": {
+    "hairline": 1,
+    "emphasis": 1.5
+  },
+  "shadow": {
+    "light": {
+      "sm": {
+        "y": 2,
+        "blur": 8,
+        "opacity": 0.05
+      },
+      "md": {
+        "y": 6,
+        "blur": 20,
+        "opacity": 0.08
+      },
+      "floating": {
+        "y": 12,
+        "blur": 34,
+        "opacity": 0.12
+      }
+    },
+    "dark": {
+      "sm": {
+        "y": 2,
+        "blur": 8,
+        "opacity": 0.18
+      },
+      "md": {
+        "y": 8,
+        "blur": 24,
+        "opacity": 0.25
+      },
+      "floating": {
+        "y": 14,
+        "blur": 40,
+        "opacity": 0.34
+      }
+    }
+  },
+  "layout": {
+    "screenHorizontalPadding": 20,
+    "screenTopPadding": 16,
+    "contentMaxWidth": 520,
+    "cardGap": 12,
+    "sectionGap": 28,
+    "minTapTarget": 44,
+    "bottomNavHeight": 68,
+    "bottomNavBottomInset": 10
+  },
+  "motion": {
+    "pressScale": 0.985,
+    "fastMs": 140,
+    "standardMs": 220,
+    "slowMs": 360,
+    "staggerMs": 45,
+    "spring": {
+      "damping": 19,
+      "stiffness": 190,
+      "mass": 0.9
+    },
+    "reduceMotion": "Respect OS reduce-motion; replace transform animations with opacity-only transitions."
+  }
+}
