@@ -75,7 +75,7 @@ Product principles encoded in both the spec and the code:
 │        │                                                                                                   │
 │   lib/ ── pure domain logic (handoff briefing, pediatric report, growth percentiles, reminders, …)         │
 │   powersync/ ── SQLite schema + sync engine (family + per-user private buckets)                            │
-│   theme/ ── "Quiet Dawn" design tokens · components/ ── primitives, icons, floating tab bar                │
+│   theme/ ── "Warm Editorial" design tokens · components/ ── primitives, icons, floating tab bar                │
 │                                                                                                            │
 └──────────────┬─────────────────────────────────────────────────────────────────────────────────────────────┘
                │  PowerSync (bidirectional sync, offline-first)
@@ -119,12 +119,13 @@ Product principles encoded in both the spec and the code:
 │   ├── agents/                 # Agent workflow docs (issue tracker, triage labels, domain)
 │   ├── architecture-deepening-plan.md
 │   └── production-readiness-audit.md
+├── alora_design_handoff/       # Warm Editorial design package — spec, tokens, contracts, audit
 ├── mobile/                     # The app — Expo SDK 54, React Native 0.81 (New Arch), TypeScript
 │   ├── app/                    # Expo Router screens (tabs + modal flows)
 │   ├── data/                   # Repository interface + mock/Supabase adapters + local stores
 │   ├── lib/                    # Pure domain logic (growth percentiles, handoff, pediatric report, …)
 │   ├── powersync/              # SQLite schema + sync engine wiring
-│   ├── theme/ components/      # "Quiet Dawn" design system
+│   ├── theme/ components/      # "Warm Editorial" design system
 │   ├── __tests__/              # Node test suite (79 tests)
 │   ├── eas.json                # EAS build profiles (development / preview / production)
 │   └── .env.example            # All EXPO_PUBLIC_* variables documented
@@ -137,7 +138,7 @@ Product principles encoded in both the spec and the code:
 │   ├── PROVISIONING.md         # The provisioning runbook (live-mode setup)
 │   └── README.md               # Backend specifics
 ├── prototype/                  # The original web design prototype (Vite + Framer Motion) —
-│                               # birthplace of the "Quiet Dawn" design language
+│                               # birthplace of the original design language — superseded by
 └── .scratch/                   # Working/wayfinder docs: MVP issues (01–14), production-readiness
                                 # PRD, launch-readiness map + research + checklists + privacy policy draft
 ```

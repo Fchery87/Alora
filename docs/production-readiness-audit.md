@@ -15,7 +15,7 @@
 
 The demo-mode experience is **genuinely polished** — well above typical prototype quality:
 
-1. **Design system is professional-grade.** `theme/tokens.ts` defines a complete token system ("Quiet Dawn" dawn/night palettes, typography with Fraunces + Hanken Grotesk, spacing/radius/motion constants). `ThemeProvider.tsx` is clean and both schemes are fully implemented. Design is consistent across all 11 screens.
+1. **Design system is professional-grade.** `theme/tokens.ts` defines a complete token system ("Warm Editorial" dawn/night palettes, typography with Playfair Display + Inter, spacing/radius/motion constants). `ThemeProvider.tsx` is clean and both schemes are fully implemented. Design is consistent across all 16 screens, with OS reduce-motion support.
 
 2. **Local-first persistence actually works.** Care events (`localCareEventStore.ts`), sleep timer (`localSleepTimerStore.ts`), and reminder preferences (`localReminderPreferenceStore.ts`) all persist to Expo SQLite and survive app restarts. The hydration logic in `mockRepository.ts` (lines 40–83) correctly merges stored events with seed data.
 

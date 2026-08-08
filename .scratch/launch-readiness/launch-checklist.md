@@ -13,7 +13,7 @@ Purpose: the handoff artifact from the [Launch Readiness map](map.md) to the **l
 
 ## 1. Store assets (prototype ticket — drafted once the beta starts)
 
-- [ ] App icon (1024×1024, "Quiet Dawn" design language — draft from `theme/tokens.ts`)
+- [ ] App icon (1024×1024, "Warm Editorial" design language — draft from `theme/tokens.ts`)
 - [ ] 3–5 screenshots per platform (Home briefing, Log, Timeline, Growth, Trust) from real app runs
 - [ ] Feature graphic (Play) / optional promo art (App Store)
 - [ ] Founder review pass against beta feedback

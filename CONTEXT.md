@@ -20,6 +20,12 @@
 - **Audit log** — the record of trust-sensitive actions such as invite, revoke, export, and account deletion.
 - **Account deletion** — the trust action that transfers ownership when possible and scrubs the deleting caregiver's private data.
 
+## Product presentation
+
+- **Public brand** — the app name is `Alora`; the brand line is `The calm in the chaos.` (used in the Settings footer). Internal design references — `Quiet Dawn`, `Alora AAA`, `Warm Editorial` — must never appear in user-facing UI.
+- **Warm Editorial redesign** — implemented 2026-08-08 (commits `179f529`…`0b96c84`): Playfair Display + Inter via `@expo-google-fonts`, Dawn/Night semantic tokens in `theme/tokens.ts`, hairline borders over token shadows, line-art iconography (emoji removed from the mood row), OS reduce-motion support. See `docs/adr/0001-warm-editorial-redesign.md` and `alora_design_handoff/`.
+- The redesign preserved all domain behavior; `data/`, `lib/`, `config/`, `services/`, and the PowerSync schema are unchanged.
+
 ## Architecture decisions crystallized in review
 
 - **Live mode** means Supabase auth plus PowerSync local-first sync. Expo SQLite remains the local source of truth; Supabase/PowerSync are adapters for live sync.

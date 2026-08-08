@@ -1,7 +1,8 @@
 # Alora — Expo app
 
 The production React Native app (iOS + Android), extracted from the `prototype/`
-web design build. Same "Quiet Dawn" design language (via `theme/tokens.ts`) and
+web design build. Same "Warm Editorial" design language (tokens in
+`theme/tokens.ts`, spec + contracts in `../alora_design_handoff/`) and
 the same swappable data layer (`data/`), now as idiomatic Expo + RN with a live
 Supabase + PowerSync adapter, growth charts, a handoff briefing, and a pediatrician
 report.
@@ -11,7 +12,7 @@ report.
 - **Expo SDK 54** on the **New Architecture** (`newArchEnabled: true`), RN 0.81 / React 19.1.
 - **Expo Router** (file-based, typed routes) with a custom floating tab bar.
 - **react-native-reanimated 4** (+ worklets) for motion — see "Motion" below.
-- **react-native-svg** icons, **@expo-google-fonts** (Fraunces + Hanken Grotesk),
+- **react-native-svg** icons, **@expo-google-fonts** (Playfair Display + Inter),
   **expo-linear-gradient** backdrops, **expo-haptics** micro-feedback.
 - **@supabase/supabase-js** auth + **PowerSync** local-first sync (schema +
   system wiring under `powersync/`; live adapter `data/supabaseRepository.ts`).
@@ -61,7 +62,9 @@ theme/
   ThemeProvider.tsx    useTheme() + scheme toggle (Dawn / Night)
 components/
   Themed.tsx           AppText, Card, PressableScale, Skeleton, ScreenScroll, CenterState
-  icons.tsx            react-native-svg icon set + event color maps
+  buttons.tsx          PrimaryButton, SecondaryButton, ChoiceChip
+  icons.tsx            react-native-svg icon set + event color maps + MoodFace mood row
+  usePrefersReducedMotion.ts  OS reduce-motion hook (Reveal/orbs/tab/springs)
   FloatingTabBar.tsx   the signature pill tab bar
   Backdrop.tsx         gradient backdrops
   AuthForm.tsx         shared sign-in/sign-up form
@@ -166,11 +169,12 @@ Ported from the prototype's Framer Motion, driven by the curves/durations in `to
 
 | Motion                 | Where                      | Implementation                                                                        |
 | ---------------------- | -------------------------- | ------------------------------------------------------------------------------------- |
-| Staggered card reveals | Home blocks, Timeline rows | `components/Reveal.tsx` — `FadeInDown.delay(i*50)`                                    |
+| Staggered card reveals | Home blocks, Timeline rows | `components/Reveal.tsx` — `FadeInDown.duration(360).delay(40 + index*45)`              |
 | Breathing orb          | Home hero status           | `components/Motion.tsx` `BreathingOrb` — `withRepeat` yoyo scale+opacity, ease-in-out |
 | "Live" pulse dot       | Home napping label         | `components/Motion.tsx` `LiveDot` — expanding/fading ring loop                        |
 | Spring tab indicator   | Floating tab bar           | `FloatingTabBar` — pill `translateX` via `withSpring` to the active slot              |
 | Interruptible press    | every `PressableScale`     | shared-value `scale` via `withTiming` on the Emil ease-out curve                      |
+| OS reduce-motion       | Reveal, orbs, tab, springs | `usePrefersReducedMotion` + `ReduceMotion.System` — everything falls back to static  |
 
 `babel.config.js` includes the `react-native-worklets/plugin` (Reanimated 4) — it must
 stay last in the plugins list.
