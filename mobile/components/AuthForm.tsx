@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { View, TextInput, StyleSheet, ActivityIndicator } from "react-native";
+import { View, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../theme/ThemeProvider";
 import { AppText, PressableScale } from "./Themed";
+import { PrimaryButton } from "./buttons";
 import { Backdrop } from "./Backdrop";
 import { getSupabase } from "../lib/supabase";
 
@@ -32,6 +33,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [focused, setFocused] = useState<"name" | "email" | "password" | null>(null);
 
   const submit = async () => {
     setBusy(true);
@@ -72,18 +74,19 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     }
   };
 
-  const inputStyle = {
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.color.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.color.line,
-    fontFamily: theme.fonts.bodyRegular,
-    fontSize: 16,
-    color: theme.color.ink,
-    marginTop: 12,
-  } as const;
+  const inputStyle = (field: "name" | "email" | "password") =>
+    ({
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      borderRadius: theme.radius.lg,
+      backgroundColor: theme.color.surface,
+      borderWidth: theme.border.emphasis,
+      borderColor: focused === field ? theme.color.accent : theme.color.line,
+      fontFamily: theme.fonts.bodyRegular,
+      fontSize: 16,
+      color: theme.color.ink,
+      marginTop: 12,
+    }) as const;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.color.bg }}>
@@ -92,7 +95,15 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         <AppText display variant="hero" weight="medium" style={{ fontSize: 44, lineHeight: 46 }}>
           Alora
         </AppText>
-        <AppText variant="heading" color="inkSoft" style={{ marginTop: 8, marginBottom: 26 }}>
+        <AppText
+          variant="caption"
+          color="inkFaint"
+          weight="medium"
+          style={{ letterSpacing: 1.2, marginTop: 6, textTransform: "uppercase" }}
+        >
+          The calm in the chaos.
+        </AppText>
+        <AppText display variant="title" color="inkSoft" style={{ marginTop: 22, marginBottom: 14 }}>
           {signUp ? "Create your family's calm, shared home." : "Welcome back."}
         </AppText>
 
@@ -103,7 +114,9 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
-            style={inputStyle}
+            style={inputStyle("name")}
+            onFocus={() => setFocused("name")}
+            onBlur={() => setFocused(null)}
           />
         )}
         <TextInput
@@ -114,7 +127,9 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
-          style={inputStyle}
+          style={inputStyle("email")}
+          onFocus={() => setFocused("email")}
+          onBlur={() => setFocused(null)}
         />
         <TextInput
           placeholder="Password"
@@ -122,7 +137,9 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          style={inputStyle}
+          style={inputStyle("password")}
+          onFocus={() => setFocused("password")}
+          onBlur={() => setFocused(null)}
         />
 
         {error && (
@@ -131,26 +148,13 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           </AppText>
         )}
 
-        <PressableScale
-          onPress={submit}
+        <PrimaryButton
+          label={signUp ? "Create account" : "Sign in"}
+          loading={busy}
           disabled={busy || !email.trim() || !password}
-          style={{
-            marginTop: 22,
-            paddingVertical: 17,
-            borderRadius: theme.radius.lg,
-            backgroundColor: theme.color.accent,
-            alignItems: "center",
-            opacity: busy || !email.trim() || !password ? 0.6 : 1,
-          }}
-        >
-          {busy ? (
-            <ActivityIndicator color={theme.color.onAccent} />
-          ) : (
-            <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
-              {signUp ? "Create account" : "Sign in"}
-            </AppText>
-          )}
-        </PressableScale>
+          onPress={submit}
+          style={{ marginTop: 22 }}
+        />
 
         <PressableScale
           scale={1}

@@ -7,7 +7,7 @@ const eslintPluginPrettier = require("eslint-plugin-prettier");
 module.exports = [
   ...expoConfig,
   {
-    ignores: ["node_modules/", ".expo/", "dist/", "coverage/"],
+    ignores: ["node_modules/", ".expo/", "dist/", "coverage/", "expo-env.d.ts"],
   },
   // Turn off rules that conflict with Prettier, then enable the formatter check.
   prettierConfig,
