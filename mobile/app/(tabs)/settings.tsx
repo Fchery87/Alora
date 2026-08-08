@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Share, View, StyleSheet } from "react-native";
+import { Share, View } from "react-native";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useRouter } from "expo-router";
@@ -276,7 +276,7 @@ export default function SettingsScreen() {
 
       <AppText variant="caption" color="inkFaint" style={{ marginTop: 24, textAlign: "center", lineHeight: 17 }}>
         Baby data is shared with your family. Check-ins are private to you.{"\n"}
-        No ads. No data selling. Export and leave anytime.{"\n"}Alora · Quiet Dawn
+        No ads. No data selling. Export and leave anytime.{"\n"}Alora · The calm in the chaos.
       </AppText>
     </ScreenScroll>
   );
@@ -301,7 +301,7 @@ function List({ children }: { children: React.ReactNode }) {
     <View
       style={{
         backgroundColor: theme.color.surface,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: theme.border.hairline,
         borderColor: theme.color.line,
         borderRadius: theme.radius.lg,
         overflow: "hidden",
@@ -314,7 +314,7 @@ function List({ children }: { children: React.ReactNode }) {
 
 function Divider() {
   const theme = useTheme();
-  return <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.color.line }} />;
+  return <View style={{ height: theme.border.hairline, backgroundColor: theme.color.line }} />;
 }
 
 function Row({
@@ -437,7 +437,7 @@ function Switch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
         borderRadius: 999,
         padding: 3,
         backgroundColor: on ? theme.color.diaper : theme.color.surfaceSunken,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: theme.border.hairline,
         borderColor: on ? theme.color.diaper : theme.color.line,
       }}
     >

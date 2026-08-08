@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Share as NativeShare, View, StyleSheet } from "react-native";
+import { Share as NativeShare, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
@@ -101,7 +101,7 @@ export default function InviteScreen() {
             padding: 18,
             borderRadius: theme.radius.lg,
             backgroundColor: theme.color.surface,
-            borderWidth: StyleSheet.hairlineWidth,
+            borderWidth: theme.border.hairline,
             borderColor: theme.color.line,
           }}
         >
@@ -120,7 +120,7 @@ export default function InviteScreen() {
               padding: 26,
               borderRadius: theme.radius.xl,
               backgroundColor: theme.color.feedTint,
-              borderWidth: StyleSheet.hairlineWidth,
+              borderWidth: theme.border.hairline,
               borderColor: theme.color.line,
               alignItems: "center",
               opacity: busy ? 0.7 : 1,
@@ -173,8 +173,8 @@ export default function InviteScreen() {
               opacity: !invite || busy ? 0.7 : 1,
             }}
           >
-            <ShareIcon />
-            <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+            <ShareIcon color={theme.color.onAccent} />
+            <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
               {action === "share" ? "Opening share..." : "Share invite link"}
             </AppText>
           </PressableScale>
@@ -197,7 +197,7 @@ export default function InviteScreen() {
               padding: 26,
               borderRadius: theme.radius.xl,
               backgroundColor: theme.color.surface,
-              borderWidth: StyleSheet.hairlineWidth,
+              borderWidth: theme.border.hairline,
               borderColor: theme.color.line,
               alignItems: "center",
             }}
@@ -229,10 +229,10 @@ export default function InviteScreen() {
               opacity: busy ? 0.7 : 1,
             }}
           >
-            <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+            <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
               {action === "generate" ? "Generating..." : "Generate new code"}
             </AppText>
-            <ChevronRight size={18} color="#fff" strokeWidth={2.4} />
+            <ChevronRight size={18} color={theme.color.onAccent} strokeWidth={2.4} />
           </PressableScale>
         </>
       )}
@@ -265,7 +265,7 @@ function RoleOption({
         paddingVertical: 14,
         borderRadius: theme.radius.lg,
         backgroundColor: selected ? theme.color.accent + "18" : theme.color.surface,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: theme.border.hairline,
         borderColor: selected ? theme.color.accent : theme.color.line,
         flexDirection: "row",
         alignItems: "center",
@@ -277,7 +277,7 @@ function RoleOption({
           width: 20,
           height: 20,
           borderRadius: 999,
-          borderWidth: 2,
+          borderWidth: theme.border.emphasis,
           borderColor: selected ? theme.color.accent : theme.color.inkFaint,
           alignItems: "center",
           justifyContent: "center",
@@ -309,7 +309,7 @@ function QrArt() {
         padding: 12,
         borderRadius: theme.radius.md,
         backgroundColor: theme.color.surface,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: theme.border.hairline,
         borderColor: theme.color.line,
       }}
     >
@@ -333,12 +333,12 @@ function Clock({ color }: { color: string }) {
   );
 }
 
-function ShareIcon() {
+function ShareIcon({ color }: { color: string }) {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Path
         d="M12 15V4M8.5 7.5 12 4l3.5 3.5M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
-        stroke="#fff"
+        stroke={color}
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"

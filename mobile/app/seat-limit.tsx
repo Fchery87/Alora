@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { useTheme } from "../theme/ThemeProvider";
@@ -45,7 +45,7 @@ export default function SeatLimitScreen() {
         style={{
           marginTop: 16,
           backgroundColor: theme.color.surface,
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: theme.border.hairline,
           borderColor: theme.color.line,
           borderRadius: theme.radius.lg,
           overflow: "hidden",
@@ -55,7 +55,7 @@ export default function SeatLimitScreen() {
           const selected = option === current;
           return (
             <View key={option === null ? "null" : String(option)}>
-              {index > 0 && <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.color.line }} />}
+              {index > 0 && <View style={{ height: theme.border.hairline, backgroundColor: theme.color.line }} />}
               <PressableScale
                 scale={0.99}
                 disabled={saving}
@@ -107,7 +107,7 @@ export default function SeatLimitScreen() {
                     <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
                       <Path
                         d="M5 13l4 4L19 7"
-                        stroke="#fff"
+                        stroke={theme.color.onAccent}
                         strokeWidth={3}
                         strokeLinecap="round"
                         strokeLinejoin="round"

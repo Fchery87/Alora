@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
@@ -105,7 +105,7 @@ export default function MergeScreen() {
               borderRadius: 999,
             }}
           >
-            <AppText weight="bold" style={{ color: "#fff" }}>
+            <AppText weight="bold" style={{ color: theme.color.onAccent }}>
               Back to timeline
             </AppText>
           </PressableScale>
@@ -125,7 +125,7 @@ export default function MergeScreen() {
           padding: 15,
           borderRadius: theme.radius.lg,
           backgroundColor: theme.color.feedTint,
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: theme.border.hairline,
           borderColor: theme.color.feed,
         }}
       >
@@ -172,7 +172,7 @@ export default function MergeScreen() {
               borderRadius: theme.radius.lg,
               marginBottom: 11,
               backgroundColor: on ? theme.color.feedTint : theme.color.surface,
-              borderWidth: 1.5,
+              borderWidth: theme.border.emphasis,
               borderColor: on ? theme.color.feed : theme.color.line,
               opacity: saving ? 0.7 : 1,
             }}
@@ -182,7 +182,7 @@ export default function MergeScreen() {
                 width: 22,
                 height: 22,
                 borderRadius: 999,
-                borderWidth: 2,
+                borderWidth: theme.border.emphasis,
                 borderColor: on ? theme.color.feed : theme.color.lineStrong,
                 alignItems: "center",
                 justifyContent: "center",
@@ -203,7 +203,7 @@ export default function MergeScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <AppText weight="bold" style={{ color: "#fff", fontSize: 10 }}>
+                  <AppText weight="bold" style={{ color: theme.color.onAccent, fontSize: 10 }}>
                     {option.event.byInitial}
                   </AppText>
                 </View>
@@ -257,7 +257,7 @@ export default function MergeScreen() {
           opacity: saving ? 0.7 : 1,
         }}
       >
-        <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+        <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
           {saving ? "Saving..." : "Merge into one entry"}
         </AppText>
       </PressableScale>
@@ -300,7 +300,7 @@ function DoneState({ result, onClose }: { result: "merged" | "kept"; onClose: ()
           <Svg width={30} height={30} viewBox="0 0 24 24" fill="none">
             <Path
               d="M5 12.5l4.5 4.5L19 7.5"
-              stroke="#fff"
+              stroke={theme.color.onAccent}
               strokeWidth={2.4}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -325,7 +325,7 @@ function DoneState({ result, onClose }: { result: "merged" | "kept"; onClose: ()
             backgroundColor: theme.color.ink,
           }}
         >
-          <AppText weight="bold" style={{ color: "#fff" }}>
+          <AppText weight="bold" style={{ color: theme.color.surface }}>
             Done
           </AppText>
         </PressableScale>

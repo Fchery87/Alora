@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, TextInput, useWindowDimensions, View } from "react-native";
+import { TextInput, useWindowDimensions, View } from "react-native";
 import Svg, { Circle, Line, Polyline, Text as SvgText } from "react-native-svg";
 import { useFocusEffect } from "expo-router";
 import { useTheme } from "../theme/ThemeProvider";
@@ -126,7 +126,7 @@ export default function GrowthScreen() {
           padding: 5,
           borderRadius: theme.radius.lg,
           backgroundColor: theme.color.surfaceSunken,
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: theme.border.hairline,
           borderColor: theme.color.line,
         }}
       >
@@ -178,7 +178,7 @@ export default function GrowthScreen() {
                 paddingVertical: 7,
                 borderRadius: 999,
                 backgroundColor: on ? theme.color.surface2 : "transparent",
-                borderWidth: 1.5,
+                borderWidth: theme.border.emphasis,
                 borderColor: on ? theme.color.accent : theme.color.line,
               }}
             >
@@ -216,7 +216,7 @@ export default function GrowthScreen() {
                     paddingVertical: 12,
                     borderRadius: theme.radius.lg,
                     backgroundColor: theme.color.surface,
-                    borderWidth: StyleSheet.hairlineWidth,
+                    borderWidth: theme.border.hairline,
                     borderColor: theme.color.line,
                     textAlign: "center",
                     fontSize: 16,
@@ -245,7 +245,7 @@ export default function GrowthScreen() {
               opacity: savingBirth ? 0.7 : 1,
             }}
           >
-            <AppText variant="heading" weight="bold" style={{ color: "#fff" }}>
+            <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
               {savingBirth ? "Saving…" : "Save birth date"}
             </AppText>
           </PressableScale>
@@ -349,7 +349,7 @@ function GrowthChart({
         marginTop: 18,
         borderRadius: theme.radius.lg,
         backgroundColor: theme.color.surface,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: theme.border.hairline,
         borderColor: theme.color.line,
         padding: 10,
       }}

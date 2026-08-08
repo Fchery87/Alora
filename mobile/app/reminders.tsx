@@ -1,5 +1,5 @@
 import { useEffect, useState, type ComponentType } from "react";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
 import { AppText, Card, CenterState, PressableScale, Skeleton } from "../components/Themed";
@@ -110,8 +110,8 @@ export default function RemindersScreen() {
             borderRadius: 999,
           }}
         >
-          <RetryIcon size={16} color="#fff" />
-          <AppText weight="bold" style={{ color: "#fff" }}>
+          <RetryIcon size={16} color={theme.color.surface} />
+          <AppText weight="bold" style={{ color: theme.color.surface }}>
             Try again
           </AppText>
         </PressableScale>
@@ -167,7 +167,7 @@ export default function RemindersScreen() {
               backgroundColor: theme.color.surfaceSunken,
               marginTop: 20,
               marginBottom: 26,
-              borderWidth: StyleSheet.hairlineWidth,
+              borderWidth: theme.border.hairline,
               borderColor: theme.color.line,
               overflow: "hidden",
             }}
@@ -213,7 +213,7 @@ export default function RemindersScreen() {
         <View
           style={{
             backgroundColor: theme.color.surface,
-            borderWidth: StyleSheet.hairlineWidth,
+            borderWidth: theme.border.hairline,
             borderColor: theme.color.line,
             borderRadius: theme.radius.lg,
             overflow: "hidden",
@@ -260,7 +260,7 @@ function findReminder(reminders: ReminderPreference[], kind: ReminderKind) {
 
 function Divider() {
   const theme = useTheme();
-  return <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.color.line }} />;
+  return <View style={{ height: theme.border.hairline, backgroundColor: theme.color.line }} />;
 }
 
 function ReminderRow({
@@ -332,7 +332,7 @@ function Switch({ on, onToggle, disabled }: { on: boolean; onToggle: () => void;
         borderRadius: 999,
         padding: 3,
         backgroundColor: on ? theme.color.diaper : theme.color.surfaceSunken,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: theme.border.hairline,
         borderColor: on ? theme.color.diaper : theme.color.line,
         opacity: disabled ? 0.65 : 1,
       }}
@@ -342,7 +342,7 @@ function Switch({ on, onToggle, disabled }: { on: boolean; onToggle: () => void;
           width: 22,
           height: 22,
           borderRadius: 999,
-          backgroundColor: "#fff",
+          backgroundColor: theme.scheme === "night" ? theme.color.ink : "#fff",
           transform: [{ translateX: on ? 18 : 0 }],
         }}
       />

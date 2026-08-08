@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import Animated, {
@@ -153,7 +153,7 @@ export default function DeleteAccountScreen() {
         style={{
           overflow: "hidden",
           borderRadius: theme.radius.lg,
-          borderWidth: 1.5,
+          borderWidth: theme.border.emphasis,
           borderColor: theme.color.danger,
           marginBottom: 8,
           opacity: deleting ? 0.75 : 1,
@@ -234,7 +234,7 @@ function DoneState({
             badge,
           ]}
         >
-          <Check color="#fff" size={30} />
+          <Check color={theme.color.surface} size={30} />
         </Animated.View>
         <AppText display variant="title" weight="medium" style={{ marginTop: 20 }}>
           Account deleted.
@@ -252,7 +252,7 @@ function DoneState({
             backgroundColor: theme.color.ink,
           }}
         >
-          <AppText weight="bold" style={{ color: "#fff" }}>
+          <AppText weight="bold" style={{ color: theme.color.surface }}>
             Done
           </AppText>
         </PressableScale>
@@ -281,7 +281,7 @@ function Consequence({
         padding: 15,
         borderRadius: theme.radius.lg,
         backgroundColor: theme.color.surface,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: theme.border.hairline,
         borderColor: theme.color.line,
         marginBottom: 10,
       }}

@@ -1,4 +1,4 @@
-import { Linking, View, StyleSheet } from "react-native";
+import { Linking, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
@@ -97,7 +97,7 @@ export default function TrustScreen() {
               paddingVertical: 13,
               borderRadius: theme.radius.lg,
               backgroundColor: theme.color.surface,
-              borderWidth: StyleSheet.hairlineWidth,
+              borderWidth: theme.border.hairline,
               borderColor: theme.color.line,
               alignItems: "center",
             }}
@@ -138,7 +138,7 @@ function Group({
       <View
         style={{
           backgroundColor: theme.color.surface,
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: theme.border.hairline,
           borderColor: theme.color.line,
           borderRadius: theme.radius.lg,
           overflow: "hidden",
@@ -152,7 +152,7 @@ function Group({
 
 function Divider() {
   const theme = useTheme();
-  return <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.color.line }} />;
+  return <View style={{ height: theme.border.hairline, backgroundColor: theme.color.line }} />;
 }
 
 function TrustRow({
@@ -294,7 +294,7 @@ function ListSkeleton() {
       <Skeleton style={{ width: "72%", height: 14 }} />
       <Skeleton style={{ width: "94%", height: 10 }} />
       <Skeleton style={{ width: 92, height: 26, borderRadius: 999, marginTop: 3 }} />
-      <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.color.line, marginVertical: 4 }} />
+      <View style={{ height: theme.border.hairline, backgroundColor: theme.color.line, marginVertical: 4 }} />
       <Skeleton style={{ width: "58%", height: 14 }} />
       <Skeleton style={{ width: "88%", height: 10 }} />
     </View>
