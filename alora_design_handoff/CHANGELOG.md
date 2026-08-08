@@ -1,5 +1,28 @@
 # Changelog
 
+## Implementation complete — 2026-08-08
+
+The Warm Editorial redesign has been implemented in `mobile/` and verified.
+
+### Shipped (commits `179f529`…`0360ccc`, 7 commits after baseline `4da9369`)
+
+- Phase 1 audit: `implementation-audit.md` (added to this package).
+- Foundations: Dawn/Night token palettes, Playfair Display + Inter (Google Fonts), hairline borders + token shadows, full type scale, `PrimaryButton`/`SecondaryButton`/`ChoiceChip`, restyled `FloatingTabBar`, line-art MoodFace icons (emoji removed from the mood row).
+- All 16 screens restyled in handoff order (Auth → Onboarding → Home → Log → Timeline → Check-In → Settings → Seat Limit → Invite → Reminders → Trust → Growth → Merge → Delete Account), each preserving its behavior exactly.
+- Motion: press 0.985 / 140–220–360ms token durations / 45ms stagger, plus OS reduce-motion support (`usePrefersReducedMotion` + `ReduceMotion.System`).
+
+### Verified
+
+- `IMPLEMENTED_BEHAVIOR_CONTRACT.md` sections all pass against code; `data/`, `lib/`, `config/`, `services/` are byte-for-byte unchanged (local-first storage, PowerSync/Supabase, RLS, roles, sync semantics untouched).
+- No invented reference-only features; support resources remain repository-driven; no recovery screen.
+- Public brand only: `Alora · The calm in the chaos.` footer; no internal codenames user-facing.
+- Typecheck clean, ESLint 0 warnings, 79/79 tests passing at every commit.
+
+### Remaining manual step
+
+- Capture Dawn + Night screenshots of Home / Log / Timeline / Check-In on a device or simulator (not available in the implementation environment).
+
+
 ## 1.2.0
 
 Behavior-reconciliation release. Closes the remaining implementation/design mismatches reported after v1.1.
