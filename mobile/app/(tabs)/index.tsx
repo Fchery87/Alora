@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState, type ComponentType } from "react";
 import { StyleSheet, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "expo-router";
 import { useTheme } from "../../theme/ThemeProvider";
 import { AppText, Card, CenterState, PressableScale, ScreenScroll, Skeleton } from "../../components/Themed";
@@ -169,13 +168,6 @@ export default function HomeScreen() {
             overflow: "hidden",
           }}
         >
-          <LinearGradient
-            colors={[s.asleep ? theme.color.sleepTint : theme.color.feedTint, theme.color.surface]}
-            start={{ x: 0.85, y: 0 }}
-            end={{ x: 0.15, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
             <BreathingOrb
               coreColor={s.asleep ? theme.color.sleep : theme.color.feed}
@@ -304,41 +296,29 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Reminder */}
-      <View style={{ marginTop: 26 }}>
-        <Card
+      {/* Next-action / likely-feed row — calm low-height informational row */}
+      <View style={{ marginTop: 18 }}>
+        <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 14,
-            padding: 15,
-            borderRadius: theme.radius.lg,
-            backgroundColor: theme.color.feedTint,
-            borderColor: theme.color.feed,
+            gap: 12,
+            paddingVertical: 12,
+            paddingHorizontal: 4,
           }}
         >
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: theme.radius.md,
-              backgroundColor: theme.color.surface,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <BellIcon size={20} color={theme.color.feed} />
-          </View>
+          <BellIcon size={18} color={theme.color.inkFaint} />
           <View style={{ flex: 1 }}>
-            <AppText variant="body" weight="semibold">
+            <AppText variant="body" weight="medium">
               Next feed likely around 3:15pm
             </AppText>
-            <AppText variant="caption" color="inkSoft" style={{ marginTop: 2 }}>
+            <AppText variant="caption" color="inkFaint" style={{ marginTop: 1 }}>
               Based on today’s rhythm · ~2h 40m between feeds
             </AppText>
           </View>
-          <ChevronRight size={18} color={theme.color.inkFaint} strokeWidth={2} />
-        </Card>
+          <ChevronRight size={16} color={theme.color.inkFaint} strokeWidth={2} />
+        </View>
+        <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.color.line }} />
       </View>
 
       {/* Recent activity */}
@@ -433,7 +413,7 @@ function QuickButton({
         padding: 15,
         borderRadius: theme.radius.lg,
         backgroundColor: theme.color.surface,
-        borderWidth: 1,
+        borderWidth: theme.border.hairline,
         borderColor: theme.color.line,
         gap: 14,
         opacity: disabled ? 0.65 : 1,
@@ -629,7 +609,14 @@ function HandoffCard({
   const sinceLabelText = marker ? `Since the handoff at ${clockLabel(marker)}` : "Since the last 24 hours";
 
   return (
-    <Card style={{ marginTop: 16, padding: 16, borderStyle: "dashed", borderColor: theme.color.lineStrong }}>
+    <Card
+      style={{
+        marginTop: 16,
+        padding: 16,
+        backgroundColor: theme.color.surface2,
+        borderColor: theme.color.line,
+      }}
+    >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <AppText variant="label" weight="bold" color="inkFaint" style={{ letterSpacing: 0.6, flex: 1 }}>
           CARE BRIEFING
@@ -642,9 +629,9 @@ function HandoffCard({
             paddingHorizontal: 12,
             paddingVertical: 6,
             borderRadius: 999,
-            backgroundColor: theme.color.surface2,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: theme.color.line,
+            backgroundColor: theme.color.surface,
+            borderWidth: theme.border.hairline,
+            borderColor: theme.color.lineStrong,
             opacity: marking ? 0.6 : 1,
           }}
         >

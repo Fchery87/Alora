@@ -230,6 +230,56 @@ export const eventIcon = {
   growth: GrowthIcon,
 } as const;
 
+/**
+ * Low-detail line mood faces for Check-In (design §11.4: "simple,
+ * low-detail faces or icons"). Replaces the previous emoji row.
+ */
+export const MoodFace = ({ level, size, color, strokeWidth }: IconProps & { level: 0 | 1 | 2 | 3 | 4 }) => {
+  const c = useStroke(color);
+  const w = strokeWidth ?? 1.6;
+  const mouth =
+    level === 0 ? (
+      <Path d="M8.5 16c2.2-2 4.8-2 7 0" {...stroke(c, w)} />
+    ) : level === 1 ? (
+      <Path d="M8.5 16h7" {...stroke(c, w)} />
+    ) : level === 2 ? (
+      <Path d="M9.5 16.5h5" {...stroke(c, w)} />
+    ) : level === 3 ? (
+      <Path d="M9.5 15.5c1.5 1.6 3.5 1.6 5 0" {...stroke(c, w)} />
+    ) : (
+      <Path d="M8 15.5c2.3 2.8 5.7 2.8 8 0" {...stroke(c, w)} />
+    );
+  const eyes =
+    level === 0 ? (
+      <>
+        <Path d="M8.5 9.5v.5" {...stroke(c, w)} />
+        <Path d="M15.5 9.5v.5" {...stroke(c, w)} />
+      </>
+    ) : level === 1 ? (
+      <>
+        <Path d="M8 9l1.5 1M15.5 9.5l-1.5.5" {...stroke(c, w)} />
+      </>
+    ) : (
+      <>
+        <Circle cx="9" cy="10" r="0.9" fill={c} stroke="none" />
+        <Circle cx="15" cy="10" r="0.9" fill={c} stroke="none" />
+      </>
+    );
+  return (
+    <Svg {...svg(size)}>
+      <Circle cx="12" cy="12" r="9" {...stroke(c, w)} />
+      {eyes}
+      {mouth}
+    </Svg>
+  );
+};
+
+export const MoodLow = (p: IconProps) => <MoodFace {...p} level={0} />;
+export const MoodTired = (p: IconProps) => <MoodFace {...p} level={1} />;
+export const MoodOkay = (p: IconProps) => <MoodFace {...p} level={2} />;
+export const MoodGood = (p: IconProps) => <MoodFace {...p} level={3} />;
+export const MoodGreat = (p: IconProps) => <MoodFace {...p} level={4} />;
+
 export const eventColorKey: Record<"feed" | "diaper" | "sleep" | "growth", keyof ColorTokens> = {
   feed: "feed",
   diaper: "diaper",

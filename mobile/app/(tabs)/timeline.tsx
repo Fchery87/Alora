@@ -35,7 +35,7 @@ export default function TimelineScreen() {
               padding: 13,
               borderRadius: theme.radius.lg,
               backgroundColor: theme.color.surface,
-              borderWidth: StyleSheet.hairlineWidth,
+              borderWidth: theme.border.hairline,
               borderColor: theme.color.line,
             }}
           >
@@ -162,7 +162,7 @@ export default function TimelineScreen() {
             paddingVertical: 14,
             borderRadius: theme.radius.lg,
             backgroundColor: theme.color.surface,
-            borderWidth: StyleSheet.hairlineWidth,
+            borderWidth: theme.border.hairline,
             borderColor: theme.color.line,
             alignItems: "center",
             opacity: loadingMore ? 0.7 : 1,
@@ -322,7 +322,7 @@ function DuplicateChip({ e, onResolved }: { e: CareEvent; onResolved: () => void
           padding: 11,
           borderRadius: theme.radius.md,
           backgroundColor: theme.color.sleepTint,
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: theme.border.hairline,
           borderColor: theme.color.sleep,
         }}
       >
@@ -339,7 +339,7 @@ function DuplicateChip({ e, onResolved }: { e: CareEvent; onResolved: () => void
             paddingHorizontal: 11,
             paddingVertical: 6,
             borderRadius: 999,
-            borderWidth: StyleSheet.hairlineWidth,
+            borderWidth: theme.border.hairline,
             borderColor: theme.color.lineStrong,
             opacity: saving ? 0.65 : 1,
           }}

@@ -12,9 +12,9 @@ import Animated, {
   withTiming,
   interpolate,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../theme/ThemeProvider";
 import { AppText, Card, PressableScale } from "../components/Themed";
+import { PrimaryButton } from "../components/buttons";
 import { Backdrop } from "../components/Backdrop";
 import { ChevronRight } from "../components/icons";
 import { saveBabyProfile } from "../data/useData";
@@ -119,7 +119,7 @@ export default function Onboarding() {
 
       <Animated.View
         key={step}
-        entering={SlideInRight.duration(320).easing(Easing.bezier(0.23, 1, 0.32, 1))}
+        entering={SlideInRight.duration(360).easing(Easing.bezier(0.23, 1, 0.32, 1))}
         style={{ flex: 1, paddingHorizontal: 26 }}
       >
         {step === 0 && <Welcome />}
@@ -142,26 +142,18 @@ export default function Onboarding() {
             {error}
           </AppText>
         )}
-        <PressableScale
+        <PrimaryButton
           disabled={saving}
-          scale={0.98}
+          loading={saving}
+          label={step === 0 ? "Get started" : step === TOTAL - 1 ? "Enter Alora" : "Continue"}
           onPress={next}
-          style={{
-            paddingVertical: 17,
-            borderRadius: theme.radius.lg,
-            backgroundColor: theme.color.accent,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            opacity: saving ? 0.75 : 1,
-          }}
+          style={{ flexDirection: "row", gap: 8 }}
         >
-          <AppText variant="heading" weight="bold" style={{ color: theme.color.onAccent }}>
+          <AppText variant="heading" weight="semibold" style={{ color: theme.color.onAccent }}>
             {saving ? "Saving…" : step === 0 ? "Get started" : step === TOTAL - 1 ? "Enter Alora" : "Continue"}
           </AppText>
           <ChevronRight size={18} color={theme.color.onAccent} strokeWidth={2.4} />
-        </PressableScale>
+        </PrimaryButton>
         {step === TOTAL - 1 && (
           <PressableScale
             disabled={saving}
@@ -179,6 +171,22 @@ export default function Onboarding() {
   );
 }
 
+/** Warm Editorial sun mark — brand moment (alora-sun-mark.svg). */
+function SunMark({ size = 120 }: { size?: number }) {
+  const theme = useTheme();
+  const c = theme.color.accent;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 96 96" fill="none">
+      <Circle cx="48" cy="48" r="17" stroke={c} strokeWidth={3} />
+      <Circle cx="48" cy="48" r="10" stroke={c} strokeWidth={2} opacity={0.65} />
+      <g stroke={c} strokeWidth={3} strokeLinecap="round">
+        <Path d="M48 7v13M48 76v13M7 48h13M76 48h13M19 19l9 9M68 68l9 9M77 19l-9 9M28 68l-9 9" />
+      </g>
+      <Path d="M33 54c7 8 23 8 30 0" stroke={c} strokeWidth={2} strokeLinecap="round" opacity={0.45} />
+    </Svg>
+  );
+}
+
 function Welcome() {
   const theme = useTheme();
   const p = useSharedValue(0);
@@ -186,7 +194,7 @@ function Welcome() {
     p.value = withRepeat(withTiming(1, { duration: 2600, easing: Easing.inOut(Easing.ease) }), -1, true);
   }, [p]);
   const ring = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(p.value, [0, 1], [1, 1.12]) }],
+    transform: [{ scale: interpolate(p.value, [0, 1], [1, 1.1]) }],
     opacity: interpolate(p.value, [0, 1], [0.5, 0.2]),
   }));
   return (
@@ -197,24 +205,19 @@ function Welcome() {
             style={[
               {
                 position: "absolute",
-                width: 150,
-                height: 150,
+                width: 132,
+                height: 132,
                 borderRadius: 999,
-                borderWidth: 1.5,
+                borderWidth: 1,
                 borderColor: theme.color.accent,
               },
               ring,
             ]}
           />
-          <LinearGradient
-            colors={[theme.color.feed, theme.color.accent]}
-            start={{ x: 0.3, y: 0.2 }}
-            end={{ x: 1, y: 1 }}
-            style={{ width: 110, height: 110, borderRadius: 999 }}
-          />
+          <SunMark size={120} />
         </View>
       </View>
-      <AppText display variant="hero" weight="medium" style={{ fontSize: 60, lineHeight: 62 }}>
+      <AppText display variant="hero" weight="medium" style={{ fontSize: 48, lineHeight: 52 }}>
         Alora
       </AppText>
       <AppText variant="heading" color="inkSoft" style={{ marginTop: 12, lineHeight: 24, marginBottom: 10 }}>

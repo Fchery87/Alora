@@ -1,18 +1,18 @@
 import { useState } from "react";
-import { View, TextInput, StyleSheet } from "react-native";
+import { View, TextInput } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import { useTheme } from "../../theme/ThemeProvider";
 import { AppText, Card, PressableScale, ScreenScroll } from "../../components/Themed";
-import { CheckInIcon, ChevronRight } from "../../components/icons";
+import { CheckInIcon, ChevronRight, MoodLow, MoodTired, MoodOkay, MoodGood, MoodGreat } from "../../components/icons";
 import { createCheckIn, useSupportResources } from "../../data/useData";
 import type { CheckInMood } from "../../data/repository";
 
-const MOODS: { face: string; label: string; mood: CheckInMood }[] = [
-  { face: "😞", label: "Low", mood: "low" },
-  { face: "😕", label: "Tired", mood: "tired" },
-  { face: "😐", label: "Okay", mood: "okay" },
-  { face: "🙂", label: "Good", mood: "good" },
-  { face: "😊", label: "Great", mood: "great" },
+const MOODS: { Icon: typeof MoodLow; label: string; mood: CheckInMood }[] = [
+  { Icon: MoodLow, label: "Low", mood: "low" },
+  { Icon: MoodTired, label: "Tired", mood: "tired" },
+  { Icon: MoodOkay, label: "Okay", mood: "okay" },
+  { Icon: MoodGood, label: "Good", mood: "good" },
+  { Icon: MoodGreat, label: "Great", mood: "great" },
 ];
 
 export default function CheckInScreen() {
@@ -98,11 +98,11 @@ export default function CheckInScreen() {
                   paddingVertical: 14,
                   borderRadius: theme.radius.lg,
                   backgroundColor: on ? theme.color.surface : "transparent",
-                  borderWidth: 1.5,
+                  borderWidth: theme.border.emphasis,
                   borderColor: on ? theme.color.diaper : "transparent",
                 }}
               >
-                <AppText style={{ fontSize: 26 }}>{m.face}</AppText>
+                <m.Icon size={26} color={on ? theme.color.ink : theme.color.inkSoft} />
                 <AppText
                   weight="semibold"
                   style={{ fontSize: 10.5, color: on ? theme.color.ink : theme.color.inkSoft }}
@@ -129,7 +129,7 @@ export default function CheckInScreen() {
             padding: 15,
             borderRadius: theme.radius.lg,
             backgroundColor: theme.color.surface,
-            borderWidth: StyleSheet.hairlineWidth,
+            borderWidth: theme.border.hairline,
             borderColor: theme.color.line,
             fontFamily: theme.fonts.bodyRegular,
             fontSize: 15,
@@ -212,7 +212,7 @@ function Resource({ title, detail, badge }: { title: string; detail: string; bad
         padding: 13,
         borderRadius: theme.radius.md,
         backgroundColor: theme.color.surface2,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: theme.border.hairline,
         borderColor: theme.color.line,
       }}
     >

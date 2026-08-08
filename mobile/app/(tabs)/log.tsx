@@ -1,5 +1,5 @@
 import { useState, type ComponentType } from "react";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../theme/ThemeProvider";
 import { AppText, Card, PressableScale, ScreenScroll } from "../../components/Themed";
@@ -144,7 +144,7 @@ export default function LogScreen() {
           padding: 6,
           borderRadius: theme.radius.lg,
           backgroundColor: theme.color.surfaceSunken,
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: theme.border.hairline,
           borderColor: theme.color.line,
         }}
       >
@@ -185,8 +185,8 @@ export default function LogScreen() {
           gap: 13,
           marginTop: 16,
           padding: 14,
-          borderStyle: "dashed",
-          borderColor: theme.color.lineStrong,
+          backgroundColor: theme.color.surface2,
+          borderColor: theme.color.line,
         }}
       >
         <View
@@ -216,9 +216,9 @@ export default function LogScreen() {
             paddingHorizontal: 14,
             paddingVertical: 8,
             borderRadius: 999,
-            backgroundColor: theme.color.surface2,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: theme.color.line,
+            backgroundColor: theme.color.surface,
+            borderWidth: theme.border.hairline,
+            borderColor: theme.color.lineStrong,
             opacity: repeatSaving ? 0.65 : 1,
           }}
         >
@@ -253,7 +253,7 @@ export default function LogScreen() {
                 paddingVertical: 11,
                 borderRadius: 999,
                 backgroundColor: theme.color.surface,
-                borderWidth: 1.5,
+                borderWidth: theme.border.emphasis,
                 borderColor: on ? accent : theme.color.line,
               }}
             >
@@ -366,7 +366,7 @@ function Stepper({
           width: 42,
           height: 42,
           borderRadius: 999,
-          borderWidth: 1.5,
+          borderWidth: theme.border.emphasis,
           borderColor: theme.color.line,
           alignItems: "center",
           justifyContent: "center",
@@ -384,7 +384,7 @@ function Stepper({
           paddingVertical: 12,
           borderRadius: theme.radius.lg,
           backgroundColor: accent + "14",
-          borderWidth: StyleSheet.hairlineWidth,
+          borderWidth: theme.border.hairline,
           borderColor: accent + "55",
         }}
       >
@@ -403,7 +403,7 @@ function Stepper({
           width: 42,
           height: 42,
           borderRadius: 999,
-          borderWidth: 1.5,
+          borderWidth: theme.border.emphasis,
           borderColor: theme.color.line,
           alignItems: "center",
           justifyContent: "center",
