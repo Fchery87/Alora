@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path } from "react-native-svg";
@@ -14,6 +14,7 @@ import Animated, {
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
 import { AppText, PressableScale } from "../components/Themed";
+import { usePrefersReducedMotion } from "../components/usePrefersReducedMotion";
 import { deleteAccount, useBabyStatus, useFamilyMembers } from "../data/useData";
 
 const OUT = Easing.bezier(0.23, 1, 0.32, 1);
@@ -211,7 +212,14 @@ function DoneState({
 }) {
   const theme = useTheme();
   const scale = useSharedValue(0.6);
-  scale.value = withSpring(1, { duration: 500, dampingRatio: 0.6 });
+  const reduced = usePrefersReducedMotion();
+  useEffect(() => {
+    if (reduced) {
+      scale.value = 1;
+      return;
+    }
+    scale.value = withSpring(1, { duration: 500, dampingRatio: 0.6 });
+  }, [reduced, scale]);
   const badge = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }], opacity: scale.value }));
   const summary = isOwner
     ? hasPartner

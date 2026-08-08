@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useTheme } from "../theme/ThemeProvider";
 import { AppText, PressableScale } from "./Themed";
+import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 import { HomeIcon, LogIcon, TimelineIcon, CheckInIcon, SettingsIcon, type IconProps } from "./icons";
 
 const TABS: Record<string, { label: string; Icon: ComponentType<IconProps> }> = {
@@ -26,14 +27,19 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const slot = barW > 0 ? (barW - PAD_H * 2) / n : 0;
 
   const x = useSharedValue(0);
+  const reduced = usePrefersReducedMotion();
   useEffect(() => {
-    if (slot > 0)
-      x.value = withSpring(state.index * slot, {
-        damping: theme.motion.spring.damping,
-        stiffness: theme.motion.spring.stiffness,
-        mass: theme.motion.spring.mass,
-      });
-  }, [state.index, slot, x, theme]);
+    if (slot <= 0) return;
+    if (reduced) {
+      x.value = state.index * slot;
+      return;
+    }
+    x.value = withSpring(state.index * slot, {
+      damping: theme.motion.spring.damping,
+      stiffness: theme.motion.spring.stiffness,
+      mass: theme.motion.spring.mass,
+    });
+  }, [state.index, slot, x, theme, reduced]);
 
   const pillStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
 

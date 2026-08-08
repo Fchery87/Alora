@@ -8,10 +8,12 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
 /**
  * Ambient breathing orb for the Home hero — a soft ring that swells and
  * fades behind the status icon. Continuous → ease-in-out (Emil).
+ * Renders a static ring when the OS reduce-motion setting is on.
  */
 export function BreathingOrb({
   coreColor,
@@ -25,9 +27,11 @@ export function BreathingOrb({
   children?: ReactNode;
 }) {
   const p = useSharedValue(0);
+  const reduced = usePrefersReducedMotion();
   useEffect(() => {
+    if (reduced) return;
     p.value = withRepeat(withTiming(1, { duration: durationMs, easing: Easing.inOut(Easing.ease) }), -1, true);
-  }, [p, durationMs]);
+  }, [p, durationMs, reduced]);
 
   const ring = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(p.value, [0, 1], [1, 1.34]) }],
@@ -58,9 +62,11 @@ export function BreathingOrb({
 /** Small pulsing "live" dot — a ring that expands and fades, looping. */
 export function LiveDot({ color, size = 7 }: { color: string; size?: number }) {
   const p = useSharedValue(0);
+  const reduced = usePrefersReducedMotion();
   useEffect(() => {
+    if (reduced) return;
     p.value = withRepeat(withTiming(1, { duration: 2400, easing: Easing.out(Easing.ease) }), -1, false);
-  }, [p]);
+  }, [p, reduced]);
 
   const ring = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(p.value, [0, 1], [1, 2.8]) }],

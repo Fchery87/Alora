@@ -17,6 +17,7 @@ import { AppText, Card, PressableScale } from "../components/Themed";
 import { PrimaryButton } from "../components/buttons";
 import { Backdrop } from "../components/Backdrop";
 import { ChevronRight } from "../components/icons";
+import { usePrefersReducedMotion } from "../components/usePrefersReducedMotion";
 import { saveBabyProfile } from "../data/useData";
 
 const TOTAL = 4;
@@ -25,6 +26,7 @@ const AGE_OPTIONS = ["0–3 mo", "3–6 mo", "6–9 mo"];
 export default function Onboarding() {
   const theme = useTheme();
   const router = useRouter();
+  const reduced = usePrefersReducedMotion();
   const [step, setStep] = useState(0);
   const [babyName, setBabyName] = useState("");
   const [babyAge, setBabyAge] = useState("0–3 mo");
@@ -119,7 +121,7 @@ export default function Onboarding() {
 
       <Animated.View
         key={step}
-        entering={SlideInRight.duration(360).easing(Easing.bezier(0.23, 1, 0.32, 1))}
+        entering={reduced ? undefined : SlideInRight.duration(360).easing(Easing.bezier(0.23, 1, 0.32, 1))}
         style={{ flex: 1, paddingHorizontal: 26 }}
       >
         {step === 0 && <Welcome />}
@@ -190,9 +192,11 @@ function SunMark({ size = 120 }: { size?: number }) {
 function Welcome() {
   const theme = useTheme();
   const p = useSharedValue(0);
+  const reduced = usePrefersReducedMotion();
   useEffect(() => {
+    if (reduced) return;
     p.value = withRepeat(withTiming(1, { duration: 2600, easing: Easing.inOut(Easing.ease) }), -1, true);
-  }, [p]);
+  }, [p, reduced]);
   const ring = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(p.value, [0, 1], [1, 1.1]) }],
     opacity: interpolate(p.value, [0, 1], [0.5, 0.2]),

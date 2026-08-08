@@ -13,7 +13,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Backdrop } from "./Backdrop";
-import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Reanimated, {
+  Easing,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { playHaptic, type HapticFeedback } from "../lib/haptics";
 import { useTheme } from "../theme/ThemeProvider";
 import type { ColorTokens } from "../theme/tokens";
@@ -159,11 +165,19 @@ export function PressableScale({
       disabled={disabled}
       onPressIn={(e) => {
         if (!disabled && isInteractive) playHaptic(haptic);
-        s.value = withTiming(scale, { duration: theme.motion.duration.fast, easing: PRESS_EASE });
+        s.value = withTiming(scale, {
+          duration: theme.motion.duration.fast,
+          easing: PRESS_EASE,
+          reduceMotion: ReduceMotion.System,
+        });
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        s.value = withTiming(1, { duration: theme.motion.duration.fast, easing: PRESS_EASE });
+        s.value = withTiming(1, {
+          duration: theme.motion.duration.fast,
+          easing: PRESS_EASE,
+          reduceMotion: ReduceMotion.System,
+        });
         onPressOut?.(e);
       }}
       style={[style, animated]}
