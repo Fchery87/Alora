@@ -1,9 +1,11 @@
 # Alora v1.1 — Roadmap PRD
 
-Status: ready-for-agent
+Status: historical roadmap; implemented beta surfaces remain in readiness hardening
 Source: [Launch Readiness map](map.md) — distilled from [Competitor feature landscape](research/01-competitor-feature-landscape.md) (web-verified), founder dispositions (Aug 2026), and the resolved [Seat limit configuration](issues/08-seat-limit-configuration.md) decision.
 
 ## Context
+
+The private-beta readiness contract preserves the implemented scoped caregiver, growth chart, pediatrician report, and handoff briefing surfaces. The acceptance records below are retained as implementation history. Phase B is deferred expansion only for new work beyond those existing surfaces.
 
 Alora's MVP (hardened + production-readiness pass) is done: fast local-first baby-care logging, reminders + quiet hours, private daily check-in, two-caregiver trust (invite/revoke/export/delete), CI, tests, Sentry wiring. This PRD defines the **next build phase** ahead of a private beta (3–5 known families) and store launch. Every feature below is acceptance-shaped and ready for issue decomposition.
 

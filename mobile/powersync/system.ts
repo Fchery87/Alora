@@ -4,7 +4,8 @@
  * the end-user JWT (so backend RLS + the sync-rules buckets apply) and
  * flushes the local write queue to Postgres.
  *
- * INERT until you install: npx expo install @powersync/react-native @powersync/op-sqlite
+ * Requires the PowerSync React Native SDK and its native OP-SQLite peer:
+ *   npx expo install @powersync/react-native @op-engineering/op-sqlite
  */
 import {
   PowerSyncDatabase,
@@ -12,7 +13,6 @@ import {
   type AbstractPowerSyncDatabase,
   type PowerSyncBackendConnector,
 } from "@powersync/react-native";
-import { OPSqliteOpenFactory } from "@powersync/op-sqlite";
 import { AppSchema } from "./schema";
 import { getSupabase } from "../lib/supabase";
 import { env } from "../config/env";
@@ -20,7 +20,7 @@ import { addBreadcrumb, captureError } from "../lib/crashReporting";
 
 export const db = new PowerSyncDatabase({
   schema: AppSchema,
-  database: new OPSqliteOpenFactory({ dbFilename: "alora.db" }),
+  database: { dbFilename: "alora.db" },
 });
 
 // Structured sync logging (PRD §Observability) — emitted as Sentry

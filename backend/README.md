@@ -1,5 +1,7 @@
 # Alora backend foundation
 
+> **Release status:** blocked. The SQL and edge-function foundation exists, but the 2026-08-13 validation found non-atomic trust operations, sync-rule privacy drift, and live-schema mismatches. Complete `../VALIDATION_TASKS.md` before provisioning a beta.
+
 The production data layer for Alora's live mode: Postgres schema + Row-Level
 Security, PowerSync sync rules, and the privileged Edge Functions. All artifacts
 here are written and tested — provisioning the cloud services and supplying
@@ -10,8 +12,7 @@ credentials is the remaining step (it needs your accounts; see
 
 | File | Purpose |
 |---|---|
-| `schema.sql` | Postgres tables, enums, indexes, triggers — including the **configurable seat limit** (nullable `families.seat_limit`, unlimited default; trigger enforces a configured cap) and the **audit trigger** for seat-limit changes. |
-| `rls.sql` | Row-Level Security policies (20) — backend-enforced access control for roles, trust actions, and privacy isolation (apply after `schema.sql`). |
+| `../supabase/migrations/` | Canonical versioned Postgres tables, enums, indexes, triggers, and Row-Level Security policies. Apply with the Supabase CLI. |
 | `sync-rules.yaml` | PowerSync buckets: shared `family`, private `user_private`, read-only `global`. |
 | `functions/generate-invite/` | Edge Function — issues a single-use, time-limited invite code for a chosen role (`partner` \| `limited`). |
 | `functions/redeem-invite/` | Edge Function — redeems a single-use invite, enforces the **configured seat limit** (not a hard-coded cap), joins the family, consumes the token. |
@@ -21,7 +22,7 @@ credentials is the remaining step (it needs your accounts; see
 ## Design decisions encoded
 
 - **Roles**: `family_role` enum = `owner`, `partner`, `limited`. **`limited` is implemented** (Phase A) — a scoped caregiver seat (grandparent/nanny) that sees care events + timeline + own profile, but never private check-ins, trust actions, or the audit log.
-- **Seat limits are a family setting, not a code constant**: `families.seat_limit` is nullable (unset = unlimited). Any non-limited member may change it; the `audit_seat_limit_change` definer trigger records actor + old/new values in the audit log; `redeem-invite` enforces it atomically. Trust actions are column-level: generic `UPDATE` on `families` is revoked, only `seat_limit` is granted.
+- **Seat limits are a family setting, not a code constant**: `families.seat_limit` is nullable (unset = unlimited). Any non-limited member may change it; the `audit_seat_limit_change` definer trigger records actor + old/new values in the audit log. The database trigger enforces the cap, but invite redemption is not yet a single atomic operation. Trust actions are column-level: generic `UPDATE` on `families` is revoked, only `seat_limit` is granted.
 - **`baby_events` has no sync-status column.** Sync state is a *client* concern owned by PowerSync's local queue; the server holds authoritative state only.
 - **Soft delete** via `deleted_at` (propagates as a sync tombstone; sync rules include deleted rows, client filters them).
 - **Invite tokens** are single-use (`used_at`), time-limited (`expires_at`, default 24h), revocable (`revoked_at`); `token_is_active()` gates redemption.
@@ -32,9 +33,9 @@ credentials is the remaining step (it needs your accounts; see
 The full ordered runbook is [`PROVISIONING.md`](PROVISIONING.md) (~45–60 min), with a founder-facing checklist (including Sentry + privacy-URL steps and Phase A live checks) in `.scratch/launch-readiness/provisioning-checklist.md`. In short:
 
 1. **Create a Supabase project** (US region for the US-only launch). Copy the project URL + anon key.
-2. Apply schema then policies:
+2. Apply the versioned migration history:
    ```bash
-   supabase db push            # or paste schema.sql then rls.sql into the SQL editor
+   supabase db push
    ```
    Seed `support_resources` (crisis-line copy still gated on MVP issue 13 sign-off).
 3. **Create a PowerSync instance**, connect it to the Supabase Postgres (replication user), and paste `sync-rules.yaml` into its Sync Rules.
@@ -53,7 +54,7 @@ The full ordered runbook is [`PROVISIONING.md`](PROVISIONING.md) (~45–60 min),
    EXPO_PUBLIC_SENTRY_DSN=...
    EXPO_PUBLIC_PRIVACY_POLICY_URL=...
    ```
-6. In the app: install `@powersync/react-native` + `@powersync/op-sqlite`, lift the `powersync/**` + `data/supabaseRepository.ts` tsconfig excludes, and sign in — `data/useData.ts` auto-selects the Supabase repository via the runtime mode resolver (`mobile/config/mode.ts`).
+6. In the app: the PowerSync dependencies and strict live-path typechecking are already wired. Connect the authenticated lifecycle to `startSync()` and sign in — `data/useData.ts` then selects the Supabase repository via the runtime mode resolver (`mobile/config/mode.ts`).
 
 ## Testing the security layer (pgTAP)
 
@@ -67,10 +68,10 @@ invite lifecycle are verified at the database layer with pgTAP:
 sudo -u postgres ./tests/run-pgtap.sh
 ```
 
-The runner creates a throwaway database, applies `tests/00-mock-auth.sql` (a
+The runner creates a throwaway database, applies `../supabase/tests/support/00-mock-auth.sql` (a
 local stand-in for the Supabase `auth` schema, since plain Postgres has no
-`auth.users`/`auth.uid()`), then the production `schema.sql` + `rls.sql`, then
-runs `tests/01-rls-security.sql`. Pass with `PGDATABASE=name ./run-pgtap.sh` to
+`auth.users`/`auth.uid()`), then the canonical baseline migration, then runs
+`tests/01-rls-security.sql`. Pass with `PGDATABASE=name ./run-pgtap.sh` to
 override the database name.
 
 What the suite covers (51 assertions):

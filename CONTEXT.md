@@ -22,6 +22,12 @@
 
 ## Product presentation
 
+## Private-beta launch scope
+
+- The private beta preserves the implemented owner, partner, and limited caregiver roles, configurable seat limits, growth charts, pediatrician report, and shift-handoff briefing.
+- This readiness pass freezes those surfaces. It does not add new growth, reporting, handoff, or caregiver features.
+- Public launch scope is reviewed after the private-beta exit criteria. A narrower public scope may be chosen, but every reachable role and backend path remains security-tested.
+
 - **Public brand** — the app name is `Alora`; the brand line is `The calm in the chaos.` (used in the Settings footer). Internal design references — `Quiet Dawn`, `Alora AAA`, `Warm Editorial` — must never appear in user-facing UI.
 - **Warm Editorial redesign** — implemented 2026-08-08 (commits `179f529`…`0b96c84`): Playfair Display + Inter via `@expo-google-fonts`, Dawn/Night semantic tokens in `theme/tokens.ts`, hairline borders over token shadows, line-art iconography (emoji removed from the mood row), OS reduce-motion support. See `docs/adr/0003-warm-editorial-redesign.md` and `alora_design_handoff/`.
 - The redesign preserved all domain behavior; `data/`, `lib/`, `config/`, `services/`, and the PowerSync schema are unchanged.

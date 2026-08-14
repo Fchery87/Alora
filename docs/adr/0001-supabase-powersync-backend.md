@@ -1,7 +1,7 @@
 # ADR-0001: Supabase + PowerSync backend
 
 - **Status:** Accepted and implemented (pending cloud provisioning — see `backend/PROVISIONING.md`)
-- **Scope:** `backend/` (schema, RLS, sync rules, Edge Functions) and the mobile live-mode adapter
+- **Scope:** `supabase/` migrations and tests, `backend/` sync rules and Edge Functions, and the mobile live-mode adapter
 
 ## Context
 
@@ -17,13 +17,13 @@ because the client is not a trust boundary.
 Use **Supabase (Postgres, US region)** as the backend with **PowerSync** as the
 bidirectional sync engine, with all access control enforced in the database:
 
-- **Schema** (`backend/schema.sql`): `family_role` enum (`owner` / `partner` /
+- **Schema** (`supabase/migrations/`): `family_role` enum (`owner` / `partner` /
   `limited`), configurable `families.seat_limit` (nullable; unset = unlimited,
   change audit-logged by trigger), `baby_events` with **no sync-status column**
   (sync state is a client concern owned by PowerSync's local queue; the server
   holds authoritative state only), soft delete via `deleted_at` (propagates as a
   sync tombstone).
-- **RLS** (`backend/rls.sql`): 20 Row-Level Security policies. Roles are enforced
+- **RLS** (included in the ordered `supabase/migrations/` history): Row-Level Security policies. Roles are enforced
   in Postgres; trust actions are column-level grants (e.g., only `seat_limit` is
   updatable on `families`); private check-ins/reflections are isolated by
   `user_id = auth.uid()`.
@@ -45,4 +45,4 @@ bidirectional sync engine, with all access control enforced in the database:
   seat limits, and privacy isolation at the database layer.
 - Live mode requires a development build (native PowerSync modules); demo and
   local-first modes work without the server.
-- Provisioning is a runbook, not a script: `backend/PROVISIONING.md`.
+- Provisioning is a runbook backed by versioned migrations: `backend/PROVISIONING.md`.

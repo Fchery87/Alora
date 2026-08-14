@@ -3,7 +3,7 @@
 > A calm, private, local-first baby-care companion for first-time parents — fast logging,
 > two-caregiver coordination, and a gentle wellbeing check-in that stays out of the way.
 
-**Status:** pre-launch · production-readiness complete · launch-readiness wayfinding in progress (backend not yet provisioned; private beta for 3–5 known families is the next milestone).
+**Status:** pre-launch · production readiness blocked · private beta not yet safe to start. See [`VALIDATION_TASKS.md`](./VALIDATION_TASKS.md) for the current executable audit.
 
 Alora is a cross-platform (iOS + Android) Expo / React Native app that helps caregivers answer three questions instantly: **what happened recently with the baby, what matters now, and what the next caregiver needs to know.** It is built around one core promise: logging baby care should feel faster and more reliable than remembering or writing notes — even with no signal, at 3 a.m., one-handed.
 
@@ -11,7 +11,7 @@ Alora is a cross-platform (iOS + Android) Expo / React Native app that helps car
 
 ## What this project is
 
-Alora is the implementation of [`alora_updated_prd.md`](./alora_updated_prd.md) — a coordination-first product for first-time parents of babies aged 0–9 months:
+Alora targets [`alora_updated_prd.md`](./alora_updated_prd.md), a coordination-first product for first-time parents of babies aged 0–9 months:
 
 - **A handoff dashboard** (Home) that summarizes the baby's current state instead of requiring a verbal recap: last feed, last diaper, current sleep, next action, recent caregiver activity.
 - **Fast, durable logging** of feeds, diapers, and sleep with presets, repeat-last actions, and device-local timers that survive app kills and offline restarts.
@@ -25,7 +25,7 @@ The product is deliberately **non-clinical** (no mood inference, scoring, or aut
 
 The PRD's core insight: first-time parents are exhausted, and the highest-value thing a care app can do is reduce mental load and handoff friction between two caregivers. Everything else — emotional check-ins, insights, analytics — is secondary and must never interfere with logging speed or trust.
 
-Product principles encoded in both the spec and the code:
+Target product principles:
 
 1. **Coordination first** — every screen is judged by whether it improves logging speed, state clarity, and handoff confidence.
 2. **Fast before comprehensive** — a feed can be logged in under 10 seconds, one-handed.
@@ -40,22 +40,22 @@ Product principles encoded in both the spec and the code:
 
 | Area | Status | Notes |
 |---|---|---|
-| Account + family + baby setup (Supabase Auth, secure-storage session) | ✅ Implemented | Offline cold-start; onboarding flow |
-| Handoff dashboard (Home) | ✅ Implemented | Baby status summary, quick actions, care briefing |
-| Feed / diaper / sleep logging | ✅ Implemented | Presets, repeat-last, durable local timers |
-| Shared timeline | ✅ Implemented | Attribution, edit markers, pending/synced states |
-| Duplicate detection + merge | ✅ Implemented | "Possible duplicate" chip → merge screen |
-| Local reminders + quiet hours | ✅ Implemented | Expo Go-safe (lazy-loaded notifications) |
-| Private daily check-in | ✅ Implemented | Per-user sync bucket + RLS isolation, crisis resources, disclaimer |
-| Trust center, JSON export, account deletion | ✅ Implemented | Transfer-then-scrub semantics, audit log |
-| **Phase A: configurable seat limit + scoped roles** | ✅ Implemented | Unlimited default; `owner` / `partner` / `limited`; enforced at invite redeem; audit-logged changes |
+| Account + family + baby setup | ⛔ Blocked | Supabase Auth UI exists; live family creation, invite acceptance, recovery, and first-user routing are incomplete |
+| Handoff dashboard (Home) | 🟡 Demo complete | Baby status and quick actions work against demo data; live sync is unavailable |
+| Feed / diaper / sleep logging | 🟡 Demo complete | Local demo persistence works; the live adapter and sleep-stop path are broken |
+| Shared timeline | 🟡 Demo complete | Pagination UI exists; live pending state is not truthful |
+| Duplicate detection + merge | 🟡 Partial | Detection and merge UI exist; live dismissal is not persisted |
+| Local reminders + quiet hours | 🟡 Needs device verification | Scheduling code exists; production notification behavior is not device-verified |
+| Private daily check-in | ⛔ Blocked | Private bucket exists, but limited-role access contradicts the product contract |
+| Trust center, JSON export, account deletion | ⛔ Blocked | UI exists; live trust tables and account deletion are not release safe |
+| **Phase A: configurable seat limit + scoped roles** | ⛔ Blocked | Schema and UI exist; sync-rule privacy and redemption atomicity must be fixed |
 | **Phase B: WHO growth charts** | ✅ Implemented | P3/P50/P97 bands, boy/girl toggle, months 0–24 (CDC-hosted WHO LMS data) |
-| **Phase B: pediatrician report (PDF)** | ✅ Implemented | Print + share; excludes private check-in content |
+| **Phase B: pediatrician report (PDF)** | 🟡 Needs device verification | Print + share code excludes private check-in content |
 | **Phase B: handoff briefing** | ✅ Implemented | 24h summary, start-of-shift marker |
 | **Phase B: trust positioning** | ✅ Implemented | "No ads. No data selling. Export and leave anytime." + privacy-policy link |
-| Sentry crash reporting | ✅ Implemented | DSN-gated, no PII, production builds only |
-| Live backend (Supabase + PowerSync) | 🔧 Ready, not provisioned | All SQL/edge-function/sync-rule artifacts written + tested; founder signup checklist delivered |
-| Private beta distribution | 🔧 Ready, not executed | EAS profiles, TestFlight/Play internal-testing checklist, install-doc outline |
+| Sentry crash reporting | 🟡 Wired, not provisioned | DSN-gated and intended to avoid PII; no production release has verified ingestion |
+| Live backend (Supabase + PowerSync) | ⛔ Blocked | Bundle/schema slice passes; sync lifecycle, onboarding, invite redemption, privacy, and backend atomicity must be fixed before provisioning |
+| Private beta distribution | ⛔ Blocked | EAS profiles and checklists exist, but no release bundle or live two-device smoke test passes yet |
 | Backlog: pumping + milk stash, wake-window suggestions, local-first photos | 📋 Roadmap | See `.scratch/launch-readiness/ROADMAP-PRD.md` |
 
 ---
@@ -81,7 +81,7 @@ Product principles encoded in both the spec and the code:
                │  PowerSync (bidirectional sync, offline-first)
                ▼
 ┌────────────────────────────────────────── BACKEND (Supabase, US region) ───────────────────────────────────┐
-│  Postgres: schema.sql (tables/enums/triggers) + rls.sql (20 Row-Level-Security policies)                   │
+│  Postgres: supabase/migrations/ (versioned tables, enums, triggers, and RLS history)                      │
 │  Edge Functions: generate-invite · redeem-invite · delete-account (service-role, JWT-authenticated)        │
 │  sync-rules.yaml: family bucket (shared) · user_private bucket (check-ins) · global bucket (resources)     │
 │  Auth: Supabase Auth → JWT → RLS · Sentry (crash reports, no PII)                                          │
@@ -97,8 +97,8 @@ Product principles encoded in both the spec and the code:
 | Mode | When | Behavior |
 |---|---|---|
 | `demo` | No env vars configured, or signed out | Mock data, no auth, straight to the tabs — zero-setup exploration |
-| `localFirst` | Backend configured, PowerSync deps not installed | Supabase auth + local SQLite, no sync yet |
-| `live` | Backend + PowerSync configured, signed in | Full local-first sync between caregivers |
+| `localFirst` | Planned fallback | Not operational. The current adapter requires PowerSync and falls back to demo data when unavailable. |
+| `live` | Backend + PowerSync configured, signed in | Target mode. Bundle and lifecycle work in `VALIDATION_TASKS.md` must be completed first. |
 
 ## Security & privacy model
 
@@ -129,14 +129,16 @@ Product principles encoded in both the spec and the code:
 │   ├── __tests__/              # Node test suite (79 tests)
 │   ├── eas.json                # EAS build profiles (development / preview / production)
 │   └── .env.example            # All EXPO_PUBLIC_* variables documented
-├── backend/                    # Supabase data layer
-│   ├── schema.sql              # Tables, enums, indexes, triggers
-│   ├── rls.sql                 # Row-Level Security policies (20)
+├── backend/                    # Supabase Edge Functions, sync rules, and test runner
 │   ├── sync-rules.yaml         # PowerSync bucket definitions
 │   ├── functions/              # Edge functions: generate-invite, redeem-invite, delete-account
-│   ├── tests/                  # pgTAP suite (51 assertions)
-│   ├── PROVISIONING.md         # The provisioning runbook (live-mode setup)
+│   ├── tests/                  # pgTAP suite and transitional local runner
+│   ├── PROVISIONING.md         # The provisioning runbook
 │   └── README.md               # Backend specifics
+├── supabase/                   # Canonical database migrations and CLI config
+│   ├── migrations/             # Versioned schema and RLS history
+│   ├── tests/support/          # Local auth support for database tests
+│   └── config.toml             # Supabase CLI project configuration
 ├── prototype/                  # The original web design prototype (Vite + Framer Motion) —
 │                               # birthplace of the original design language — superseded by
 └── .scratch/                   # Working/wayfinder docs: MVP issues (01–14), production-readiness
@@ -162,11 +164,11 @@ cd mobile
 npm run typecheck    # tsc --noEmit, strict
 npm run lint         # ESLint, zero-warning policy
 npm run format       # Prettier check
-npm test             # 79 tests — dual-adapter contract suite (mock + Supabase/PowerSync),
+npm test             # 79 behavioral tests — mock adapter + a fake-DB live-adapter harness,
                      # growth math (WHO LMS), handoff briefing, pediatric report, reminders, stores
 ```
 
-CI (`.github/workflows/ci.yml`) runs typecheck + lint + tests on every push/PR.
+CI (`.github/workflows/ci.yml`) runs typecheck + lint + tests on every push/PR. It does not yet validate formatting, native bundle resolution, dependency advisories, or the pgTAP security suite. The current CI can pass while the Android export fails.
 
 ### 3. Verify the backend security layer (optional, needs local Postgres + pgTAP)
 
@@ -179,16 +181,18 @@ sudo -u postgres ./tests/run-pgtap.sh    # 51 assertions: RLS matrix, invite lif
 
 The full exact path is [`backend/PROVISIONING.md`](./backend/PROVISIONING.md) (~45–60 min), with the founder-facing checklist and Phase A live checks in [`.scratch/launch-readiness/provisioning-checklist.md`](./.scratch/launch-readiness/provisioning-checklist.md):
 
-1. Create the Supabase project (US region) → apply `schema.sql` + `rls.sql`, seed `support_resources`.
+1. Create the Supabase project (US region) → link it and apply `supabase/migrations/`, then seed `support_resources`.
 2. Deploy the three edge functions (set `SUPABASE_SERVICE_ROLE_KEY` secret).
 3. Create the PowerSync instance → connect to Supabase Postgres, deploy `sync-rules.yaml`.
 4. Create the Sentry project → set `EXPO_PUBLIC_SENTRY_DSN`.
 5. Publish the privacy policy → set `EXPO_PUBLIC_PRIVACY_POLICY_URL` (Apple 5.1.1 / Play requirement).
-6. `cp .env.example .env`, fill in the values; install `@powersync/react-native` + `@powersync/op-sqlite`, lift the tsconfig excludes, swap in `supabaseRepository`, call `startSync()` after sign-in.
+6. Complete the remaining `VALIDATION_TASKS.md` Phase 0 work before setting live credentials. The PowerSync bundle/schema slice is complete, but sync lifecycle, onboarding, privacy, security, CI, and external launch gates remain.
 
 Cost: **$0/month** (Supabase Free, PowerSync Cloud Free, Sentry Free, EAS Free). The only paid items are the one-time developer enrollments for beta distribution ($99 Apple + $25 Google).
 
-## Launch readiness (current effort)
+## Launch readiness
+
+The current ordered launch path is [`docs/launch-checklist.md`](./docs/launch-checklist.md). The earlier wayfinder artifacts remain useful background, but their production-readiness assumptions are superseded by the 2026-08-13 validation scan.
 
 Tracked in the wayfinder map `.scratch/launch-readiness/map.md` (tickets + research):
 
@@ -205,8 +209,10 @@ The beta → launch gate (exit criteria) is defined in `.scratch/launch-readines
 |---|---|
 | `alora_updated_prd.md` | The product spec — vision, scope, requirements, architecture, compliance |
 | `CONTEXT.md` | Domain glossary (single context) — shared vocabulary across code and docs |
+| `VALIDATION_TASKS.md` | Current executable health score, release blockers, and remediation tasks |
+| `docs/launch-checklist.md` | Ordered path from blocked build through private beta and store launch |
 | `docs/adr/` | Architecture decision records |
-| `docs/production-readiness-audit.md` | The 6-phase hardening audit (all shipped) |
+| `docs/production-readiness-audit.md` | Historical demo-mode audit, superseded by `VALIDATION_TASKS.md` |
 | `.scratch/alora-mvp/` | The original 14-issue MVP build plan |
 | `.scratch/launch-readiness/` | Wayfinder map, research, roadmap PRD, operating docs, checklists |
 | `docs/agents/` | Agent workflow conventions (issue tracker, triage labels, domain rules) |

@@ -1,12 +1,7 @@
-// @ts-nocheck — this file is excluded from tsconfig until PowerSync deps are
-// installed. When those deps arrive, remove this directive and the exclude entry.
 /**
  * Live data adapter — reads from the on-device PowerSync SQLite (local-first
  * source of truth), which syncs to Supabase Postgres. Same interface as
  * mockRepository, so swapping it in (in useData.ts) needs no screen changes.
- *
- * INERT until you install the PowerSync deps + provision the backend.
- * Then in data/useData.ts the mode resolver switches to this adapter.
  *
  * All 19 AloraRepository methods implemented. Write methods use PowerSync
  * local db.execute() which auto-queues the upload to Supabase Postgres.
@@ -39,6 +34,7 @@ import type {
 
 type EventRow = {
   id: string;
+  family_id: string;
   event_type: string;
   sub_type: string | null;
   created_by: string | null;
@@ -403,7 +399,7 @@ export const supabaseRepository: AloraRepository = {
     const remainder = mins % 60;
     const detail = hours ? `${hours}h ${remainder}m` : `${remainder}m`;
     const now = new Date().toISOString();
-    await db.execute(`UPDATE baby_events SET end_at = ?, detail = ?, updated_at = ? WHERE id = ?`, [
+    await db.execute(`UPDATE baby_events SET end_at = ?, notes = ?, updated_at = ? WHERE id = ?`, [
       stoppedAt,
       detail,
       now,
@@ -418,7 +414,7 @@ export const supabaseRepository: AloraRepository = {
         id,
         event.family_id ?? (await requireFamilyId()),
         uid,
-        JSON.stringify({ end_at: event.end_at, detail: event.detail ?? null }),
+        JSON.stringify({ end_at: event.end_at, notes: event.notes }),
         now,
       ],
     );

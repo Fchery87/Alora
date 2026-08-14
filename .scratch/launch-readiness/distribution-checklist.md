@@ -1,6 +1,8 @@
 # Beta Distribution Setup — Founder Checklist
 
-Status: ready-for-human
+Status: needs-triage
+
+> Blocked by the 2026-08-13 production validation. Do not build or distribute a beta until `VALIDATION_TASKS.md` clears the critical release tasks.
 Source: ticket *Beta distribution setup* (04) — depends on *Provision backend free tier* (03) being live (builds embed the real env). Research backing: *Free-tier infra and distribution research* (verified: Apple $99/yr, TestFlight internal ≤100 testers no review; Play $25 once, internal testing ≤100 no review; EAS Free 30 builds/mo max 15 iOS; Google production gate = 12 testers/14 days — irrelevant to internal testing).
 
 **Cost: $124 one-time ($99 Apple + $25 Google). $0/mo recurring.**

@@ -2,6 +2,8 @@
 
 > **Revision note (June 2026):** This revision updates the original Convex-based plan after a June 2026 standards review and a structured design grilling. Key changes: the backend/sync stack moved to **Supabase + PowerSync** (true local-first durability), auth moved to **Supabase Auth**, conflict handling, private-data isolation, role scope, check-in safety posture, notification scope, launch geography/compliance, and account-deletion semantics are now explicitly resolved. Items marked **[needs sign-off]** require a product or legal owner before release.
 
+> **Private-beta scope reconciliation (August 2026):** The first private beta preserves the implemented caregiver trust, scoped limited-role, growth chart, pediatrician report, and handoff briefing surfaces. These are beta capabilities with no net-new expansion in this readiness program. Public-launch scope remains a separate decision after the beta exit criteria. Any feature not listed as implemented remains deferred.
+
 ## Overview
 
 Alora is a cross-platform mobile application for iOS and Android designed for first-time parents with babies in the 0-9 month stage who need fast baby-care logging, clear caregiver coordination, and lightweight private support for parent wellbeing. The MVP positions Alora as a coordination-first product, with baby-care tracking and caregiver handoff as the primary value and emotional check-ins as a secondary, private, non-clinical feature.
@@ -99,9 +101,9 @@ The MVP explicitly avoids:
 - Provider integrations or healthcare-system workflows.
 - Advanced emotional inference or partner-behavior interpretation.
 - Audio libraries, soothing tools, or microphone-based analysis.
-- More than two caregivers in the base launch experience.
+- More caregivers than the configured family seat limit or the supported owner, partner, and limited roles.
 - Server-triggered shared push notifications (deferred to Phase 2).
-- Growth charts, milestone media, and advanced analytics in v1.
+- Milestone media and advanced analytics beyond the implemented beta surfaces.
 - EU launch / GDPR-K age-verification flows in v1 (US-only launch; see [Security, Privacy, and Compliance](#security-privacy-and-compliance)).
 
 ## MVP Scope
@@ -115,6 +117,7 @@ The MVP explicitly avoids:
 - Create a family unit and one baby profile.
 - Invite one additional caregiver (single-use, time-limited, revocable invite token).
 - Assign Owner and Partner caregiver roles (two seats total).
+- Support a scoped Limited caregiver role in the private beta when enabled by the family trust model.
 
 > First-run actions that inherently require connectivity — sign-up, family creation, and accepting an invite — are online-only. After first setup, logging works fully offline.
 
@@ -161,11 +164,10 @@ The MVP explicitly avoids:
 - Full structured data export (machine-readable JSON of the user's family data + own check-ins).
 - Audit visibility for family membership changes and sensitive settings changes.
 
-### Deferred to Phase 2+
+### Deferred to a later expansion
 
-- Limited caregiver role / third seat (grandparents, sitters).
 - Server-triggered shared push notifications (FCM v1 + APNs + push-token management).
-- Growth charts and developmental milestone features.
+- Growth analytics beyond the implemented chart and report surfaces.
 - Media uploads and memory capture.
 - Mood correlations and trend analytics.
 - More than two caregivers in standard consumer flow.
@@ -247,13 +249,13 @@ Onboarding includes product framing, privacy explanation, family setup, baby pro
 
 The data model supports one family unit containing one or more babies over time, although the MVP UX optimizes for one baby. Permissions are enforced through a dedicated `family_members` table (not embedded role fields) and at the database layer via Postgres RLS.
 
-**MVP ships two roles (two seats total): Owner and Partner caregiver.** The role column is an extensible enum; the Limited caregiver role is designed for but deferred to Phase 2 as a paid third seat.
+**The private beta supports three roles: Owner, Partner caregiver, and Limited caregiver.** The role column is an extensible enum. The Limited role is a scoped caregiver seat for a grandparent or sitter. Family owners may choose a narrower public-launch scope after beta evidence, but every supported role remains server-enforced and security-tested.
 
 | Role | Create logs | Edit logs | Invite caregivers | Manage billing | View check-ins |
 |---|---|---|---|---|---|
 | Owner | Yes | Yes | Yes | Yes | Own entries only |
 | Partner caregiver | Yes | Yes, limited by policy | No | No | Own entries only |
-| _Limited caregiver (Phase 2)_ | _Yes_ | _Limited_ | _No_ | _No_ | _No_ |
+| Limited caregiver (private beta) | Yes | Limited | No | No | No |
 
 Parent check-ins are private by default and excluded from shared family visibility. This is enforced at the sync layer: check-in rows belong to a per-user PowerSync bucket keyed on `user_id` and are never included in the family bucket, so a partner's device does not receive them. RLS double-enforces.
 

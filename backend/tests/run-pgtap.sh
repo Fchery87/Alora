@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Alora — pgTAP RLS/security test runner
 # ---------------------------------------------------------------------------
-# Creates a throwaway database, applies the local auth mock, the production
-# schema + RLS policies, then runs the pgTAP suite (backend/tests/01-rls-security.sql)
+# Creates a throwaway database, applies the local auth mock, the canonical
+# baseline migration, then runs the pgTAP suite (backend/tests/01-rls-security.sql)
 # as the postgres superuser. Identity is simulated per-test via
 # `set local role authenticated` + request.jwt.claims (see the suite header).
 #
@@ -32,10 +32,9 @@ createdb "${DB}"
 echo "==> installing pgTAP"
 "${PSQL[@]}" -d "${DB}" -c "create extension if not exists pgtap;"
 
-echo "==> applying local auth mock + schema + RLS"
-"${PSQL[@]}" -d "${DB}" -f "${HERE}/00-mock-auth.sql"
-"${PSQL[@]}" -d "${DB}" -f "${HERE}/../schema.sql"
-"${PSQL[@]}" -d "${DB}" -f "${HERE}/../rls.sql"
+echo "==> applying local auth mock + canonical baseline migration"
+"${PSQL[@]}" -d "${DB}" -f "${HERE}/../../supabase/tests/support/00-mock-auth.sql"
+"${PSQL[@]}" -d "${DB}" -f "${HERE}/../../supabase/migrations/20260814000100_alora_baseline.sql"
 # Mirror Supabase grants (authenticated has broad table grants; RLS is the
 # fine-grained gate). Applied after the tables exist.
 "${PSQL[@]}" -d "${DB}" -c "grant usage on schema public to authenticated; grant select, insert, update, delete on all tables in schema public to authenticated;"

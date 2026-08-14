@@ -1,12 +1,7 @@
-// @ts-nocheck — inert until @powersync/react-native is installed
 /**
  * PowerSync local SQLite schema — mirrors the synced Postgres tables
- * (see ../../backend/schema.sql). PowerSync adds an implicit `id` text PK
+ * (see ../../supabase/migrations/). PowerSync adds an implicit `id` text PK
  * to every table. Timestamps are stored as ISO text.
- *
- * INERT until you install the PowerSync deps:
- *   npx expo install @powersync/react-native @powersync/op-sqlite
- * (excluded from tsconfig until then — see ../tsconfig.json).
  */
 import { column, Schema, Table } from "@powersync/react-native";
 
@@ -28,7 +23,12 @@ const baby_events = new Table(
   { indexes: { by_family: ["family_id", "start_at"] } },
 );
 
-const families = new Table({ name: column.text, created_by: column.text, created_at: column.text });
+const families = new Table({
+  name: column.text,
+  created_by: column.text,
+  seat_limit: column.integer,
+  created_at: column.text,
+});
 const family_members = new Table({
   family_id: column.text,
   user_id: column.text,
@@ -54,6 +54,29 @@ const reminders = new Table({
   kind: column.text,
   config: column.text,
   enabled: column.integer,
+  created_at: column.text,
+});
+const audit_logs = new Table({
+  family_id: column.text,
+  actor_id: column.text,
+  action: column.text,
+  detail: column.text,
+  created_at: column.text,
+});
+const subscription_status = new Table({
+  family_id: column.text,
+  tier: column.text,
+  updated_at: column.text,
+});
+const invitation_tokens = new Table({
+  family_id: column.text,
+  created_by: column.text,
+  code: column.text,
+  role: column.text,
+  expires_at: column.text,
+  used_at: column.text,
+  used_by: column.text,
+  revoked_at: column.text,
   created_at: column.text,
 });
 const notification_preferences = new Table({
@@ -86,6 +109,9 @@ export const AppSchema = new Schema({
   babies,
   event_edits,
   reminders,
+  audit_logs,
+  subscription_status,
+  invitation_tokens,
   notification_preferences,
   parent_check_ins,
   parent_reflections,

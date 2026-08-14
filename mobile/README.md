@@ -121,22 +121,21 @@ lib/
 The app reads `EXPO_PUBLIC_*` env vars. **With none set it runs in demo mode** —
 mock data, no auth, straight to the tabs. Wiring real data:
 
-1. **Provision** Supabase + PowerSync and apply `../backend` (schema, RLS,
-   sync-rules, Edge Functions). See `../backend/PROVISIONING.md` and the
+1. **Provision** Supabase + PowerSync and apply `../supabase/migrations/`, then
+   deploy the backend sync rules and Edge Functions. See `../backend/PROVISIONING.md` and the
    founder checklist in `.scratch/launch-readiness/provisioning-checklist.md`.
 2. **Set env** — copy `.env.example` → `.env` with your URL/keys. Auth turns on
    automatically: `lib/useAuth.tsx` gates the app, routing to `app/(auth)/sign-in`
    when signed out. Sessions persist in SecureStore (`lib/supabase.ts`) for
    offline cold start.
-3. **Enable sync** — install the native PowerSync deps and lift the tsconfig
-   excludes (the code is all written; nothing else to change):
+3. **Enable sync** — the PowerSync build graph is wired, but the authenticated
+   lifecycle still needs to call `startSync()` before live beta use:
    ```bash
-   npx expo install @powersync/react-native @powersync/op-sqlite
-   # then remove powersync/** + data/supabaseRepository.ts from tsconfig exclude
+   npx expo install @powersync/react-native @op-engineering/op-sqlite
    ```
-   `data/useData.ts` auto-swaps to the live adapter and `startSync()`
-   (`powersync/system.ts`) runs after sign-in. A development build is required
-   (op-sqlite is native):
+   The schema and live adapter are typechecked. Wire `startSync()`
+   (`powersync/system.ts`) to the authenticated lifecycle. A development build
+   is required because OP-SQLite is native:
    ```bash
    npx expo run:android   # or: run:ios  /  eas build --profile development
    ```
@@ -146,12 +145,12 @@ mock data, no auth, straight to the tabs. Wiring real data:
 
 ## Env reference (`mobile/.env.example`)
 
-| Variable | Purpose |
-|---|---|
-| `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL (Project Settings → API) |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon public key (RLS does the rest) |
-| `EXPO_PUBLIC_POWERSYNC_URL` | PowerSync instance endpoint (enables local-first sync) |
-| `EXPO_PUBLIC_SENTRY_DSN` | Sentry DSN — crash reporting (production only) |
+| Variable                         | Purpose                                                           |
+| -------------------------------- | ----------------------------------------------------------------- |
+| `EXPO_PUBLIC_SUPABASE_URL`       | Supabase project URL (Project Settings → API)                     |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY`  | Supabase anon public key (RLS does the rest)                      |
+| `EXPO_PUBLIC_POWERSYNC_URL`      | PowerSync instance endpoint (enables local-first sync)            |
+| `EXPO_PUBLIC_SENTRY_DSN`         | Sentry DSN — crash reporting (production only)                    |
 | `EXPO_PUBLIC_PRIVACY_POLICY_URL` | Public privacy-policy URL — trust screen link + store requirement |
 
 ## Crash reporting (Sentry)
@@ -169,12 +168,12 @@ Ported from the prototype's Framer Motion, driven by the curves/durations in `to
 
 | Motion                 | Where                      | Implementation                                                                        |
 | ---------------------- | -------------------------- | ------------------------------------------------------------------------------------- |
-| Staggered card reveals | Home blocks, Timeline rows | `components/Reveal.tsx` — `FadeInDown.duration(360).delay(40 + index*45)`              |
+| Staggered card reveals | Home blocks, Timeline rows | `components/Reveal.tsx` — `FadeInDown.duration(360).delay(40 + index*45)`             |
 | Breathing orb          | Home hero status           | `components/Motion.tsx` `BreathingOrb` — `withRepeat` yoyo scale+opacity, ease-in-out |
 | "Live" pulse dot       | Home napping label         | `components/Motion.tsx` `LiveDot` — expanding/fading ring loop                        |
 | Spring tab indicator   | Floating tab bar           | `FloatingTabBar` — pill `translateX` via `withSpring` to the active slot              |
 | Interruptible press    | every `PressableScale`     | shared-value `scale` via `withTiming` on the Emil ease-out curve                      |
-| OS reduce-motion       | Reveal, orbs, tab, springs | `usePrefersReducedMotion` + `ReduceMotion.System` — everything falls back to static  |
+| OS reduce-motion       | Reveal, orbs, tab, springs | `usePrefersReducedMotion` + `ReduceMotion.System` — everything falls back to static   |
 
 `babel.config.js` includes the `react-native-worklets/plugin` (Reanimated 4) — it must
 stay last in the plugins list.

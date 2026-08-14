@@ -9,7 +9,7 @@ A private beta running live — provisioned Supabase + PowerSync on free tiers, 
 ## Notes
 
 - **Domain**: Alora, a local-first Expo/React Native baby-care logging app (see `CONTEXT.md` for glossary). Live mode = Supabase auth + PowerSync sync over Expo SQLite; demo mode = same local modules, mock data.
-- **Prior work**: `.scratch/production-readiness/` (implemented) covered tooling, CI, backend security tests, dual-adapter contract tests, UI hardening, observability wiring. Backend code exists (`backend/`) but is **not provisioned** — provisioning is a human gate (`backend/PROVISIONING.md`).
+- **Prior work**: `.scratch/production-readiness/` attempted tooling, CI, backend security tests, adapter contract tests, UI hardening, and observability wiring. A 2026-08-13 executable audit found the remediation incomplete. See `VALIDATION_TASKS.md` before provisioning.
 - **Standing preferences** (charted with the human): destination = launch-ready v1.0 + research-backed roadmap; beta = 3–5 known families on both platforms (accepting one-time $99 Apple Developer + $25 Play Console); $0/month free tiers (Supabase, PowerSync, Sentry, EAS); backend provisioned early (critical path for two-caregiver sync); Sentry-only observability; market research scoped to feature ideas.
 - **Open human gates elsewhere**: crisis-resources copy sign-off and COPPA posture (`.scratch/alora-mvp/` issues 13, 14 — ready-for-human).
 - **Skills**: `grilling` + `domain-modeling` for HITL tickets; `research` subagents for AFK facts; `prototype` when a concrete artifact raises fidelity.

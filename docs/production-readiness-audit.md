@@ -1,5 +1,7 @@
 # Alora — Production Readiness Audit
 
+> **Superseded on 2026-08-13.** This document records the earlier demo-mode audit. References to `backend/schema.sql` and `backend/rls.sql` are historical names from that snapshot. The canonical database source is now `supabase/migrations/`. Several listed infrastructure gaps were later addressed, but the remediation was not complete. The current executable results and release blockers live in [`VALIDATION_TASKS.md`](../VALIDATION_TASKS.md).
+
 > **Date:** Audit performed against the current codebase (demo-mode build).
 > **Scope:** Full six-phase audit — project understanding, implementation review, user-workflow mapping, competitive benchmarking, enterprise-readiness checklist, and final scored report.
 
@@ -34,6 +36,12 @@ The demo-mode experience is **genuinely polished** — well above typical protot
 ---
 
 ## Critical Issues (🔴) — Blocks production launch
+
+> Historical snapshot note: this audit was written before the first remediation
+> slice on 2026-08-13. The PowerSync dependencies, live-path typechecking,
+> Android export, schema alignment, and role-scoped trust buckets are now
+> addressed. The remaining findings below are still open unless superseded by
+> `VALIDATION_TASKS.md`.
 
 ### 1. The core value proposition is not functional: no live backend, incomplete sync adapter
 

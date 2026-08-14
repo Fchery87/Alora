@@ -26,8 +26,29 @@ bucket_definitions:
       - select * from baby_events         where family_id = bucket.id
       - select * from event_edits         where family_id = bucket.id
       - select * from reminders           where family_id = bucket.id
-      - select * from audit_logs          where family_id = bucket.id
       - select * from subscription_status where family_id = bucket.id
+
+  # Trust bucket — audit history is visible to owners and partners, but not to
+  # limited caregivers. The RLS policy applies the same role boundary.
+  trust:
+    parameters: >
+      select family_id as id
+      from family_members
+      where user_id = token_parameters.user_id
+        and role != 'limited'
+    data:
+      - select * from audit_logs where family_id = bucket.id
+
+  # Owner-only bucket — invite tokens must never sync to partners or limited
+  # caregivers. The owner still needs the local table for get/revoke flows.
+  owner_trust:
+    parameters: >
+      select family_id as id
+      from family_members
+      where user_id = token_parameters.user_id
+        and role = 'owner'
+    data:
+      - select * from invitation_tokens where family_id = bucket.id
 
   # -----------------------------------------------------------------------
   # Private bucket — data that belongs to the individual user only.

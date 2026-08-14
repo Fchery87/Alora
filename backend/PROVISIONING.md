@@ -1,5 +1,7 @@
 # Alora — Provisioning Runbook
 
+> **Blocked for beta use.** Complete the critical items in `../VALIDATION_TASKS.md` before following this runbook. Provisioning the current code does not produce a working or safe live build.
+
 Exact, ordered steps to take Alora from demo-mode (mock data) to live local-first
 data. Do these once. Everything the app needs is already written — this just stands
 up the cloud services and flips the switches.
@@ -20,12 +22,15 @@ Estimated time: ~45–60 min.
    - **anon public** key → `EXPO_PUBLIC_SUPABASE_ANON_KEY`
    - **service_role** key → keep secret (Edge Functions only; never in the app).
 
-## 2. Apply the schema + policies (~5 min)
+## 2. Apply the versioned database history (~5 min)
 
-In **SQL Editor**, run in this order (paste the file contents):
+Link the project and apply the committed migration history. Do not paste mutable
+schema copies into the SQL Editor.
 
-1. `schema.sql`  — tables, enums, indexes, triggers.
-2. `rls.sql`     — Row-Level Security policies.
+```bash
+supabase link --project-ref <your-project-ref>
+supabase db push
+```
 
 Then seed the support resources (Check-In screen):
 
@@ -62,6 +67,7 @@ cd backend
 supabase login
 supabase link --project-ref <your-project-ref>
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<service_role key from step 1>
+supabase functions deploy generate-invite
 supabase functions deploy redeem-invite
 supabase functions deploy delete-account
 ```
@@ -105,26 +111,25 @@ of demo-mode tabs. Create an account and confirm you reach the tabs.
 
 ```bash
 cd mobile
-npx expo install @powersync/react-native @powersync/op-sqlite
+npx expo install @powersync/react-native @op-engineering/op-sqlite
 ```
 
-Then:
+The repository already includes the native dependencies, strict TypeScript
+coverage, and the PowerSync/Postgres schema contract. Then:
 
-1. Remove `powersync/**` and `data/supabaseRepository.ts` from the `exclude` list in
-   `tsconfig.json`.
-2. In `data/useData.ts`, swap the active repository:
+1. In `data/useData.ts`, swap the active repository:
    ```ts
    import { supabaseRepository } from "./supabaseRepository";
    export const repository = supabaseRepository;
    ```
-3. Start sync after sign-in — add to `app/(tabs)/_layout.tsx`:
+2. Start sync after sign-in — add to `app/(tabs)/_layout.tsx`:
    ```ts
    import { useEffect } from "react";
    import { startSync } from "../../powersync/system";
    // inside the component:
    useEffect(() => { startSync(); }, []);
    ```
-4. A development build is required (op-sqlite is native):
+3. A development build is required (OP-SQLite is native):
    ```bash
    npx expo run:ios   # or run:android
    ```

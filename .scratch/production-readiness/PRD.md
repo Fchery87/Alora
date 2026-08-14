@@ -1,6 +1,10 @@
 # Production Readiness Remediation — Spec (PRD)
 
-Status: implemented
+Status: needs-triage
+
+> **2026-08-13 validation update:** The PowerSync dependencies, live-path typechecking, Android export, schema alignment, and role-scoped trust buckets are complete. Critical runtime, onboarding, backend, CI, and launch tasks remain. See `VALIDATION_TASKS.md`.
+
+> **August 2026 scope decision:** The private beta includes the implemented scoped caregiver role, growth charts, pediatrician report, and handoff briefing. This document treats them as beta surfaces under hardening, not as permission to add related features. Public-launch scope remains a post-beta decision.
 
 ---
 
@@ -146,9 +150,9 @@ Infrastructure changes (version control setup, CI pipeline, linting) have no cod
 
 ## Out of Scope
 
-- Growth charts, developmental milestones, and analytics (Phase 2 per PRD).
+- New growth charts, developmental milestones, or analytics beyond the implemented beta surfaces.
 - Server-triggered shared push notifications / FCM / APNs (Phase 2 per PRD).
-- A third caregiver seat or limited role (Phase 2 per PRD).
+- Additional caregiver roles or seats beyond the supported owner, partner, and limited roles.
 - EU launch / GDPR-K age verification / EU data residency (US-only launch per PRD).
 - A paid tier or billing integration (no paid tier at MVP launch per PRD).
 - Mood inference, scoring, or automated triggering (explicitly excluded by PRD principle 5).

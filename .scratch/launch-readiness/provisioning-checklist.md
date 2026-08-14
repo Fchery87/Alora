@@ -1,6 +1,8 @@
 # Provision Backend Free Tier — Founder Checklist
 
-Status: ready-for-human
+Status: needs-triage
+
+> Blocked by the 2026-08-13 production validation. Complete the critical tasks in `VALIDATION_TASKS.md` before provisioning.
 Source: ticket *Provision backend free tier* (03) — layers on `backend/PROVISIONING.md` (the full runbook, ~45–60 min) with the deltas since it was written (Phase A seat limits + scoped roles, Sentry, privacy URL). Research backing: *Free-tier infra and distribution research* (verified: Supabase Free 50k MAU, PowerSync Cloud Free 2 GB/mo / 50 concurrent, Sentry Free 5k errors, EAS Free 30 builds/15 iOS).
 
 **Cost: $0/mo recurring.** The only accounts needed: Supabase, PowerSync, Sentry (all free tiers).
@@ -18,7 +20,6 @@ Source: ticket *Provision backend free tier* (03) — layers on `backend/PROVISI
 1. [ ] `supabase login` + `supabase link --project-ref <ref>`
 2. [ ] `supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...`
 3. [ ] Deploy **all three**: `generate-invite`, `redeem-invite`, `delete-account`
-   > Note: `generate-invite` is missing from the runbook's deploy list — deploy it too (it's the role-aware invite issuer used by other clients; the app itself writes invites locally and RLS enforces owner-only).
 
 ## Step 3 — PowerSync instance (PROVISIONING.md §5)
 
@@ -42,7 +43,7 @@ Source: ticket *Provision backend free tier* (03) — layers on `backend/PROVISI
 
 1. [ ] `cd mobile && cp .env.example .env` (fill from steps above) → `npx expo start -c`
 2. [ ] Sign-up route appears instead of demo tabs (auth is now on)
-3. [ ] Install PowerSync deps (`npx expo install @powersync/react-native @powersync/op-sqlite`), lift the tsconfig excludes, point `useData.ts` at `supabaseRepository`, `startSync()` after sign-in — PROVISIONING.md §7
+3. [ ] Wire the authenticated lifecycle to `startSync()` and point `useData.ts` at `supabaseRepository` — dependencies and strict live-path typechecking are already in place; PROVISIONING.md §7
 4. [ ] Run the **tracer test** (PROVISIONING.md §8): two-device invite → airplane-mode offline logging → sync → edit conflict → account deletion transfer
 5. [ ] **Phase A live checks** (new): set a seat limit of 2 → third invite code shows the rejection message on redeem; add a "limited" seat → verify that member sees care events + timeline only (no check-in tab, no trust actions, no audit log); change the limit as the partner (non-owner) → appears in the trust log with actor + old/new values
 
