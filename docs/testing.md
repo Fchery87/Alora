@@ -20,6 +20,10 @@ excluding tests, generated Expo output, and dependencies. Phase 2 records the
 baseline; enforcement thresholds are intentionally deferred until the source
 coverage baseline is stable.
 
+Baseline recorded on 2026-08-14: 10 suites and 86 tests passed; collected
+source coverage is 49.50% lines, 46.46% statements, 45.02% functions, and
+41.71% branches. The report is intentionally descriptive for this phase.
+
 The database security suite is owned by Supabase CLI:
 
 ```bash

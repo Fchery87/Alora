@@ -15,13 +15,13 @@ Alora is a strong demo build. It is not production ready. The Android shipping b
 |---|---|---|
 | `npm run typecheck` | Pass | Exit 0 with the live PowerSync system, schema, and repository included. |
 | `npm run lint` | Pass | Exit 0 with the zero-warning policy. |
-| `npm test` | In progress | Jest Expo now owns the mobile suites, including the PowerSync schema and sync-rule contract tests. The repository suite uses a fake PowerSync database; the complete long-running run remains a Phase 2 verification step. |
+| `npm test` | Pass | Jest Expo runs 10 suites and 86 tests, including the PowerSync schema and sync-rule contract tests. The repository suite uses a fake PowerSync database. Jest reports an app-test open-handle warning after completion, with exit 0. |
 | `npm run format` | Pass after safe fix | `mobile/README.md` was formatted. |
 | Android Expo export | Pass | Expo produces the Android Hermes bundle in `/tmp/alora-export-android`. Native-device build and runtime smoke testing remain. |
 | `npm audit --omit=dev` | Fail | 1 critical, 16 high, and 9 moderate findings. |
 | Expo dependency compatibility | Pass with caveat | Local SDK 54 dependency map reports current versions. Network validation was unavailable. |
 | Backend pgTAP suite | Not run | `supabase test db` is wired to `supabase/tests/01-rls-security.test.sql`, but local Postgres is not listening on port 54322 in this environment. |
-| Coverage | Configured | Jest coverage now instruments application TypeScript through the Expo transform. Phase 2 records the baseline without enforcing a threshold. |
+| Coverage | Pass | Jest instruments application TypeScript through the Expo transform: 49.50% lines, 46.46% statements, 45.02% functions, and 41.71% branches across the collected source baseline. No threshold is enforced yet. |
 
 ## Open tasks
 
