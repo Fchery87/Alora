@@ -68,11 +68,18 @@ invite lifecycle are verified at the database layer with pgTAP:
 supabase test db
 ```
 
-The runner creates a throwaway database, applies `../supabase/tests/support/00-mock-auth.sql` (a
-local stand-in for the Supabase `auth` schema, since plain Postgres has no
-`auth.users`/`auth.uid()`), then the canonical baseline migration, then runs
-`supabase/tests/01-rls-security.test.sql`. Pass with `PGDATABASE=name ./tests/run-pgtap.sh` to
-override the database name.
+The local runner creates a throwaway database, applies
+`../supabase/tests/support/00-mock-auth.sql` (a local stand-in for the
+Supabase `auth` schema), then the canonical baseline migration. Pass with
+`PGDATABASE=name ./tests/run-pgtap.sh` to override the database name.
+
+Docker-free fallback: set `PGLTAP_DATABASE_URL` to a dedicated hosted
+PostgreSQL/Supabase database and run the same script with
+`PGLTAP_REMOTE_CONFIRM=I_UNDERSTAND_THIS_IS_A_DEDICATED_TEST_DATABASE`. The
+remote target must already have the canonical migration. For a disposable
+plain PostgreSQL target, also set `PGLTAP_APPLY_MIGRATION=1` and
+`PGLTAP_USE_AUTH_MOCK=1`. The script uses `psql`, rolls back fixture data, and
+refuses remote mode without the explicit confirmation value.
 
 What the suite covers (51 assertions):
 

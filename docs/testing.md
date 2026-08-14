@@ -35,5 +35,20 @@ after applying the migrations. Docker must be running and the local Supabase
 stack must include pgTAP. The support SQL under `supabase/tests/support/` is
 kept for standalone PostgreSQL fixtures and does not contain production data.
 
+If Docker is not available, use the Docker-free runner with a dedicated hosted
+database and a lightweight `psql` client:
+
+```bash
+PGLTAP_DATABASE_URL='postgresql://…' \
+PGLTAP_REMOTE_CONFIRM=I_UNDERSTAND_THIS_IS_A_DEDICATED_TEST_DATABASE \
+./backend/tests/run-pgtap.sh
+```
+
+The target must already contain the canonical migration. For a disposable
+plain PostgreSQL database, add `PGLTAP_APPLY_MIGRATION=1` and
+`PGLTAP_USE_AUTH_MOCK=1`. Never point this at production: the fixture IDs are
+deterministic, and remote mode is intentionally blocked without the explicit
+confirmation value.
+
 The full release matrix, native journeys, and evidence requirements live in
 the [production-readiness testing matrix](plans/2026-08-14-production-readiness/testing.md).

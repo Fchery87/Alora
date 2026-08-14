@@ -20,7 +20,7 @@ Alora is a strong demo build. It is not production ready. The Android shipping b
 | Android Expo export | Pass | Expo produces the Android Hermes bundle in `/tmp/alora-export-android`. Native-device build and runtime smoke testing remain. |
 | `npm audit --omit=dev` | Fail | 1 critical, 16 high, and 9 moderate findings. |
 | Expo dependency compatibility | Pass with caveat | Local SDK 54 dependency map reports current versions. Network validation was unavailable. |
-| Backend pgTAP suite | Not run | `supabase test db` is wired to `supabase/tests/01-rls-security.test.sql`, but local Postgres is not listening on port 54322 in this environment. |
+| Backend pgTAP suite | Ready with remote fallback | `supabase test db` remains the local-Docker path; `backend/tests/run-pgtap.sh` now supports an explicitly confirmed hosted `PGLTAP_DATABASE_URL` without Docker. This environment still has no reachable Postgres/psql target. |
 | Coverage | Pass | Jest instruments application TypeScript through the Expo transform: 49.50% lines, 46.46% statements, 45.02% functions, and 41.71% branches across the collected source baseline. No threshold is enforced yet. |
 
 ## Open tasks
