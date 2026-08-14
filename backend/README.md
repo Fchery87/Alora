@@ -17,7 +17,7 @@ credentials is the remaining step (it needs your accounts; see
 | `functions/generate-invite/` | Edge Function — issues a single-use, time-limited invite code for a chosen role (`partner` \| `limited`). |
 | `functions/redeem-invite/` | Edge Function — redeems a single-use invite, enforces the **configured seat limit** (not a hard-coded cap), joins the family, consumes the token. |
 | `functions/delete-account/` | Edge Function — transfer-then-scrub account deletion (promote partner / delete sole-owner family / hard-delete PII + private check-ins). |
-| `tests/` | pgTAP suite (51 assertions) — verifies RLS enforcement, the invite lifecycle, seat limits, and privacy isolation at the database layer. |
+| `supabase/tests/01-rls-security.test.sql` | pgTAP suite (51 assertions) — verifies RLS enforcement, the invite lifecycle, seat limits, and privacy isolation at the database layer. |
 
 ## Design decisions encoded
 
@@ -65,13 +65,13 @@ invite lifecycle are verified at the database layer with pgTAP:
 ```bash
 # Needs PostgreSQL + the pgTAP extension for your server version:
 #   apt install postgresql postgresql-client postgresql-<ver>-pgtap
-sudo -u postgres ./tests/run-pgtap.sh
+supabase test db
 ```
 
 The runner creates a throwaway database, applies `../supabase/tests/support/00-mock-auth.sql` (a
 local stand-in for the Supabase `auth` schema, since plain Postgres has no
 `auth.users`/`auth.uid()`), then the canonical baseline migration, then runs
-`tests/01-rls-security.sql`. Pass with `PGDATABASE=name ./run-pgtap.sh` to
+`supabase/tests/01-rls-security.test.sql`. Pass with `PGDATABASE=name ./tests/run-pgtap.sh` to
 override the database name.
 
 What the suite covers (51 assertions):

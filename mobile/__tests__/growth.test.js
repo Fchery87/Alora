@@ -1,31 +1,8 @@
 // Growth percentile math — WHO Child Growth Standards (LMS method).
 // Exercises lib/growth/percentile.ts against the embedded WHO_LMS table.
-const { test } = require("node:test");
+const { test } = require("@jest/globals");
 const assert = require("node:assert/strict");
-const ts = require("typescript");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
-
-// Transpile + load the TS growth modules (same pattern as repository.test.js).
-function loadTsModule(filePath, mockRequire = {}) {
-  const source = readFileSync(filePath, "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const moduleExports = {};
-  const requireMock = (name) => {
-    if (mockRequire[name]) return mockRequire[name];
-    throw new Error(`Unexpected module: ${name}`);
-  };
-  new Function("exports", "require", compiled)(moduleExports, requireMock);
-  return moduleExports;
-}
-
-const wholmsModule = loadTsModule(join(__dirname, "../lib/growth/wholms.ts"));
-const { lmsAt, percentile, valueAtPercentile, zScore, normalCdf } = loadTsModule(
-  join(__dirname, "../lib/growth/percentile.ts"),
-  { "./wholms": wholmsModule },
-);
+const { lmsAt, percentile, valueAtPercentile, zScore, normalCdf } = require("../lib/growth/percentile");
 
 test("lmsAt returns the WHO birth median at 0 months", () => {
   assert.ok(Math.abs(lmsAt("weight", "boy", 0).M - 3.3464) < 1e-6);

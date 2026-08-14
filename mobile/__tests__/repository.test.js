@@ -10,44 +10,22 @@
  *                          shapes, same row semantics)
  *
  * The PowerSync native modules are NOT installed in CI (they arrive with
- * backend provisioning), so both adapters are loaded via the transpile-in-Node
- * pattern used by the other suites, with native deps mocked.
+ * backend provisioning), so both adapters use Jest module mocks for native
+ * dependencies while the real TypeScript modules go through Expo's transform.
  *
  * Also tests standalone functions like detectDuplicates.
  */
 const assert = require("node:assert/strict");
-const test = require("node:test");
-const ts = require("typescript");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
-
-// ---------------------------------------------------------------------------
-// Helpers: transpile + load a TypeScript module
-// ---------------------------------------------------------------------------
-function loadTsModule(filePath, mockRequire = {}) {
-  const source = readFileSync(filePath, "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const moduleExports = {};
-  const requireMock = (name) => {
-    if (mockRequire[name]) return mockRequire[name];
-    throw new Error(`Unexpected module: ${name}`);
-  };
-  new Function("exports", "require", compiled)(moduleExports, requireMock);
-  return moduleExports;
-}
+const { jest, test } = require("@jest/globals");
 
 // ---------------------------------------------------------------------------
 // Load the repository module (just the interface + helpers, not impl)
 // ---------------------------------------------------------------------------
-const repoModule = loadTsModule(join(__dirname, "../data/repository.ts"));
+const repoModule = require("../data/repository");
 
 // ---------------------------------------------------------------------------
 // Load mock.ts data module first (needed by mockRepository)
 // ---------------------------------------------------------------------------
-const mockModule = loadTsModule(join(__dirname, "../data/mock.ts"));
-
 // ---------------------------------------------------------------------------
 // mockRepository, with local store mocks
 // ---------------------------------------------------------------------------
@@ -57,9 +35,7 @@ function loadMockRepository() {
   const reminderPrefs = { current: [] };
 
   const storeMocks = {
-    "./repository": repoModule,
-    "./mock": mockModule,
-    "./localCareEventStore": {
+    "../data/localCareEventStore": {
       getStoredCareEvents: async () => {
         const rows = [];
         for (const [, val] of careEvents) rows.push({ ...val });
@@ -69,7 +45,7 @@ function loadMockRepository() {
         careEvents.set(event.id, { ...event, deletedAt: deletedAt || null });
       },
     },
-    "./localSleepTimerStore": {
+    "../data/localSleepTimerStore": {
       getStoredSleepTimer: async () => sleepTimer.current,
       saveStoredSleepTimer: async (t) => {
         sleepTimer.current = t;
@@ -78,7 +54,7 @@ function loadMockRepository() {
         sleepTimer.current = null;
       },
     },
-    "./localReminderPreferenceStore": {
+    "../data/localReminderPreferenceStore": {
       getStoredReminderPreferences: async () => [...reminderPrefs.current],
       saveStoredReminderPreference: async (pref) => {
         const idx = reminderPrefs.current.findIndex((p) => p.kind === pref.kind);
@@ -88,7 +64,12 @@ function loadMockRepository() {
     },
   };
 
-  return loadTsModule(join(__dirname, "../data/mockRepository.ts"), storeMocks).mockRepository;
+  for (const [moduleName, mock] of Object.entries(storeMocks)) jest.doMock(moduleName, () => mock);
+  let repository;
+  jest.isolateModules(() => {
+    repository = require("../data/mockRepository").mockRepository;
+  });
+  return repository;
 }
 
 // ---------------------------------------------------------------------------
@@ -343,12 +324,13 @@ function loadSupabaseRepository() {
     },
   });
 
-  return loadTsModule(join(__dirname, "../data/supabaseRepository.ts"), {
-    "../powersync/system": { db },
-    "../lib/supabase": { getSupabase },
-    "./repository": repoModule,
-    "./mock": {},
-  }).supabaseRepository;
+  jest.doMock("../powersync/system", () => ({ db }));
+  jest.doMock("../lib/supabase", () => ({ getSupabase }));
+  let repository;
+  jest.isolateModules(() => {
+    repository = require("../data/supabaseRepository").supabaseRepository;
+  });
+  return repository;
 }
 
 // ---------------------------------------------------------------------------

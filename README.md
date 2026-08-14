@@ -126,17 +126,18 @@ Target product principles:
 │   ├── lib/                    # Pure domain logic (growth percentiles, handoff, pediatric report, …)
 │   ├── powersync/              # SQLite schema + sync engine wiring
 │   ├── theme/ components/      # "Warm Editorial" design system
-│   ├── __tests__/              # Node test suite (79 tests)
+│   ├── __tests__/              # Jest Expo unit and React Native contract tests
 │   ├── eas.json                # EAS build profiles (development / preview / production)
 │   └── .env.example            # All EXPO_PUBLIC_* variables documented
 ├── backend/                    # Supabase Edge Functions, sync rules, and test runner
 │   ├── sync-rules.yaml         # PowerSync bucket definitions
 │   ├── functions/              # Edge functions: generate-invite, redeem-invite, delete-account
-│   ├── tests/                  # pgTAP suite and transitional local runner
+│   ├── tests/                  # Transitional standalone PostgreSQL runner
 │   ├── PROVISIONING.md         # The provisioning runbook
 │   └── README.md               # Backend specifics
 ├── supabase/                   # Canonical database migrations and CLI config
 │   ├── migrations/             # Versioned schema and RLS history
+│   ├── tests/                   # Canonical Supabase CLI pgTAP suite
 │   ├── tests/support/          # Local auth support for database tests
 │   └── config.toml             # Supabase CLI project configuration
 ├── prototype/                  # The original web design prototype (Vite + Framer Motion) —
@@ -170,11 +171,10 @@ npm test             # 79 behavioral tests — mock adapter + a fake-DB live-ada
 
 CI (`.github/workflows/ci.yml`) runs typecheck + lint + tests on every push/PR. It does not yet validate formatting, native bundle resolution, dependency advisories, or the pgTAP security suite. The current CI can pass while the Android export fails.
 
-### 3. Verify the backend security layer (optional, needs local Postgres + pgTAP)
+### 3. Verify the backend security layer (optional, needs Supabase CLI + local Docker)
 
 ```bash
-cd backend
-sudo -u postgres ./tests/run-pgtap.sh    # 51 assertions: RLS matrix, invite lifecycle, seat caps, privacy isolation
+supabase test db                         # 51 assertions: RLS matrix, invite lifecycle, seat caps, privacy isolation
 ```
 
 ### 4. Go live (when you're ready)

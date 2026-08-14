@@ -1,24 +1,7 @@
 // Shift-handoff briefing computation (lib/handoff.ts).
-const { test } = require("node:test");
+const { test } = require("@jest/globals");
 const assert = require("node:assert/strict");
-const ts = require("typescript");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
-
-function loadTsModule(filePath, mockRequire = {}) {
-  const source = readFileSync(filePath, "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const moduleExports = {};
-  new Function("exports", "require", compiled)(moduleExports, (name) => {
-    if (mockRequire[name]) return mockRequire[name];
-    throw new Error(`Unexpected module: ${name}`);
-  });
-  return moduleExports;
-}
-
-const { buildHandoffBrief } = loadTsModule(join(__dirname, "../lib/handoff.ts"));
+const { buildHandoffBrief } = require("../lib/handoff");
 
 const now = new Date("2026-08-07T12:00:00Z");
 const ev = (id, type, atMinutesAgo, extra = {}) => ({

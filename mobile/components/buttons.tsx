@@ -30,6 +30,8 @@ export function PrimaryButton({
   const bg = theme.color[color === "accent" ? "accent" : color];
   return (
     <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       disabled={disabled || loading}
       style={[
@@ -74,6 +76,8 @@ export function SecondaryButton({
   const theme = useTheme();
   return (
     <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       disabled={disabled}
       style={[
@@ -115,6 +119,8 @@ export function ChoiceChip({
   const theme = useTheme();
   return (
     <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       style={[
         {

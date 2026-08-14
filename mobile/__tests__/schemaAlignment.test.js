@@ -6,34 +6,31 @@
  * runner as well as on an Expo development machine.
  */
 const assert = require("node:assert/strict");
-const test = require("node:test");
-const ts = require("typescript");
+const { jest, test } = require("@jest/globals");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
+const mockPowerSync = {
+  column: { text: "text", real: "real", integer: "integer" },
+  Table: class Table {
+    constructor(fields, options) {
+      this.fields = fields;
+      this.options = options;
+    }
+  },
+  Schema: class Schema {
+    constructor(tables) {
+      this.tables = tables;
+    }
+  },
+};
+
+jest.mock("@powersync/react-native", () => mockPowerSync);
+
 function loadSchema() {
-  const source = readFileSync(join(__dirname, "../powersync/schema.ts"), "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const moduleExports = {};
-  const powerSyncMock = {
-    column: { text: "text", real: "real", integer: "integer" },
-    Table: class Table {
-      constructor(fields, options) {
-        this.fields = fields;
-        this.options = options;
-      }
-    },
-    Schema: class Schema {
-      constructor(tables) {
-        this.tables = tables;
-      }
-    },
-  };
-  new Function("exports", "require", compiled)(moduleExports, (name) => {
-    if (name === "@powersync/react-native") return powerSyncMock;
-    throw new Error(`Unexpected module: ${name}`);
+  let moduleExports;
+  jest.isolateModules(() => {
+    moduleExports = require("../powersync/schema");
   });
   return moduleExports.AppSchema;
 }

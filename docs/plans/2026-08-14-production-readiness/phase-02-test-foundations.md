@@ -62,6 +62,11 @@ Use `supabase test db` so each test is transaction-isolated and TAP failures ret
 
 Completion criterion. A deliberately failing pgTAP assertion fails the command, and a subsequent clean run starts from an unchanged database.
 
+Current state. The suite is now at `supabase/tests/01-rls-security.test.sql` and
+the canonical command is wired. The standalone runner remains as a fallback
+until a local Supabase Postgres stack is available to verify failure
+propagation and cleanup end to end.
+
 ### Task 4. Record the baseline without gaming it
 
 **Files:**

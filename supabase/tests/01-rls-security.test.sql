@@ -18,7 +18,7 @@
 --      no private check-ins, no audit log, no invite issue, no seat-limit
 --      changes — enforced by RLS even though the client hides the UI.
 --
--- Run via tests/run-pgtap.sh (applies fixtures + schema + RLS, then runs
+-- Run via `supabase test db` (applies migrations + test support, then runs
 -- this file). Requires the pgTAP extension.
 --
 -- Identity model: RLS evaluates for the `authenticated` role with

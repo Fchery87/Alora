@@ -37,6 +37,7 @@ module.exports = [
         require: "readonly",
         module: "readonly",
         process: "readonly",
+        jest: "readonly",
       },
     },
   },

@@ -1,24 +1,7 @@
 // Pediatrician-visit PDF report builder — pure HTML from a DataExport.
-const { test } = require("node:test");
+const { test } = require("@jest/globals");
 const assert = require("node:assert/strict");
-const ts = require("typescript");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
-
-function loadTsModule(filePath, mockRequire = {}) {
-  const source = readFileSync(filePath, "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const moduleExports = {};
-  new Function("exports", "require", compiled)(moduleExports, (name) => {
-    if (mockRequire[name]) return mockRequire[name];
-    throw new Error(`Unexpected module: ${name}`);
-  });
-  return moduleExports;
-}
-
-const { buildPediatricReportHTML } = loadTsModule(join(__dirname, "../lib/pediatricReport.ts"));
+const { buildPediatricReportHTML } = require("../lib/pediatricReport");
 
 const base = new Date("2026-08-01T12:00:00Z");
 const fixture = {

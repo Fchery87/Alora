@@ -1,16 +1,6 @@
 const assert = require("node:assert/strict");
-const test = require("node:test");
-const ts = require("typescript");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
-
-const source = readFileSync(join(__dirname, "../lib/reminderSchedule.ts"), "utf8");
-const compiled = ts.transpileModule(source, {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-}).outputText;
-const moduleExports = {};
-new Function("exports", compiled)(moduleExports);
-const { reminderSchedulePlan, reminderSchedulePlans } = moduleExports;
+const { test } = require("@jest/globals");
+const { reminderSchedulePlan, reminderSchedulePlans } = require("../lib/reminderSchedule");
 
 test("uses repeating triggers when quiet hours are off", () => {
   assert.deepEqual(reminderSchedulePlan("feed", false), { kind: "timeInterval", seconds: 10800, repeats: true });

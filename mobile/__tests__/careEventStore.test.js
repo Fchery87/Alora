@@ -1,8 +1,10 @@
 const assert = require("node:assert/strict");
-const test = require("node:test");
-const ts = require("typescript");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
+const { jest, test } = require("@jest/globals");
+
+let mockDb;
+jest.mock("expo-sqlite", () => ({
+  openDatabaseAsync: async () => mockDb,
+}));
 
 function loadStore(initialRows = []) {
   const rows = new Map(initialRows.map((row) => [row.id, { ...row }]));
@@ -25,16 +27,11 @@ function loadStore(initialRows = []) {
       });
     },
   };
-  const source = readFileSync(join(__dirname, "../data/localCareEventStore.ts"), "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const moduleExports = {};
-  const requireMock = (name) => {
-    if (name === "expo-sqlite") return { openDatabaseAsync: async () => db };
-    throw new Error(`Unexpected module: ${name}`);
-  };
-  new Function("exports", "require", compiled)(moduleExports, requireMock);
+  mockDb = db;
+  let moduleExports;
+  jest.isolateModules(() => {
+    moduleExports = require("../data/localCareEventStore");
+  });
   return moduleExports;
 }
 

@@ -15,13 +15,13 @@ Alora is a strong demo build. It is not production ready. The Android shipping b
 |---|---|---|
 | `npm run typecheck` | Pass | Exit 0 with the live PowerSync system, schema, and repository included. |
 | `npm run lint` | Pass | Exit 0 with the zero-warning policy. |
-| `npm test` | Pass | Seven test files pass, including the PowerSync schema and sync-rule contract tests. The repository suite uses a fake PowerSync database. |
+| `npm test` | In progress | Jest Expo now owns the mobile suites, including the PowerSync schema and sync-rule contract tests. The repository suite uses a fake PowerSync database; the complete long-running run remains a Phase 2 verification step. |
 | `npm run format` | Pass after safe fix | `mobile/README.md` was formatted. |
 | Android Expo export | Pass | Expo produces the Android Hermes bundle in `/tmp/alora-export-android`. Native-device build and runtime smoke testing remain. |
 | `npm audit --omit=dev` | Fail | 1 critical, 16 high, and 9 moderate findings. |
 | Expo dependency compatibility | Pass with caveat | Local SDK 54 dependency map reports current versions. Network validation was unavailable. |
-| Backend pgTAP suite | Not run | PostgreSQL and pgTAP are unavailable in this environment. The suite is not in CI. |
-| Coverage | Invalid | Node reports 100% with no files because TypeScript is transpiled inside the tests and is not instrumented. |
+| Backend pgTAP suite | Not run | `supabase test db` is wired to `supabase/tests/01-rls-security.test.sql`, but local Postgres is not listening on port 54322 in this environment. |
+| Coverage | Configured | Jest coverage now instruments application TypeScript through the Expo transform. Phase 2 records the baseline without enforcing a threshold. |
 
 ## Open tasks
 
@@ -36,14 +36,14 @@ Alora is a strong demo build. It is not production ready. The Android shipping b
 | VAL-007 | todo | critical | security | global | `backend/functions/delete-account/index.ts` | Account deletion mutates ownership before auth deletion and ignores intermediate errors. |
 | VAL-008 | todo | critical | security | global | `mobile/package-lock.json` | The production dependency tree has a critical advisory. |
 | VAL-009 | todo | high | ci | global | `.github/workflows/ci.yml` | CI can be green while the app cannot bundle. |
-| VAL-010 | todo | high | test | global | `backend/tests/run-pgtap.sh` | Backend security tests are not automated and the runner does not perform its advertised cleanup. |
+| VAL-010 | in progress | high | test | global | `supabase/tests/01-rls-security.test.sql` | The 51-assertion security matrix is now owned by the Supabase CLI; local execution is blocked until the Supabase Postgres stack is running. |
 | VAL-011 | in progress | high | docs | global | `README.md`, `alora_updated_prd.md`, `.scratch/production-readiness` | Documentation now records the private-beta scope; migration and provisioning references still need canonical-path updates. |
-| VAL-012 | todo | high | accessibility | global | `mobile/components`, `mobile/app` | Interactive controls have no explicit accessibility roles, labels, or states. |
+| VAL-012 | in progress | high | accessibility | global | `mobile/components/buttons.tsx`, `mobile/__tests__/app/accessibility-primitives.test.tsx` | Shared buttons and chips now expose explicit button roles and labels; screen-wide role/state coverage remains. |
 | VAL-013 | todo | high | release | global | `mobile/app.json`, `mobile/eas.json` | Store assets, EAS project linkage, privacy publication, and release metadata are incomplete. |
 | VAL-014 | todo | high | data-integrity | global | `supabase/migrations/` | Database invariants allow cross-family references and need composite ownership constraints. |
 | VAL-015 | todo | high | correctness | global | `mobile/data/supabaseRepository.ts` | Live sleep stop, sync status, and duplicate dismissal do not satisfy the repository contract. |
 | VAL-016 | todo | medium | reliability | global | `mobile/app/_layout.tsx`, `mobile/lib/useAuth.tsx` | Font and session restoration failures can leave the app on a blank or permanent loading screen. |
-| VAL-017 | todo | medium | coverage | global | `mobile/__tests__` | There is no credible coverage measurement or real PowerSync integration test. |
+| VAL-017 | in progress | medium | coverage | global | `mobile/jest.config.js`, `mobile/__tests__` | Jest Expo now instruments source TypeScript and renders React Native behavior; the measured baseline and native PowerSync integration remain. |
 
 ## Task details
 

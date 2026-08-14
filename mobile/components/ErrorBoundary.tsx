@@ -1,9 +1,6 @@
 import { Component, type ReactNode } from "react";
-import { View, StyleSheet } from "react-native";
+import { Pressable, Text, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useTheme } from "../theme/ThemeProvider";
-import { AppText, PressableScale } from "./Themed";
 import { captureError } from "../lib/crashReporting";
 
 interface Props {
@@ -43,60 +40,38 @@ export class ErrorBoundaryClass extends Component<Props, State> {
 }
 
 function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
-  const theme = useTheme();
-  const router = useRouter();
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.color.bg }}>
-      <View style={{ flex: 1, paddingHorizontal: 26, justifyContent: "center", alignItems: "center" }}>
-        <AppText display variant="hero" weight="medium" style={{ fontSize: 44, marginBottom: 12 }}>
-          Alora
-        </AppText>
-        <AppText variant="heading" weight="bold" style={{ marginBottom: 8 }}>
-          Something went wrong
-        </AppText>
-        <AppText variant="body" color="inkSoft" style={{ textAlign: "center", marginBottom: 6 }}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.content}>
+        <Text style={styles.brand}>Alora</Text>
+        <Text style={styles.heading}>Something went wrong</Text>
+        <Text style={styles.body}>
           The app encountered an unexpected error. Your data is safe — it lives on your device.
-        </AppText>
-        {error && (
-          <AppText variant="caption" color="inkFaint" style={{ textAlign: "center", marginBottom: 24 }}>
-            {error.message}
-          </AppText>
-        )}
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <PressableScale
+        </Text>
+        {error && <Text style={styles.error}>{error.message}</Text>}
+        <View style={styles.actions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Try again"
             onPress={onReset}
-            style={{
-              paddingVertical: 14,
-              paddingHorizontal: 24,
-              borderRadius: theme.radius.lg,
-              backgroundColor: theme.color.accent,
-            }}
+            style={styles.primaryButton}
           >
-            <AppText variant="body" weight="bold" style={{ color: theme.color.onAccent }}>
-              Try again
-            </AppText>
-          </PressableScale>
-          <PressableScale
-            onPress={() => {
-              onReset();
-              router.replace("/");
-            }}
-            style={{
-              paddingVertical: 14,
-              paddingHorizontal: 24,
-              borderRadius: theme.radius.lg,
-              backgroundColor: theme.color.surface,
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: theme.color.line,
-            }}
-          >
-            <AppText variant="body" weight="bold" color="inkSoft">
-              Go home
-            </AppText>
-          </PressableScale>
+            <Text style={styles.primaryButtonText}>Try again</Text>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: "#FAF8F5" },
+  content: { flex: 1, paddingHorizontal: 26, justifyContent: "center", alignItems: "center" },
+  brand: { color: "#141113", fontSize: 44, fontWeight: "500", marginBottom: 12 },
+  heading: { color: "#141113", fontSize: 22, fontWeight: "700", marginBottom: 8 },
+  body: { color: "#5F5759", textAlign: "center", marginBottom: 6 },
+  error: { color: "#8A8081", textAlign: "center", marginBottom: 24 },
+  actions: { flexDirection: "row", gap: 12 },
+  primaryButton: { paddingVertical: 14, paddingHorizontal: 24, borderRadius: 16, backgroundColor: "#6A5AE0" },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+});

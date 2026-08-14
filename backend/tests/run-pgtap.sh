@@ -2,7 +2,7 @@
 # Alora — pgTAP RLS/security test runner
 # ---------------------------------------------------------------------------
 # Creates a throwaway database, applies the local auth mock, the canonical
-# baseline migration, then runs the pgTAP suite (backend/tests/01-rls-security.sql)
+# baseline migration, then runs the pgTAP suite (supabase/tests/01-rls-security.test.sql)
 # as the postgres superuser. Identity is simulated per-test via
 # `set local role authenticated` + request.jwt.claims (see the suite header).
 #
@@ -44,6 +44,6 @@ echo "==> applying local auth mock + canonical baseline migration"
 "${PSQL[@]}" -d "${DB}" -c "revoke update on families from authenticated; grant update (seat_limit) on families to authenticated;"
 
 echo "==> running pgTAP suite"
-psql -X -q -d "${DB}" -v ON_ERROR_STOP=0 -f "${HERE}/01-rls-security.sql"
+psql -X -q -d "${DB}" -v ON_ERROR_STOP=0 -f "${HERE}/../../supabase/tests/01-rls-security.test.sql"
 
 echo "==> cleanup: dropdb --if-exists ${DB}"
