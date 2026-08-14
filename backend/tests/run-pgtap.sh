@@ -58,6 +58,8 @@ run_remote() {
   PSQL_ARGS=("$REMOTE_URL" -X -q)
   echo "==> running pgTAP against the explicitly confirmed remote test database"
   echo "    schema migration: ${PGLTAP_APPLY_MIGRATION:-0}"
+  echo "==> enabling pgTAP"
+  psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=1 -c "create extension if not exists pgtap;"
 
   if [[ "${PGLTAP_APPLY_MIGRATION:-0}" == "1" ]]; then
     if [[ "${PGLTAP_USE_AUTH_MOCK:-0}" == "1" ]]; then
