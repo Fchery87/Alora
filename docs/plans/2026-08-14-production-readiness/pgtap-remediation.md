@@ -19,6 +19,12 @@ The follow-up migration `20260814000300_harden_owner_first_rls.sql` also require
 the inserted `user_id` to equal `auth.uid()`, preventing a creator's client from
 assigning the first owner seat to another user.
 
+Migration `20260814000400_remove_direct_membership_management.sql` removes the
+older `members_owner_manage` `FOR ALL` policy. Its INSERT arm otherwise ORs with
+the bootstrap policy and lets an existing owner insert arbitrary memberships,
+including additional owners. Membership changes remain server-side trust
+operations; the first-owner bootstrap is the sole authenticated client insert.
+
 ### Task 2: Correct pgTAP behavior assertions
 
 **Files:**
