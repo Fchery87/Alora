@@ -81,6 +81,12 @@ plain PostgreSQL target, also set `PGLTAP_APPLY_MIGRATION=1` and
 `PGLTAP_USE_AUTH_MOCK=1`. The script uses `psql`, rolls back fixture data, and
 refuses remote mode without the explicit confirmation value.
 
+The runner's cleanup behavior has a database-free regression check:
+
+```bash
+bash ./tests/run-pgtap-cleanup.test.sh
+```
+
 What the suite covers (52 assertions):
 
 - A non-member cannot read family events, families, memberships, invite

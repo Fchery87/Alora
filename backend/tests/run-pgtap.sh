@@ -36,7 +36,6 @@ check_tap_result() {
 run_suite() {
   local output_file
   output_file="$(mktemp)"
-  trap 'rm -f -- "$output_file"' RETURN
 
   set +e
   psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=0 -f "$TEST_FILE" 2>&1 | tee "$output_file"
@@ -45,9 +44,14 @@ run_suite() {
 
   if ((psql_status != 0)); then
     echo "ERROR: psql exited with status ${psql_status}." >&2
+    rm -f -- "$output_file"
     return "$psql_status"
   fi
-  check_tap_result "$output_file"
+  if ! check_tap_result "$output_file"; then
+    rm -f -- "$output_file"
+    return 1
+  fi
+  rm -f -- "$output_file"
 }
 
 apply_migrations() {

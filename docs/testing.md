@@ -50,5 +50,11 @@ plain PostgreSQL database, add `PGLTAP_APPLY_MIGRATION=1` and
 deterministic, and remote mode is intentionally blocked without the explicit
 confirmation value.
 
+The runner's database-free cleanup regression test is:
+
+```bash
+bash backend/tests/run-pgtap-cleanup.test.sh
+```
+
 The full release matrix, native journeys, and evidence requirements live in
 the [production-readiness testing matrix](plans/2026-08-14-production-readiness/testing.md).
