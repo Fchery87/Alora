@@ -6,7 +6,7 @@ reaches each device, and the Edge Functions are thin authenticated transports
 over database transactions.
 
 Release status is code-complete for the current beta contract. It is not yet a
-launch approval: the five 2026-08-15 migrations still need to be applied to the
+launch approval: the six 2026-08-15 migrations still need to be applied to the
 linked Supabase project, the hosted 74-assertion suite must pass, and PowerSync
 and device journeys remain human-gated.
 

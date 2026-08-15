@@ -59,4 +59,4 @@ bash -n backend/tests/run-pgtap.sh
 git diff --check
 ```
 
-Review the SQL diff and confirm no production reset or destructive operation is introduced. After review, push migrations `20260815000100` through `20260815000500` with `supabase db push`, then rerun the dedicated remote suite with the existing `PGLTAP_DATABASE_URL`, `PGPASSWORD`, and confirmation token.
+Review the SQL diff and confirm no production reset or destructive operation is introduced. After review, push migrations `20260815000100` through `20260815000600` with `supabase db push`, then rerun the dedicated remote suite with the existing `PGLTAP_DATABASE_URL`, `PGPASSWORD`, and confirmation token.
