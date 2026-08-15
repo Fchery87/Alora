@@ -30,6 +30,7 @@ import { buildHandoffBrief } from "../../lib/handoff";
 import { getStoredHandoff, saveStoredHandoff } from "../../data/localHandoffStore";
 import { Reveal } from "../../components/Reveal";
 import { BreathingOrb, LiveDot } from "../../components/Motion";
+import { useSyncProjection } from "../../powersync/useSyncProjection";
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -45,6 +46,7 @@ export default function HomeScreen() {
   const activity = useRecentActivity(3);
   const timeline = useTimeline();
   const members = useFamilyMembers();
+  const sync = useSyncProjection();
   const [handoffMarker, setHandoffMarker] = useState<Date | null | undefined>(undefined);
   const selfName = members.status === "ready" ? members.data.find((m) => m.isSelf)?.displayName : undefined;
   const greetingName = selfName ?? "there";
@@ -345,13 +347,15 @@ export default function HomeScreen() {
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, marginTop: 22 }}>
         <CloudIcon size={14} color={theme.color.inkFaint} />
         <AppText variant="caption" color="inkFaint">
-          {timeline.status === "ready"
-            ? (() => {
-                const pending = timeline.data.filter((e) => e.sync === "pending").length;
-                if (pending === 0) return "All changes synced";
-                return `${pending} change${pending > 1 ? "s" : ""} syncing`;
-              })()
-            : "Checking sync status..."}
+          {sync.error
+            ? sync.error
+            : sync.pendingCount > 0
+              ? `${sync.pendingCount} change${sync.pendingCount > 1 ? "s" : ""} waiting to sync`
+              : sync.connection === "offline"
+                ? "Changes are saved on this device"
+                : sync.initialSyncComplete
+                  ? "All changes synced"
+                  : "Checking sync status..."}
         </AppText>
       </View>
     </ScreenScroll>

@@ -25,6 +25,7 @@ bucket_definitions:
       # the client filters on deleted_at for display.
       - select * from baby_events         where family_id = bucket.id
       - select * from event_edits         where family_id = bucket.id
+      - select * from event_duplicate_resolutions where family_id = bucket.id
       - select * from reminders           where family_id = bucket.id
       - select * from subscription_status where family_id = bucket.id
 

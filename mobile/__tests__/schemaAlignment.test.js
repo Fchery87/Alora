@@ -41,6 +41,7 @@ test("PowerSync schema covers every family and global sync-rule table", () => {
     "audit_logs",
     "babies",
     "baby_events",
+    "event_duplicate_resolutions",
     "event_edits",
     "families",
     "family_members",
@@ -66,6 +67,8 @@ test("PowerSync schema preserves backend columns used by live repository queries
   assert.equal(schema.tables.invitation_tokens.fields.code, "text");
   assert.equal(schema.tables.invitation_tokens.fields.role, "text");
   assert.equal(schema.tables.invitation_tokens.fields.expires_at, "text");
+  assert.equal(schema.tables.parent_check_ins.fields.family_id, "text");
+  assert.equal(schema.tables.parent_reflections.fields.family_id, "text");
 });
 
 test("sync rules keep trust data out of limited caregiver buckets", () => {

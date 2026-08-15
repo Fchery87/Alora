@@ -2,6 +2,7 @@ import { Linking, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
+import { CapabilityGate } from "../components/CapabilityGate";
 import { AppText, PressableScale, Skeleton } from "../components/Themed";
 import { Reveal } from "../components/Reveal";
 import { sinceLabel } from "../data/mock";
@@ -11,6 +12,18 @@ import { env } from "../config/env";
 import type { ColorTokens } from "../theme/tokens";
 
 export default function TrustScreen() {
+  return (
+    <CapabilityGate
+      allowed="canViewAudit"
+      title="Trust details are restricted"
+      message="Trust history is available to owner and partner caregivers."
+    >
+      <TrustContent />
+    </CapabilityGate>
+  );
+}
+
+function TrustContent() {
   const theme = useTheme();
   const resources = useSupportResources();
   const auditLog = useAuditLog();

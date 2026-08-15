@@ -12,7 +12,13 @@
 
 ## Context
 
-The first remediation slice restored the PowerSync build graph, strict TypeScript coverage, Android export, and structural schema alignment. The remaining blockers are coupled. An authenticated app can still fall back to demo data. New users cannot create the first family. Invite and deletion workflows cross several non-atomic requests. Limited-role privacy is incomplete. The current tests cannot prove native lifecycle, real PowerSync behavior, or UI accessibility.
+The implementation slices have now restored the PowerSync build graph, strict
+TypeScript coverage, runtime lifecycle, transactional onboarding and trust
+operations, role privacy, duplicate persistence, and release CI. The remaining
+gates are evidence-producing operations: apply the additive migrations to the
+hosted project, run the 74-assertion suite, provision PowerSync, complete native
+two-device and accessibility checks, resolve dependency risk, and obtain legal
+and store approval.
 
 This plan treats `VALIDATION_TASKS.md` as a dated hypothesis ledger. Every blocker closes only when current automated and runtime evidence exists.
 
@@ -97,12 +103,11 @@ The complete verification matrix lives in [testing.md](testing.md).
 
 ## Program gates
 
-1. Phase 2 must prove tests fail correctly before feature work begins.
-2. Phase 4 must land before any privileged RPC relies on family or actor invariants.
-3. Phase 6 must land before invite deep links or limited-role device tests are accepted.
-4. Phases 7 through 9 must pass before CI is promoted to the release gate.
-5. Phase 11 must be green before EAS staging builds begin.
-6. Phase 12 requires human-owned service accounts, secrets, legal approval, and physical devices.
+1. Hosted migrations and pgTAP must pass before a live beta account is created.
+2. PowerSync must be provisioned before accepting two-device sync evidence.
+3. Native accessibility and deletion checks must pass before store packaging is approved.
+4. Phase 11 must be green before EAS staging builds begin.
+5. Phase 12 requires human-owned service accounts, secrets, legal approval, and physical devices.
 
 ## Throughput checkpoint
 
@@ -161,6 +166,11 @@ Reference current official guidance when implementing test infrastructure. Use [
 
 ## Definition of done
 
-Production-readiness engineering is complete only when all agent-owned tasks in `VALIDATION_TASKS.md` have current evidence, both native staging builds install on clean devices, the two-caregiver tracer test passes, restricted rows are absent from a limited device's SQLite database, CI blocks every release-contract failure, and `docs/launch-checklist.md` contains only human or joint external gates.
+Production-readiness engineering is complete only when all agent-owned tasks in
+`VALIDATION_TASKS.md` have current evidence, both native staging builds install
+on clean devices, the two-caregiver tracer test passes, restricted rows are
+absent from a limited device's SQLite database, CI blocks every release-contract
+failure, and `docs/launch-checklist.md` contains only human or joint external
+gates.
 
 Public launch is a separate decision after the documented private-beta exit criteria pass.

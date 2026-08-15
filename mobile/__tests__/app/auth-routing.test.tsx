@@ -5,6 +5,11 @@ import { AuthProvider, useAuth, useProtectedRoute } from "../../lib/useAuth";
 const mockReplace = jest.fn();
 let mockSegments: string[] = ["(tabs)"];
 let mockSession: object | null = null;
+let mockSessionError: Error | null = null;
+const mockGetSession = jest.fn(async () => {
+  if (mockSessionError) throw mockSessionError;
+  return { data: { session: mockSession } };
+});
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ replace: mockReplace }),
@@ -16,7 +21,7 @@ jest.mock("../../config/env", () => ({ isBackendConfigured: true }));
 jest.mock("../../lib/supabase", () => ({
   getSupabase: () => ({
     auth: {
-      getSession: jest.fn(async () => ({ data: { session: mockSession } })),
+      getSession: mockGetSession,
       onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } })),
       signOut: jest.fn(async () => ({ error: null })),
     },
@@ -36,6 +41,8 @@ describe("authenticated route gate", () => {
     mockReplace.mockReset();
     mockSegments = ["(tabs)"];
     mockSession = null;
+    mockSessionError = null;
+    mockGetSession.mockClear();
   });
 
   it("redirects a signed-out user from protected routes to sign-in", async () => {
@@ -61,5 +68,18 @@ describe("authenticated route gate", () => {
 
     await waitFor(() => expect(queryScreen.getByText("signedIn")).toBeTruthy());
     expect(mockReplace).toHaveBeenCalledWith("/");
+  });
+
+  it("surfaces session restoration failures as retryable auth state", async () => {
+    mockSessionError = new Error("offline");
+
+    await render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => expect(queryScreen.getByText("error")).toBeTruthy());
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
   });
 });

@@ -4,6 +4,7 @@ import Svg, { Path } from "react-native-svg";
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
 import { AppText, PressableScale } from "../components/Themed";
+import { CapabilityGate } from "../components/CapabilityGate";
 import { ChevronRight } from "../components/icons";
 import type { InviteCode, InviteRole } from "../data/repository";
 import { generateInvite, revokeInvite, useBabyStatus, useInvite } from "../data/useData";
@@ -11,6 +12,18 @@ import { generateInvite, revokeInvite, useBabyStatus, useInvite } from "../data/
 type InviteAction = null | "share" | "revoke" | "generate";
 
 export default function InviteScreen() {
+  return (
+    <CapabilityGate
+      allowed="canInvite"
+      title="Invites are owner-only"
+      message="Only the family owner can issue or revoke caregiver invites."
+    >
+      <InviteContent />
+    </CapabilityGate>
+  );
+}
+
+function InviteContent() {
   const theme = useTheme();
   const inviteState = useInvite();
   const baby = useBabyStatus();

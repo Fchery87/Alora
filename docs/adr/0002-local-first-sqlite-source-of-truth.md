@@ -1,7 +1,7 @@
 # ADR-0002: Local-first SQLite as source of truth
 
 - **Status:** Accepted and implemented
-- **Scope:** `mobile/` data layer (`data/`, `config/mode.ts`, `lib/supabase.ts`)
+- **Scope:** `mobile/` data layer (`data/`, `runtime/`, `lib/supabase.ts`)
 
 ## Context
 
@@ -15,10 +15,10 @@ zero-configuration in Expo Go (no env vars, no auth, no native modules).
 **Expo SQLite is the local source of truth; Supabase/PowerSync are adapters for
 live sync, never the primary store.**
 
-- **One runtime mode resolver** (`config/mode.ts`): `demo` (no env / signed out)
-  / `localFirst` (backend configured, auth + local SQLite, no sync) / `live`
-  (full sync). Decided from environment configuration plus auth/session state —
-  no screen or hook reads raw env booleans.
+- **One runtime composition owner** (`runtime/RuntimeProvider.tsx`): `demo` (no
+  backend), `localFirst` (authenticated local adapter), or `live` (full
+  PowerSync sync). It is decided from environment configuration plus
+  auth/session state; no screen or hook reads raw env booleans.
 - **One data boundary** (`data/repository.ts` — `AloraRepository` interface):
   screens call a repository, never a data source. `mockRepository` (demo) and
   `supabaseRepository` (live, local SQLite via PowerSync) implement the same
@@ -28,9 +28,10 @@ live sync, never the primary store.**
   isolated from live data.
 - **Sessions persist in SecureStore** (`lib/supabase.ts`) for offline cold start
   ("open + log while offline" per the PRD).
-- **PowerSync starts only after** local-first/live mode has a valid authenticated
-  session (`shouldStartSync` in `config/mode.ts`).
-- **Tests**: the same suite (79 tests) runs against the mock and a fake
+- **PowerSync starts only after** the runtime lifecycle has a valid
+  authenticated session. It owns stop, clear, retry, and a sanitized sync
+  projection for user-visible connection state.
+- **Tests**: the same suite (99 tests) runs against the mock and a fake
   PowerSync SQL engine, proving dual-adapter behavior through the contract.
 
 ## Consequences

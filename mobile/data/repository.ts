@@ -1,8 +1,8 @@
 /**
  * Data access boundary (shared with the prototype).
- * Screens call an AloraRepository, never a data source directly. The app
- * uses mockRepository today; swap in a Supabase + PowerSync adapter later
- * (see ../../backend) with zero screen changes.
+ * Screens call an AloraRepository, never a data source directly. Runtime
+ * composition selects the demo or Supabase + PowerSync adapter without any
+ * screen-level data-source branching.
  */
 import type { CareEvent, EventType } from "./mock";
 export type { CareEvent, EventType };
@@ -125,15 +125,18 @@ export interface AloraRepository {
    *  caregiver may call this; the change is audit-logged server-side. */
   setSeatLimit(limit: number | null): Promise<void>;
   saveBabyProfile(profile: BabyProfile): Promise<void>;
+  bootstrapFamily(profile: BabyProfile): Promise<void>;
   createEvent(input: NewCareEvent): Promise<string>;
   startSleep(at?: Date): Promise<string>;
   stopSleep(id: string, endAt?: Date): Promise<void>;
   updateEvent(id: string, patch: EventPatch): Promise<void>;
   softDeleteEvent(id: string): Promise<void>;
+  resolveDuplicate(eventId: string, duplicateOf: string, resolution: "keep_both" | "merged"): Promise<void>;
   createCheckIn(input: NewCheckIn): Promise<string>;
   setReminder(kind: ReminderKind, config: ReminderConfig, enabled: boolean): Promise<void>;
   revokeInvite(): Promise<InviteCode>;
   generateInvite(role?: InviteRole): Promise<InviteCode>;
+  redeemInvite(code: string): Promise<void>;
   deleteAccount(): Promise<void>;
   exportMyData(): Promise<DataExport>;
 }

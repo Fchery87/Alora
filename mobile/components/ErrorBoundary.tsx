@@ -1,6 +1,5 @@
 import { Component, type ReactNode } from "react";
 import { Pressable, Text, View, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { captureError } from "../lib/crashReporting";
 
 interface Props {
@@ -41,7 +40,7 @@ export class ErrorBoundaryClass extends Component<Props, State> {
 
 function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.content}>
         <Text style={styles.brand}>Alora</Text>
         <Text style={styles.heading}>Something went wrong</Text>
@@ -60,7 +59,7 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -18,43 +18,16 @@ import type {
   SupportResource,
 } from "./repository";
 import { mockRepository } from "./mockRepository";
-import { resolveMode, type AppMode } from "../config/mode";
-import type { AuthStatus } from "../lib/useAuth";
 
 let currentRepository: AloraRepository = mockRepository;
-let currentMode: AppMode = "demo";
 
-/** Lazily load the supabaseRepository — only succeeds when PowerSync deps are installed. */
-async function loadSupabaseRepository(): Promise<AloraRepository | null> {
-  try {
-    // Dynamic import avoids static resolution when PowerSync deps are missing
-    const mod = await (import("./supabaseRepository") as Promise<{ supabaseRepository: AloraRepository }>);
-    return mod.supabaseRepository;
-  } catch {
-    console.warn("[useData] PowerSync adapter not available — staying in demo mode.");
-    return null;
-  }
+/** Activate the adapter selected by the runtime composition module. */
+export function setActiveRepository(next: AloraRepository): void {
+  currentRepository = next;
 }
 
-/**
- * Switch the active repository at runtime when auth state changes.
- * Called from the auth provider effect so all hooks pick up the change.
- */
-export async function setRepositoryMode(authStatus: AuthStatus): Promise<void> {
-  const mode = resolveMode(authStatus);
-  if (mode === currentMode) return;
-  currentMode = mode;
-  if (mode === "live" || mode === "localFirst") {
-    const live = await loadSupabaseRepository();
-    if (live) {
-      currentRepository = live;
-      return;
-    }
-    // Fall back to mock if PowerSync deps aren't installed
-    console.warn(
-      "[useData] Falling back to mock repository — set EXPO_PUBLIC_POWERSYNC_URL and install PowerSync deps for live mode.",
-    );
-  }
+/** Clear authenticated data access on sign-out or a failed boot. */
+export function resetActiveRepository(): void {
   currentRepository = mockRepository;
 }
 
@@ -167,15 +140,19 @@ export const useFamilyMembers = () => useAsync<FamilyMember[]>(() => repository.
 export const useSeatLimit = () => useAsync<number | null>(() => repository.getSeatLimit());
 export const setSeatLimit = (limit: number | null): Promise<void> => repository.setSeatLimit(limit);
 export const saveBabyProfile = (profile: BabyProfile): Promise<void> => repository.saveBabyProfile(profile);
+export const bootstrapFamily = (profile: BabyProfile): Promise<void> => repository.bootstrapFamily(profile);
 export const createCareEvent = (input: NewCareEvent) => repository.createEvent(input);
 export const startSleep = (at?: Date): Promise<string> => repository.startSleep(at);
 export const stopSleep = (id: string, endAt?: Date): Promise<void> => repository.stopSleep(id, endAt);
 export const updateCareEvent = (id: string, patch: EventPatch) => repository.updateEvent(id, patch);
 export const softDeleteCareEvent = (id: string) => repository.softDeleteEvent(id);
+export const resolveDuplicate = (eventId: string, duplicateOf: string, resolution: "keep_both" | "merged") =>
+  repository.resolveDuplicate(eventId, duplicateOf, resolution);
 export const createCheckIn = (input: NewCheckIn) => repository.createCheckIn(input);
 export const setReminder = (kind: ReminderKind, config: ReminderConfig, enabled: boolean) =>
   repository.setReminder(kind, config, enabled);
 export const revokeInvite = (): Promise<InviteCode> => repository.revokeInvite();
 export const generateInvite = (role?: InviteRole): Promise<InviteCode> => repository.generateInvite(role);
+export const redeemInvite = (code: string): Promise<void> => repository.redeemInvite(code);
 export const deleteAccount = (): Promise<void> => repository.deleteAccount();
 export const exportMyData = (): Promise<DataExport> => repository.exportMyData();

@@ -24,6 +24,7 @@ import {
   currentScenario,
   detectDuplicates,
 } from "./repository";
+import { applyDuplicateResolutions, type DuplicateResolution } from "./duplicateResolution";
 
 const LATENCY = 650;
 let nextEventId = events.length + 1;
@@ -31,6 +32,7 @@ let nextCheckInId = 1;
 let nextInviteId = 1;
 let babyProfileStore: BabyProfile = { name: baby.name, ageLabel: baby.ageLabel, birthDate: baby.birthDate };
 let eventStore: CareEvent[] = sortNewest(events);
+const duplicateResolutionsStore: DuplicateResolution[] = [];
 let careEventsHydrated = false;
 const deletedEventIds = new Set<string>();
 const checkInStore: CheckInRecord[] = [];
@@ -262,14 +264,25 @@ export const mockRepository: AloraRepository = {
   async getTimeline(offset = 0, limit?: number) {
     const s = currentScenario();
     await hydrateActiveSleep();
-    const all = s === "empty" ? [] : detectDuplicates(sortNewest(activeEvents()));
+    const all =
+      s === "empty"
+        ? []
+        : applyDuplicateResolutions(detectDuplicates(sortNewest(activeEvents())), duplicateResolutionsStore);
     const page = limit !== undefined ? all.slice(offset, offset + limit) : all;
     return delay<CareEvent[]>(page, s);
   },
   async getRecentActivity(limit: number) {
     const s = currentScenario();
     await hydrateActiveSleep();
-    return delay<CareEvent[]>(s === "empty" ? [] : detectDuplicates(sortNewest(activeEvents())).slice(0, limit), s);
+    return delay<CareEvent[]>(
+      s === "empty"
+        ? []
+        : applyDuplicateResolutions(detectDuplicates(sortNewest(activeEvents())), duplicateResolutionsStore).slice(
+            0,
+            limit,
+          ),
+      s,
+    );
   },
   async getBabyStatus() {
     const s = currentScenario();
@@ -339,6 +352,17 @@ export const mockRepository: AloraRepository = {
     seatLimitStore = limit;
   },
   async saveBabyProfile(profile: BabyProfile) {
+    const s = currentScenario();
+    const nextProfile = {
+      ...babyProfileStore,
+      name: profile.name.trim() || baby.name,
+      ageLabel: profile.ageLabel,
+      ...(profile.birthDate ? { birthDate: profile.birthDate } : {}),
+    };
+    await delay<void>(undefined, s);
+    babyProfileStore = nextProfile;
+  },
+  async bootstrapFamily(profile: BabyProfile) {
     const s = currentScenario();
     const nextProfile = {
       ...babyProfileStore,
@@ -437,6 +461,16 @@ export const mockRepository: AloraRepository = {
     deletedEventIds.add(id);
     await saveStoredCareEvent(event, new Date());
   },
+  async resolveDuplicate(eventId: string, duplicateOf: string, resolution: "keep_both" | "merged") {
+    const s = currentScenario();
+    await delay<void>(undefined, s);
+    const existing = duplicateResolutionsStore.find(
+      (item) => item.eventId === eventId && item.duplicateOf === duplicateOf,
+    );
+    if (existing) existing.resolution = resolution;
+    else duplicateResolutionsStore.push({ eventId, duplicateOf, resolution });
+    if (resolution === "merged") deletedEventIds.add(eventId);
+  },
   async createCheckIn(input: NewCheckIn) {
     const s = currentScenario();
     await delay<void>(undefined, s);
@@ -462,6 +496,10 @@ export const mockRepository: AloraRepository = {
     await delay<void>(undefined, s);
     inviteStore = makeInvite(nextInviteCode());
     return cloneInvite(inviteStore);
+  },
+  async redeemInvite(_code: string) {
+    const s = currentScenario();
+    await delay<void>(undefined, s);
   },
   async deleteAccount() {
     const s = currentScenario();

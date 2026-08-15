@@ -3,7 +3,7 @@
 > A calm, private, local-first baby-care companion for first-time parents — fast logging,
 > two-caregiver coordination, and a gentle wellbeing check-in that stays out of the way.
 
-**Status:** pre-launch · production readiness blocked · private beta not yet safe to start. See [`VALIDATION_TASKS.md`](./VALIDATION_TASKS.md) for the current executable audit.
+**Status:** pre-launch · implementation slices complete · private beta still blocked on hosted, native, dependency, and legal evidence. See [`VALIDATION_TASKS.md`](./VALIDATION_TASKS.md) for the executable gate.
 
 Alora is a cross-platform (iOS + Android) Expo / React Native app that helps caregivers answer three questions instantly: **what happened recently with the baby, what matters now, and what the next caregiver needs to know.** It is built around one core promise: logging baby care should feel faster and more reliable than remembering or writing notes — even with no signal, at 3 a.m., one-handed.
 
@@ -16,7 +16,7 @@ Alora targets [`alora_updated_prd.md`](./alora_updated_prd.md), a coordination-f
 - **A handoff dashboard** (Home) that summarizes the baby's current state instead of requiring a verbal recap: last feed, last diaper, current sleep, next action, recent caregiver activity.
 - **Fast, durable logging** of feeds, diapers, and sleep with presets, repeat-last actions, and device-local timers that survive app kills and offline restarts.
 - **A shared timeline** with actor attribution, edit markers, and duplicate detection when two caregivers log overlapping events.
-- **A private daily check-in** — a single mood input + optional reflection that is *never* visible to the co-caregiver, plus a non-triggered support-resources surface (988, PSI) and a clear non-clinical disclaimer.
+- **A private daily check-in** — a single mood input + optional reflection that is _never_ visible to the co-caregiver, plus a non-triggered support-resources surface (988, PSI) and a clear non-clinical disclaimer.
 - **A caregiver trust layer** — single-use invites, owner/partner/limited roles, configurable seat limits, audit log, JSON export, and transfer-then-scrub account deletion.
 
 The product is deliberately **non-clinical** (no mood inference, scoring, or automated triggering), **US-only at launch** on a **GDPR-ready** foundation, and **free** (no paid tier at MVP — monetization is deferred until habit is proven).
@@ -30,7 +30,7 @@ Target product principles:
 1. **Coordination first** — every screen is judged by whether it improves logging speed, state clarity, and handoff confidence.
 2. **Fast before comprehensive** — a feed can be logged in under 10 seconds, one-handed.
 3. **Local confidence, cloud coordination** — SQLite on-device is the source of truth; sync happens in the background. Logging never waits on a network round trip.
-4. **Shared by default, private where needed** — baby-care data is family-shared; check-ins are per-user, enforced at the *sync layer* (a partner's device never pulls them), not just in the UI.
+4. **Shared by default, private where needed** — baby-care data is family-shared; check-ins are per-user, enforced at the _sync layer_ (a partner's device never pulls them), not just in the UI.
 5. **Calm, not clinical** — no diagnosis, no scoring, plain-language disclaimers.
 6. **Privacy as product UX** — the trust center explains who can see what in plain language; export and deletion are one tap away.
 
@@ -38,25 +38,25 @@ Target product principles:
 
 ## Feature status
 
-| Area | Status | Notes |
-|---|---|---|
-| Account + family + baby setup | ⛔ Blocked | Supabase Auth UI exists; live family creation, invite acceptance, recovery, and first-user routing are incomplete |
-| Handoff dashboard (Home) | 🟡 Demo complete | Baby status and quick actions work against demo data; live sync is unavailable |
-| Feed / diaper / sleep logging | 🟡 Demo complete | Local demo persistence works; the live adapter and sleep-stop path are broken |
-| Shared timeline | 🟡 Demo complete | Pagination UI exists; live pending state is not truthful |
-| Duplicate detection + merge | 🟡 Partial | Detection and merge UI exist; live dismissal is not persisted |
-| Local reminders + quiet hours | 🟡 Needs device verification | Scheduling code exists; production notification behavior is not device-verified |
-| Private daily check-in | ⛔ Blocked | Private bucket exists, but limited-role access contradicts the product contract |
-| Trust center, JSON export, account deletion | ⛔ Blocked | UI exists; live trust tables and account deletion are not release safe |
-| **Phase A: configurable seat limit + scoped roles** | ⛔ Blocked | Schema and UI exist; sync-rule privacy and redemption atomicity must be fixed |
-| **Phase B: WHO growth charts** | ✅ Implemented | P3/P50/P97 bands, boy/girl toggle, months 0–24 (CDC-hosted WHO LMS data) |
-| **Phase B: pediatrician report (PDF)** | 🟡 Needs device verification | Print + share code excludes private check-in content |
-| **Phase B: handoff briefing** | ✅ Implemented | 24h summary, start-of-shift marker |
-| **Phase B: trust positioning** | ✅ Implemented | "No ads. No data selling. Export and leave anytime." + privacy-policy link |
-| Sentry crash reporting | 🟡 Wired, not provisioned | DSN-gated and intended to avoid PII; no production release has verified ingestion |
-| Live backend (Supabase + PowerSync) | ⛔ Blocked | Bundle/schema slice passes; sync lifecycle, onboarding, invite redemption, privacy, and backend atomicity must be fixed before provisioning |
-| Private beta distribution | ⛔ Blocked | EAS profiles and checklists exist, but no release bundle or live two-device smoke test passes yet |
-| Backlog: pumping + milk stash, wake-window suggestions, local-first photos | 📋 Roadmap | See `.scratch/launch-readiness/ROADMAP-PRD.md` |
+| Area                                                                       | Status                         | Notes                                                                                                             |
+| -------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Account + family + baby setup                                              | ✅ Code complete               | Idempotent bootstrap, setup gate, invite deep links, and password recovery are wired; hosted/native proof remains |
+| Handoff dashboard (Home)                                                   | ✅ Code complete               | Live repository, active sleep identity, and honest sync projection are wired                                      |
+| Feed / diaper / sleep logging                                              | ✅ Code complete               | Local-first writes, restart-safe sleep, and PowerSync upload lifecycle are wired                                  |
+| Shared timeline                                                            | ✅ Code complete               | Pagination, actor attribution, edit history, and sync/error projection are wired                                  |
+| Duplicate detection + merge                                                | ✅ Code complete               | Keep-both and merged decisions persist through the family sync bucket                                             |
+| Local reminders + quiet hours                                              | 🟡 Needs device verification   | Scheduling code exists; production notification behavior is not device-verified                                   |
+| Private daily check-in                                                     | ✅ Code complete               | Family context, author-only RLS, private sync bucket, and limited-seat gates align                                |
+| Trust center, JSON export, account deletion                                | ✅ Code complete               | Role gates, durable deletion workflow, and export boundary are implemented                                        |
+| **Phase A: configurable seat limit + scoped roles**                        | ✅ Code complete               | Atomic seat enforcement, role-scoped buckets, and capability gates are implemented                                |
+| **Phase B: WHO growth charts**                                             | ✅ Implemented                 | P3/P50/P97 bands, boy/girl toggle, months 0–24 (CDC-hosted WHO LMS data)                                          |
+| **Phase B: pediatrician report (PDF)**                                     | 🟡 Needs device verification   | Print + share code excludes private check-in content                                                              |
+| **Phase B: handoff briefing**                                              | ✅ Implemented                 | 24h summary, start-of-shift marker                                                                                |
+| **Phase B: trust positioning**                                             | ✅ Implemented                 | "No ads. No data selling. Export and leave anytime." + privacy-policy link                                        |
+| Sentry crash reporting                                                     | 🟡 Wired, not provisioned      | DSN-gated and intended to avoid PII; no production release has verified ingestion                                 |
+| Live backend (Supabase + PowerSync)                                        | 🟡 Hosted verification pending | Five additive migrations and the 74-assertion suite are ready; apply them before provisioning a beta              |
+| Private beta distribution                                                  | ⛔ Blocked                     | EAS profiles and checklists exist, but no release bundle or live two-device smoke test passes yet                 |
+| Backlog: pumping + milk stash, wake-window suggestions, local-first photos | 📋 Roadmap                     | See `.scratch/launch-readiness/ROADMAP-PRD.md`                                                                    |
 
 ---
 
@@ -68,7 +68,9 @@ Target product principles:
 │   app/ (Expo Router) ── Home · Log · Timeline · Check-In · Settings · growth · seat-limit · trust · …      │
 │        │                                                                                                   │
 │        ▼                                                                                                   │
-│   data/useData.ts ── runtime mode resolver (demo / localFirst / live) + repository proxy                    │
+│   runtime/RuntimeProvider.tsx ── explicit demo / localFirst / live composition + sync lifecycle             │
+│        │                                                                                                   │
+│   data/useData.ts ── repository proxy                                                                       │
 │        │                                                                                                   │
 │        ├── mockRepository ── demo mode: zero env vars, mock data, no auth                                  │
 │        └── supabaseRepository ── live mode: reads/writes local SQLite via PowerSync                        │
@@ -82,7 +84,7 @@ Target product principles:
                ▼
 ┌────────────────────────────────────────── BACKEND (Supabase, US region) ───────────────────────────────────┐
 │  Postgres: supabase/migrations/ (versioned tables, enums, triggers, and RLS history)                      │
-│  Edge Functions: generate-invite · redeem-invite · delete-account (service-role, JWT-authenticated)        │
+│  Edge Functions: generate-invite · redeem-invite · delete-account (JWT-authenticated transport)            │
 │  sync-rules.yaml: family bucket (shared) · user_private bucket (check-ins) · global bucket (resources)     │
 │  Auth: Supabase Auth → JWT → RLS · Sentry (crash reports, no PII)                                          │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -92,13 +94,13 @@ Target product principles:
 
 **Conflict rules** (fixed in the PRD): concurrent creates of overlapping events are both preserved and flagged as possible duplicates; concurrent edits are last-write-wins with prior values recorded in `event_edits`; deletions are soft (`deleted_at`) sync tombstones.
 
-### Runtime modes (`mobile/config/mode.ts`)
+### Runtime composition (`mobile/runtime/`)
 
-| Mode | When | Behavior |
-|---|---|---|
-| `demo` | No env vars configured, or signed out | Mock data, no auth, straight to the tabs — zero-setup exploration |
-| `localFirst` | Planned fallback | Not operational. The current adapter requires PowerSync and falls back to demo data when unavailable. |
-| `live` | Backend + PowerSync configured, signed in | Target mode. Bundle and lifecycle work in `VALIDATION_TASKS.md` must be completed first. |
+| Mode         | When                                         | Behavior                                                                                    |
+| ------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `demo`       | No backend env vars configured               | Mock data and zero-setup exploration.                                                       |
+| `localFirst` | Backend configured without PowerSync         | Authenticated local repository path; startup fails closed if the adapter cannot initialize. |
+| `live`       | Backend + PowerSync configured and signed in | Supabase repository plus one authenticated PowerSync lifecycle owner.                       |
 
 ## Security & privacy model
 
@@ -165,16 +167,16 @@ cd mobile
 npm run typecheck    # tsc --noEmit, strict
 npm run lint         # ESLint, zero-warning policy
 npm run format       # Prettier check
-npm test             # 79 behavioral tests — mock adapter + a fake-DB live-adapter harness,
+    npm test             # 99 behavioral tests — mock adapter + a fake-DB live-adapter harness,
                      # growth math (WHO LMS), handoff briefing, pediatric report, reminders, stores
 ```
 
-CI (`.github/workflows/ci.yml`) runs typecheck + lint + tests on every push/PR. It does not yet validate formatting, native bundle resolution, dependency advisories, or the pgTAP security suite. The current CI can pass while the Android export fails.
+CI (`.github/workflows/ci.yml`) runs formatting, typecheck, lint, tests, Android/iOS exports, backend checks, and an optional hosted pgTAP job. Dependency audit remains advisory until the current risk register has an approved disposition.
 
 ### 3. Verify the backend security layer (optional, needs Supabase CLI + local Docker)
 
 ```bash
-supabase test db                         # 51 assertions: RLS matrix, invite lifecycle, seat caps, privacy isolation
+supabase test db                         # 74 assertions: RLS, ownership, bootstrap, invites, privacy, deletion
 ```
 
 ### 4. Go live (when you're ready)
@@ -186,7 +188,7 @@ The full exact path is [`backend/PROVISIONING.md`](./backend/PROVISIONING.md) (~
 3. Create the PowerSync instance → connect to Supabase Postgres, deploy `sync-rules.yaml`.
 4. Create the Sentry project → set `EXPO_PUBLIC_SENTRY_DSN`.
 5. Publish the privacy policy → set `EXPO_PUBLIC_PRIVACY_POLICY_URL` (Apple 5.1.1 / Play requirement).
-6. Complete the remaining `VALIDATION_TASKS.md` Phase 0 work before setting live credentials. The PowerSync bundle/schema slice is complete, but sync lifecycle, onboarding, privacy, security, CI, and external launch gates remain.
+6. Complete the remaining `VALIDATION_TASKS.md` hosted/device/legal gates before distributing a beta. The implementation is wired, but migrations, PowerSync provisioning, two-device evidence, dependency disposition, and external launch approval remain.
 
 Cost: **$0/month** (Supabase Free, PowerSync Cloud Free, Sentry Free, EAS Free). The only paid items are the one-time developer enrollments for beta distribution ($99 Apple + $25 Google).
 
@@ -205,14 +207,14 @@ The beta → launch gate (exit criteria) is defined in `.scratch/launch-readines
 
 ## Documentation map
 
-| Document | What it's for |
-|---|---|
-| `alora_updated_prd.md` | The product spec — vision, scope, requirements, architecture, compliance |
-| `CONTEXT.md` | Domain glossary (single context) — shared vocabulary across code and docs |
-| `VALIDATION_TASKS.md` | Current executable health score, release blockers, and remediation tasks |
-| `docs/launch-checklist.md` | Ordered path from blocked build through private beta and store launch |
-| `docs/adr/` | Architecture decision records |
-| `docs/production-readiness-audit.md` | Historical demo-mode audit, superseded by `VALIDATION_TASKS.md` |
-| `.scratch/alora-mvp/` | The original 14-issue MVP build plan |
-| `.scratch/launch-readiness/` | Wayfinder map, research, roadmap PRD, operating docs, checklists |
-| `docs/agents/` | Agent workflow conventions (issue tracker, triage labels, domain rules) |
+| Document                             | What it's for                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| `alora_updated_prd.md`               | The product spec — vision, scope, requirements, architecture, compliance  |
+| `CONTEXT.md`                         | Domain glossary (single context) — shared vocabulary across code and docs |
+| `VALIDATION_TASKS.md`                | Current executable health score, release blockers, and remediation tasks  |
+| `docs/launch-checklist.md`           | Ordered path from blocked build through private beta and store launch     |
+| `docs/adr/`                          | Architecture decision records                                             |
+| `docs/production-readiness-audit.md` | Historical demo-mode audit, superseded by `VALIDATION_TASKS.md`           |
+| `.scratch/alora-mvp/`                | The original 14-issue MVP build plan                                      |
+| `.scratch/launch-readiness/`         | Wayfinder map, research, roadmap PRD, operating docs, checklists          |
+| `docs/agents/`                       | Agent workflow conventions (issue tracker, triage labels, domain rules)   |

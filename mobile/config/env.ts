@@ -1,7 +1,8 @@
 /**
  * Backend configuration, read from Expo public env vars.
- * Until these are set (see ../../backend/README.md), the app runs in
- * "demo mode" on mock data — no auth, no network.
+ * Until these are set (see ../../backend/README.md), the app intentionally
+ * runs in demo mode on mock data. Once backend credentials exist, runtime
+ * composition fails closed until the authenticated adapter and sync are ready.
  */
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";

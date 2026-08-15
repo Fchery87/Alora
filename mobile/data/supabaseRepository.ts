@@ -1,7 +1,8 @@
 /**
  * Live data adapter — reads from the on-device PowerSync SQLite (local-first
- * source of truth), which syncs to Supabase Postgres. Same interface as
- * mockRepository, so swapping it in (in useData.ts) needs no screen changes.
+ * source of truth), which syncs to Supabase Postgres. It implements the same
+ * repository boundary as demo mode, so runtime selection needs no screen
+ * changes.
  *
  * All 19 AloraRepository methods implemented. Write methods use PowerSync
  * local db.execute() which auto-queues the upload to Supabase Postgres.
@@ -10,6 +11,7 @@ import { db } from "../powersync/system";
 import { getSupabase } from "../lib/supabase";
 import type { CareEvent, EventType } from "./mock";
 import { detectDuplicates } from "./repository";
+import { applyDuplicateResolutions, type DuplicateResolution } from "./duplicateResolution";
 import type {
   AloraRepository,
   AuditLogEntry,
@@ -100,9 +102,21 @@ async function requireBabyId(): Promise<string> {
   return bid;
 }
 
+async function persistedDuplicateResolutions(): Promise<DuplicateResolution[]> {
+  const rows = await db.getAll<{
+    event_id: string;
+    duplicate_of: string;
+    resolution: DuplicateResolution["resolution"];
+  }>(`SELECT event_id, duplicate_of, resolution FROM event_duplicate_resolutions`);
+  return rows.map((row) => ({ eventId: row.event_id, duplicateOf: row.duplicate_of, resolution: row.resolution }));
+}
+
 async function memberNames(): Promise<Record<string, { name: string; initial: string }>> {
+  const fid = await myFamilyId();
+  if (!fid) return {};
   const rows = await db.getAll<{ user_id: string; display_name: string | null }>(
-    `SELECT user_id, display_name FROM family_members`,
+    `SELECT user_id, display_name FROM family_members WHERE family_id = ?`,
+    [fid],
   );
   const map: Record<string, { name: string; initial: string }> = {};
   for (const r of rows) {
@@ -159,38 +173,52 @@ export const supabaseRepository: AloraRepository = {
   // ── Reads ──────────────────────────────────────────────────────────────
 
   async getTimeline(offset = 0, limit?: number) {
+    const fid = await requireFamilyId();
     const query =
       limit !== undefined
-        ? `SELECT * FROM baby_events WHERE deleted_at IS NULL ORDER BY start_at DESC LIMIT ? OFFSET ?`
-        : `SELECT * FROM baby_events WHERE deleted_at IS NULL ORDER BY start_at DESC`;
-    const params = limit !== undefined ? [limit, offset] : [];
-    const [rows, me, names] = await Promise.all([db.getAll<EventRow>(query, params), currentUserId(), memberNames()]);
-    return detectDuplicates(rows.map((r: EventRow) => toEvent(r, me, names)));
+        ? `SELECT * FROM baby_events WHERE family_id = ? AND deleted_at IS NULL ORDER BY start_at DESC LIMIT ? OFFSET ?`
+        : `SELECT * FROM baby_events WHERE family_id = ? AND deleted_at IS NULL ORDER BY start_at DESC`;
+    const params = limit !== undefined ? [fid, limit, offset] : [fid];
+    const [rows, me, names, resolutions] = await Promise.all([
+      db.getAll<EventRow>(query, params),
+      currentUserId(),
+      memberNames(),
+      persistedDuplicateResolutions(),
+    ]);
+    return applyDuplicateResolutions(detectDuplicates(rows.map((r: EventRow) => toEvent(r, me, names))), resolutions);
   },
 
   async getRecentActivity(limit: number) {
-    const [rows, me, names] = await Promise.all([
-      db.getAll<EventRow>(`SELECT * FROM baby_events WHERE deleted_at IS NULL ORDER BY start_at DESC LIMIT ?`, [limit]),
+    const fid = await requireFamilyId();
+    const [rows, me, names, resolutions] = await Promise.all([
+      db.getAll<EventRow>(
+        `SELECT * FROM baby_events WHERE family_id = ? AND deleted_at IS NULL ORDER BY start_at DESC LIMIT ?`,
+        [fid, limit],
+      ),
       currentUserId(),
       memberNames(),
+      persistedDuplicateResolutions(),
     ]);
-    return detectDuplicates(rows.map((r: EventRow) => toEvent(r, me, names)));
+    return applyDuplicateResolutions(detectDuplicates(rows.map((r: EventRow) => toEvent(r, me, names))), resolutions);
   },
 
   async getBabyStatus(): Promise<BabyStatus> {
+    const fid = await requireFamilyId();
     const baby = await db.getOptional<{ name: string; birth_date: string | null }>(
-      `SELECT name, birth_date FROM babies ORDER BY created_at ASC LIMIT 1`,
+      `SELECT name, birth_date FROM babies WHERE family_id = ? ORDER BY created_at ASC LIMIT 1`,
+      [fid],
     );
     const me = await currentUserId();
     const names = await memberNames();
 
     const openSleep = await db.getOptional<EventRow>(
-      `SELECT * FROM baby_events WHERE event_type = 'sleep' AND end_at IS NULL AND deleted_at IS NULL ORDER BY start_at DESC LIMIT 1`,
+      `SELECT * FROM baby_events WHERE family_id = ? AND event_type = 'sleep' AND end_at IS NULL AND deleted_at IS NULL ORDER BY start_at DESC LIMIT 1`,
+      [fid],
     );
     const lastOf = (t: EventType) =>
       db.getOptional<EventRow>(
-        `SELECT * FROM baby_events WHERE event_type = ? AND deleted_at IS NULL ORDER BY start_at DESC LIMIT 1`,
-        [t],
+        `SELECT * FROM baby_events WHERE family_id = ? AND event_type = ? AND deleted_at IS NULL ORDER BY start_at DESC LIMIT 1`,
+        [fid, t],
       );
     const [lastFeed, lastDiaper] = await Promise.all([lastOf("feed"), lastOf("diaper")]);
 
@@ -199,6 +227,7 @@ export const supabaseRepository: AloraRepository = {
       ageLabel: baby?.birth_date ? ageLabel(baby.birth_date) : "",
       birthDate: baby?.birth_date ? new Date(baby.birth_date) : undefined,
       asleep: !!openSleep,
+      activeSleepId: openSleep?.id,
       asleepSince: openSleep?.start_at ? new Date(openSleep.start_at) : undefined,
       putDownBy: openSleep
         ? openSleep.created_by === me
@@ -287,12 +316,16 @@ export const supabaseRepository: AloraRepository = {
 
   async getFamilyMembers(): Promise<FamilyMember[]> {
     const me = await currentUserId();
+    const fid = await myFamilyId();
+    if (!fid) return [];
     const rows = await db.getAll<{
       user_id: string;
       display_name: string | null;
       role: string;
       joined_at: string;
-    }>(`SELECT user_id, display_name, role, joined_at FROM family_members ORDER BY joined_at ASC`);
+    }>(`SELECT user_id, display_name, role, joined_at FROM family_members WHERE family_id = ? ORDER BY joined_at ASC`, [
+      fid,
+    ]);
     return rows.map((r) => ({
       userId: r.user_id,
       displayName: r.display_name ?? "Caregiver",
@@ -343,6 +376,15 @@ export const supabaseRepository: AloraRepository = {
         new Date().toISOString(),
       ]);
     }
+  },
+
+  async bootstrapFamily(profile: BabyProfile): Promise<void> {
+    const { error } = await getSupabase().rpc("bootstrap_family", {
+      family_name: "Our family",
+      baby_name: profile.name,
+      baby_birth_date: profile.birthDate?.toISOString().slice(0, 10) ?? null,
+    });
+    if (error) throw error;
   },
 
   // ── Writes ─────────────────────────────────────────────────────────────
@@ -472,19 +514,42 @@ export const supabaseRepository: AloraRepository = {
     await db.execute(`UPDATE baby_events SET deleted_at = ?, updated_at = ? WHERE id = ?`, [now, now, id]);
   },
 
+  async resolveDuplicate(eventId: string, duplicateOf: string, resolution: "keep_both" | "merged"): Promise<void> {
+    const [uid, fid] = await Promise.all([requireUserId(), requireFamilyId()]);
+    const now = new Date().toISOString();
+    await db.execute(
+      `INSERT INTO event_duplicate_resolutions
+        (id, family_id, event_id, duplicate_of, resolution, resolved_by, resolved_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (family_id, event_id, duplicate_of)
+       DO UPDATE SET resolution = excluded.resolution, resolved_by = excluded.resolved_by, resolved_at = excluded.resolved_at`,
+      [generateId(), fid, eventId, duplicateOf, resolution, uid, now],
+    );
+    if (resolution === "merged") {
+      await db.execute(`UPDATE baby_events SET deleted_at = ?, updated_at = ? WHERE id = ? AND family_id = ?`, [
+        now,
+        now,
+        eventId,
+        fid,
+      ]);
+    }
+  },
+
   async createCheckIn(input: NewCheckIn): Promise<string> {
     const uid = await requireUserId();
+    const fid = await requireFamilyId();
     const id = generateId();
-    await db.execute(`INSERT INTO parent_check_ins (id, user_id, mood, created_at) VALUES (?, ?, ?, ?)`, [
+    await db.execute(`INSERT INTO parent_check_ins (id, family_id, user_id, mood, created_at) VALUES (?, ?, ?, ?, ?)`, [
       id,
+      fid,
       uid,
       input.mood,
       (input.at ?? new Date()).toISOString(),
     ]);
     if (input.reflection) {
       await db.execute(
-        `INSERT INTO parent_reflections (id, check_in_id, user_id, body, created_at) VALUES (?, ?, ?, ?, ?)`,
-        [generateId(), id, uid, input.reflection, new Date().toISOString()],
+        `INSERT INTO parent_reflections (id, check_in_id, family_id, user_id, body, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+        [generateId(), id, fid, uid, input.reflection, new Date().toISOString()],
       );
     }
     return id;
@@ -562,17 +627,27 @@ export const supabaseRepository: AloraRepository = {
     return { code, link: `https://alora.app/invite/${code}`, expiresAt: new Date(expiresAt), revoked: false };
   },
 
+  async redeemInvite(code: string): Promise<void> {
+    const { error } = await getSupabase().functions.invoke("redeem-invite", {
+      body: { code: code.trim().toUpperCase() },
+    });
+    if (error) throw error;
+  },
+
   async deleteAccount(): Promise<void> {
     const supabase = getSupabase();
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw new Error("Not authenticated.");
 
     // Call the delete-account Edge Function (server-side orchestration)
-    const { error } = await supabase.functions.invoke("delete-account", {
+    const { data: result, error } = await supabase.functions.invoke("delete-account", {
       method: "POST",
       body: {},
     });
     if (error) throw error;
+    if (!(result as { ok?: boolean } | null)?.ok) {
+      throw new Error("Deletion is still processing. Try again shortly.");
+    }
   },
 
   async exportMyData(): Promise<DataExport> {

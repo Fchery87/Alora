@@ -49,6 +49,14 @@ const event_edits = new Table({
   prior_values: column.text,
   edited_at: column.text,
 });
+const event_duplicate_resolutions = new Table({
+  family_id: column.text,
+  event_id: column.text,
+  duplicate_of: column.text,
+  resolution: column.text,
+  resolved_by: column.text,
+  resolved_at: column.text,
+});
 const reminders = new Table({
   family_id: column.text,
   kind: column.text,
@@ -86,9 +94,15 @@ const notification_preferences = new Table({
   prefs: column.text,
   updated_at: column.text,
 });
-const parent_check_ins = new Table({ user_id: column.text, mood: column.text, created_at: column.text });
+const parent_check_ins = new Table({
+  family_id: column.text,
+  user_id: column.text,
+  mood: column.text,
+  created_at: column.text,
+});
 const parent_reflections = new Table({
   check_in_id: column.text,
+  family_id: column.text,
   user_id: column.text,
   body: column.text,
   created_at: column.text,
@@ -108,6 +122,7 @@ export const AppSchema = new Schema({
   family_members,
   babies,
   event_edits,
+  event_duplicate_resolutions,
   reminders,
   audit_logs,
   subscription_status,

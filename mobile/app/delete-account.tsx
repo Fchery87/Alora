@@ -16,12 +16,14 @@ import { ModalScreen } from "../components/ModalScreen";
 import { AppText, PressableScale } from "../components/Themed";
 import { usePrefersReducedMotion } from "../components/usePrefersReducedMotion";
 import { deleteAccount, useBabyStatus, useFamilyMembers } from "../data/useData";
+import { useAuth } from "../lib/useAuth";
 
 const OUT = Easing.bezier(0.23, 1, 0.32, 1);
 
 export default function DeleteAccountScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { signOut } = useAuth();
   const [done, setDone] = useState(false);
   const [holding, setHolding] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -74,7 +76,10 @@ export default function DeleteAccountScreen() {
   if (done)
     return (
       <DoneState
-        onClose={() => router.back()}
+        onClose={async () => {
+          await signOut();
+          router.replace("/sign-in");
+        }}
         isOwner={isOwner}
         hasPartner={Boolean(partner)}
         babyName={babyName}
@@ -204,7 +209,7 @@ function DoneState({
   babyName,
   partnerName,
 }: {
-  onClose: () => void;
+  onClose: () => void | Promise<void>;
   isOwner: boolean;
   hasPartner: boolean;
   babyName: string;

@@ -3,7 +3,7 @@ import { useRouter, useSegments } from "expo-router";
 import type { Session } from "@supabase/supabase-js";
 import { isBackendConfigured } from "../config/env";
 import { getSupabase } from "./supabase";
-import { setRepositoryMode } from "../data/useData";
+import { getPendingInviteCode } from "./pendingInvite";
 
 /**
  * Auth states:
@@ -12,54 +12,66 @@ import { setRepositoryMode } from "../data/useData";
  *  - "signedOut" needs to authenticate
  *  - "signedIn"  has a valid session
  */
-export type AuthStatus = "demo" | "loading" | "signedOut" | "signedIn";
+export type AuthStatus = "demo" | "loading" | "signedOut" | "signedIn" | "error";
 
 type AuthValue = {
   status: AuthStatus;
   session: Session | null;
+  error: Error | null;
+  retry: () => void;
   signOut: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthValue>({ status: "demo", session: null, signOut: async () => {} });
+const AuthContext = createContext<AuthValue>({
+  status: "demo",
+  session: null,
+  error: null,
+  retry: () => undefined,
+  signOut: async () => {},
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [restoreAttempt, setRestoreAttempt] = useState(0);
   const [status, setStatus] = useState<AuthStatus>(isBackendConfigured ? "loading" : "demo");
 
   useEffect(() => {
     if (!isBackendConfigured) return;
     const supabase = getSupabase();
 
-    supabase.auth.getSession().then(({ data }) => {
-      const newStatus: AuthStatus = data.session ? "signedIn" : "signedOut";
-      setSession(data.session);
-      setStatus(newStatus);
-      void setRepositoryMode(newStatus);
-    });
+    setStatus("loading");
+    setError(null);
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        const newStatus: AuthStatus = data.session ? "signedIn" : "signedOut";
+        setSession(data.session);
+        setStatus(newStatus);
+      })
+      .catch((cause: unknown) => {
+        setSession(null);
+        setError(cause instanceof Error ? cause : new Error("Session restoration failed."));
+        setStatus("error");
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
       const newStatus: AuthStatus = next ? "signedIn" : "signedOut";
       setSession(next);
       setStatus(newStatus);
-      void setRepositoryMode(newStatus);
     });
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [restoreAttempt]);
 
   const signOut = async () => {
     if (isBackendConfigured) {
       // Stop PowerSync and clear local state before signing out
-      try {
-        const { stopSync } = await import("../powersync/system");
-        await stopSync();
-      } catch {
-        // PowerSync deps may not be installed — that's fine
-      }
       await getSupabase().auth.signOut();
     }
   };
 
-  return <AuthContext.Provider value={{ status, session, signOut }}>{children}</AuthContext.Provider>;
+  const retry = () => setRestoreAttempt((attempt) => attempt + 1);
+  return <AuthContext.Provider value={{ status, session, error, retry, signOut }}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);
@@ -76,7 +88,10 @@ export function useProtectedRoute() {
   useEffect(() => {
     if (status === "demo" || status === "loading") return;
     const inAuthGroup = segments[0] === "(auth)";
+    const pendingInvite = getPendingInviteCode();
     if (status === "signedOut" && !inAuthGroup) router.replace("/sign-in");
-    else if (status === "signedIn" && inAuthGroup) router.replace("/");
+    else if (status === "signedIn" && pendingInvite && (inAuthGroup || segments[0] !== "invite")) {
+      router.replace(`/invite/${pendingInvite}` as never);
+    } else if (status === "signedIn" && inAuthGroup) router.replace("/");
   }, [status, segments, router]);
 }

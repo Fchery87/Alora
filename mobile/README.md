@@ -27,7 +27,7 @@ npm install            # add --legacy-peer-deps if a transitive web peer (react-
 npm run android        # or: npm run ios  /  npx expo start
 npm run typecheck      # tsc --noEmit (passes clean, strict)
 npm run lint           # ESLint, zero-warning policy
-npm test               # 79 tests — contract suite, growth math, handoff, pediatric report, …
+npm test               # 99 tests — contract suite, runtime/auth, roles, sync, growth, handoff, report, …
 ```
 
 **Demo mode needs zero configuration**: with no env vars set the app runs on
@@ -72,10 +72,14 @@ data/
   repository.ts        AloraRepository interface (the contract)
   mockRepository.ts    demo-mode adapter (mock data)
   supabaseRepository.ts live adapter — local SQLite via PowerSync, full contract
-  useData.ts           runtime mode resolver + repository proxy (mock fallback)
+  useData.ts           repository proxy selected by runtime composition
   mock.ts              demo fixtures
   localCareEventStore.ts / localSleepTimerStore.ts / localHandoffStore.ts /
   localBabySexStore.ts / localReminderPreferenceStore.ts   durable local stores
+runtime/
+  RuntimeProvider.tsx  session-driven adapter and PowerSync lifecycle
+powersync/
+  syncProjection.ts    sanitized connection and upload projection for UI
 lib/
   supabase.ts          client + SecureStore session (offline cold-start)
   useAuth.tsx          auth gate (routes to sign-in when signed out)
@@ -92,10 +96,11 @@ lib/
 
 - **Full data layer contract** (`data/repository.ts`), covered by a dual-adapter
   test suite: the same tests run against the mock and the Supabase/PowerSync
-  adapter (fake PowerSync SQL engine) — 79 tests total.
-- **Runtime mode resolution** (`config/mode.ts`): `demo` (no env) / `localFirst`
-  (auth + local SQLite) / `live` (full sync). The repository proxy in
-  `useData.ts` picks the adapter automatically; screens don't change.
+  adapter (fake PowerSync SQL engine) — 99 tests total.
+- **Runtime composition** (`runtime/RuntimeProvider.tsx`): `demo` (no backend),
+  `localFirst` (authenticated local adapter), or `live` (PowerSync). One
+  lifecycle owner selects the repository, starts/stops sync, and fails closed
+  instead of showing demo data to an authenticated user.
 - **WHO growth charts** (`app/growth.tsx` + `lib/growth/`): weight/length P3/P50/P97
   bands for 0–24 months, boy/girl reference toggle (persisted), inline birth-date
   entry. Reference data generated from CDC-hosted WHO LMS CSVs with provenance.
@@ -128,14 +133,9 @@ mock data, no auth, straight to the tabs. Wiring real data:
    automatically: `lib/useAuth.tsx` gates the app, routing to `app/(auth)/sign-in`
    when signed out. Sessions persist in SecureStore (`lib/supabase.ts`) for
    offline cold start.
-3. **Enable sync** — the PowerSync build graph is wired, but the authenticated
-   lifecycle still needs to call `startSync()` before live beta use:
-   ```bash
-   npx expo install @powersync/react-native @op-engineering/op-sqlite
-   ```
-   The schema and live adapter are typechecked. Wire `startSync()`
-   (`powersync/system.ts`) to the authenticated lifecycle. A development build
-   is required because OP-SQLite is native:
+3. **Enable sync** — the authenticated runtime lifecycle starts and stops
+   PowerSync automatically. A development build is required because OP-SQLite
+   is native:
    ```bash
    npx expo run:android   # or: run:ios  /  eas build --profile development
    ```

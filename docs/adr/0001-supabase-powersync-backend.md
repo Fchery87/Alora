@@ -41,7 +41,8 @@ bidirectional sync engine, with all access control enforced in the database:
 ## Consequences
 
 - Privacy is isolated at **both** layers: RLS and the per-user PowerSync bucket.
-- The pgTAP suite (52 assertions) verifies RLS enforcement, the invite lifecycle,
+- The pgTAP suite (74 assertions) verifies RLS enforcement, relational ownership,
+  bootstrap, the invite lifecycle,
   seat limits, and privacy isolation at the database layer.
 - Live mode requires a development build (native PowerSync modules); demo and
   local-first modes work without the server.

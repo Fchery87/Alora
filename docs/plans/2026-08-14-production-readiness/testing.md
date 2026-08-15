@@ -8,28 +8,28 @@ This matrix separates fast contract tests, database security tests, native integ
 
 ## Static checks
 
-| Check              | Command                                                                                  | Required evidence                                                       |
-| ------------------ | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Formatting         | `cd mobile && npm run format`                                                            | Exit 0 with no changed files                                            |
-| TypeScript         | `cd mobile && npm run typecheck`                                                         | Exit 0 with runtime, PowerSync, routes, and tests included              |
-| Lint               | `cd mobile && npm run lint`                                                              | Exit 0 with zero warnings                                               |
-| Expo compatibility | `cd mobile && npx expo install --check`                                                  | No incompatible Expo package versions                                   |
-| Android bundle     | `cd mobile && npx expo export --platform android --output-dir /tmp/alora-export-android` | Hermes bundle and metadata emitted                                      |
-| iOS bundle         | `cd mobile && npx expo export --platform ios --output-dir /tmp/alora-export-ios`         | JavaScript bundle and metadata emitted                                  |
-| Dependency policy  | `cd mobile && npm audit --omit=dev --audit-level=high`                                   | No unresolved critical or high advisory without an approved disposition |
+| Check              | Command                                                | Required evidence                                                       |
+| ------------------ | ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| Formatting         | `cd mobile && npm run format`                          | Exit 0 with no changed files                                            |
+| TypeScript         | `cd mobile && npm run typecheck`                       | Exit 0 with runtime, PowerSync, routes, and tests included              |
+| Lint               | `cd mobile && npm run lint`                            | Exit 0 with zero warnings                                               |
+| Expo compatibility | `cd mobile && npx expo install --check`                | No incompatible Expo package versions                                   |
+| Android bundle     | `cd mobile && npm run export:android`                  | Hermes bundle and metadata emitted                                      |
+| iOS bundle         | `cd mobile && npm run export:ios`                      | JavaScript bundle and metadata emitted                                  |
+| Dependency policy  | `cd mobile && npm audit --omit=dev --audit-level=high` | No unresolved critical or high advisory without an approved disposition |
 
 ## Automated test layers
 
-| Layer                    | Tool                                        | Must prove                                                                                               |
-| ------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Pure domain              | Jest                                        | Mode resolution, capabilities, duplicate pairs, retry decisions, formatting, and calculations            |
-| React Native integration | Jest Expo plus React Native Testing Library | Boot fallback, auth routing, onboarding gates, role navigation, accessibility semantics, and error retry |
-| Repository contract      | Jest with the existing SQLite stand-in      | Mock and live adapters preserve the same domain behavior                                                 |
-| Source coverage          | Jest coverage                               | Application TypeScript appears in the report; thresholds follow the measured baseline                    |
-| Database security        | Supabase CLI plus pgTAP                     | RLS, composite ownership, actor attribution, role matrix, invite concurrency, and deletion idempotency   |
-| Edge orchestration       | Deno tests or locally invoked functions     | Auth validation, generic errors, RPC mapping, and checked external failures                              |
-| Native journey           | Maestro on development builds               | Sign-up, onboarding, recovery, deep links, route guards, and basic accessibility focus                   |
-| Live two-device          | Provisioned Supabase plus PowerSync         | Offline persistence, reconnect, convergence, privacy isolation, and deletion propagation                 |
+| Layer                    | Tool                                        | Must prove                                                                                                        |
+| ------------------------ | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Pure domain              | Jest                                        | Runtime states, capabilities, duplicate pairs, sync projection, retry decisions, formatting, and calculations     |
+| React Native integration | Jest Expo plus React Native Testing Library | Boot fallback, auth routing, onboarding gates, role navigation, accessibility semantics, and error retry          |
+| Repository contract      | Jest with the existing SQLite stand-in      | Mock and live adapters preserve the same domain behavior                                                          |
+| Source coverage          | Jest coverage                               | Application TypeScript appears in the report; thresholds follow the measured baseline                             |
+| Database security        | Supabase CLI plus pgTAP                     | RLS, composite ownership, actor attribution, role matrix, invite concurrency, bootstrap, and deletion idempotency |
+| Edge orchestration       | Deno tests or locally invoked functions     | Auth validation, generic errors, RPC mapping, and checked external failures                                       |
+| Native journey           | Maestro on development builds               | Sign-up, onboarding, recovery, deep links, route guards, and basic accessibility focus                            |
+| Live two-device          | Provisioned Supabase plus PowerSync         | Offline persistence, reconnect, convergence, privacy isolation, and deletion propagation                          |
 
 ## Required negative tests
 
@@ -55,7 +55,7 @@ Use two clean physical devices or one physical device and one simulator with sep
 1. Create Account A. Confirm email when that environment requires it.
 2. Create the family and baby through onboarding.
 3. Generate a partner invite and open its deep link on Device B.
-4. Create Account B and redeem the invite.
+4. Create Account B and redeem the invite. If the link was opened while signed out, confirm the pending-code handoff resumes after sign-in.
 5. Put Device A offline. Log feed, diaper, and an open sleep.
 6. Kill and reopen Device A while still offline. Confirm all data and the active sleep survive.
 7. Stop sleep. Confirm the pending state is honest.

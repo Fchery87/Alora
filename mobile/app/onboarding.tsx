@@ -18,7 +18,7 @@ import { PrimaryButton } from "../components/buttons";
 import { Backdrop } from "../components/Backdrop";
 import { ChevronRight } from "../components/icons";
 import { usePrefersReducedMotion } from "../components/usePrefersReducedMotion";
-import { saveBabyProfile } from "../data/useData";
+import { bootstrapFamily } from "../data/useData";
 
 const TOTAL = 4;
 const AGE_OPTIONS = ["0–3 mo", "3–6 mo", "6–9 mo"];
@@ -37,7 +37,7 @@ export default function Onboarding() {
     setSaving(true);
     setError(null);
     try {
-      await saveBabyProfile({ name: babyName, ageLabel: babyAge });
+      await bootstrapFamily({ name: babyName, ageLabel: babyAge });
       router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save your baby's profile.");

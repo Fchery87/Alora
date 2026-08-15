@@ -57,11 +57,11 @@ insert into babies (id, family_id, name) values
 insert into baby_events (id, family_id, baby_id, created_by, event_type, start_at, notes) values
   ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'feed', now() - interval '2 hours', 'bottle'),
   ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 'sleep', now() - interval '1 hour', 'nap');
-insert into parent_check_ins (id, user_id, mood) values
-  ('40000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'okay'),
-  ('40000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', 'tired');
-insert into parent_reflections (id, check_in_id, user_id, body) values
-  ('41000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'private reflection');
+insert into parent_check_ins (id, family_id, user_id, mood) values
+  ('40000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'okay'),
+  ('40000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 'tired');
+insert into parent_reflections (id, check_in_id, family_id, user_id, body) values
+  ('41000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'private reflection');
 insert into invitation_tokens (id, family_id, created_by, code, expires_at, used_at, revoked_at) values
   ('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'ACTIVE-F1', now() + interval '24 hours', null, null),
   ('50000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'USED-F1',   now() + interval '24 hours', now(), null),
@@ -107,7 +107,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Plan
 -- ---------------------------------------------------------------------------
-select plan(52);
+select plan(74);
 
 -- ===========================================================================
 -- Block A — non-member sees nothing (intruder@alora.test has no membership)
@@ -192,6 +192,34 @@ select is(
 );
 reset role;
 
+-- The transactional bootstrap RPC is retry-safe for a newly authenticated user.
+set local role authenticated;
+select tests_set_identity('00000000-0000-0000-0000-000000000003');
+select lives_ok(
+  $$ select * from bootstrap_family('F4 New Family', 'Theo', '2026-01-01') $$,
+  'C8: bootstrap creates a family, owner, and baby atomically'
+);
+select is(
+  (select count(*) from family_members where user_id = '00000000-0000-0000-0000-000000000003' and role = 'owner'),
+  1::bigint,
+  'C9: bootstrap grants exactly one owner membership'
+);
+select lives_ok(
+  $$ select * from bootstrap_family('ignored retry name', 'ignored retry baby', '2026-02-02') $$,
+  'C10: bootstrap retry is idempotent'
+);
+select is(
+  (select count(*) from families where created_by = '00000000-0000-0000-0000-000000000003'),
+  1::bigint,
+  'C11: bootstrap retry does not create a second family'
+);
+select is(
+  (select count(*) from babies where family_id = (select family_id from family_members where user_id = '00000000-0000-0000-0000-000000000003')),
+  1::bigint,
+  'C12: bootstrap retry does not create a second baby'
+);
+reset role;
+
 -- ===========================================================================
 -- Block D — invite issuance: owner only
 -- ===========================================================================
@@ -206,6 +234,13 @@ select lives_ok(
   $$ insert into invitation_tokens (family_id, created_by, code)
      values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'FRESH-F1') $$,
   'D2: owner can issue a new invite code'
+);
+select throws_ok(
+  $$ insert into invitation_tokens (family_id, created_by, code, role)
+     values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'OWNER-F1', 'owner') $$,
+  '23514',
+  NULL,
+  'D2b: an invite cannot mint an owner seat'
 );
 select is(
   (select count(*) from invitation_tokens where family_id = '10000000-0000-0000-0000-000000000001'),
@@ -297,15 +332,15 @@ select throws_ok(
 );
 -- Restore one free seat so the redemption flow can succeed below.
 update families set seat_limit = 2 where id = '10000000-0000-0000-0000-000000000002';
+set local role authenticated;
+select tests_set_identity('00000000-0000-0000-0000-000000000003');
 select lives_ok(
-  $$ -- emulate redeem-invite: consume the token, join as partner, audit
-     update invitation_tokens set used_at = now(), used_by = '00000000-0000-0000-0000-000000000003'
-       where code = 'ACTIVE-F2';
-     insert into family_members (family_id, user_id, role, display_name)
-       values ('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'partner', 'Intruder Person');
-     insert into audit_logs (family_id, actor_id, action)
-       values ('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003', 'member.joined'); $$,
-  'G2: redemption flow (token consume + join + audit) succeeds via service role'
+  $$ select * from redeem_invite('ACTIVE-F2', 'Intruder Person') $$,
+  'G2: transactional redemption (token consume + join + audit) succeeds'
+);
+select lives_ok(
+  $$ select * from redeem_invite('ACTIVE-F2', 'Intruder Person') $$,
+  'G2b: retrying the winning redemption returns the original success'
 );
 select is(
   (select token_is_active(t) from invitation_tokens t where t.code = 'ACTIVE-F2'),
@@ -316,6 +351,12 @@ select is(
   0::bigint,
   'G4: no redeemable codes remain in F2'
 );
+select is(
+  (select count(*) from family_members where family_id = '10000000-0000-0000-0000-000000000002' and user_id = '00000000-0000-0000-0000-000000000003'),
+  1::bigint,
+  'G4b: a redemption retry does not duplicate membership'
+);
+reset role;
 
 -- After redemption, the intruder is a partner of F2 — and nothing more.
 set local role authenticated;
@@ -379,6 +420,135 @@ select throws_ok(
 select tests_set_identity('00000000-0000-0000-0000-000000000002');
 select ok((select tests_count('audit_logs')) >= 1, 'H8: partner (non-owner) still reads the audit log');
 reset role;
+
+-- ===========================================================================
+-- Block I — relational ownership and actor-attribution invariants
+-- ===========================================================================
+set local role authenticated;
+select tests_set_identity('00000000-0000-0000-0000-000000000005');
+select throws_ok(
+  $$ insert into parent_check_ins (id, family_id, user_id, mood)
+     values ('40000000-0000-0000-0000-000000000005',
+             '10000000-0000-0000-0000-000000000001',
+             '00000000-0000-0000-0000-000000000005',
+             'okay') $$,
+  '42501',
+  NULL,
+  'I1: limited caregiver cannot create a private check-in'
+);
+
+select tests_set_identity('00000000-0000-0000-0000-000000000001');
+select throws_ok(
+  $$ insert into baby_events (id, family_id, baby_id, created_by, event_type, start_at)
+     values ('30000000-0000-0000-0000-000000000010',
+             '10000000-0000-0000-0000-000000000001',
+             '20000000-0000-0000-0000-000000000002',
+             '00000000-0000-0000-0000-000000000001',
+             'feed', now()) $$,
+  '23503',
+  NULL,
+  'I2: event cannot reference a baby from another family'
+);
+select throws_ok(
+  $$ insert into event_edits (id, event_id, family_id, edited_by, prior_values)
+     values ('60000000-0000-0000-0000-000000000001',
+             '30000000-0000-0000-0000-000000000003',
+             '10000000-0000-0000-0000-000000000001',
+             '00000000-0000-0000-0000-000000000001',
+             '{}') $$,
+  '23503',
+  NULL,
+  'I3: event edit cannot reference an event from another family'
+);
+select throws_ok(
+  $$ insert into parent_reflections (id, check_in_id, family_id, user_id, body)
+     values ('41000000-0000-0000-0000-000000000010',
+             '40000000-0000-0000-0000-000000000002',
+             '10000000-0000-0000-0000-000000000001',
+             '00000000-0000-0000-0000-000000000001',
+             'cross-user reflection') $$,
+  '23503',
+  NULL,
+  'I4: reflection cannot reference another user''s check-in'
+);
+select throws_ok(
+  $$ insert into baby_events (id, family_id, baby_id, created_by, event_type, start_at)
+     values ('30000000-0000-0000-0000-000000000011',
+             '10000000-0000-0000-0000-000000000001',
+             '20000000-0000-0000-0000-000000000001',
+             '00000000-0000-0000-0000-000000000002',
+             'feed', now()) $$,
+  '42501',
+  NULL,
+  'I5: event attribution must match the authenticated actor'
+);
+reset role;
+select throws_ok(
+  $$ insert into family_members (family_id, user_id, role)
+     values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'owner') $$,
+  '23505',
+  NULL,
+  'I6: a family can have at most one owner'
+);
+
+set local role authenticated;
+select tests_set_identity('00000000-0000-0000-0000-000000000001');
+select lives_ok(
+  $$ insert into event_duplicate_resolutions
+       (family_id, event_id, duplicate_of, resolution, resolved_by)
+     values ('10000000-0000-0000-0000-000000000001',
+             '30000000-0000-0000-0000-000000000002',
+             '30000000-0000-0000-0000-000000000001',
+             'keep_both',
+             '00000000-0000-0000-0000-000000000001') $$,
+  'I7: caregiver can persist a duplicate resolution'
+);
+select is(
+  tests_count('event_duplicate_resolutions'),
+  1::bigint,
+  'I8: duplicate resolution remains available to future reads'
+);
+select lives_ok(
+  $$ update event_duplicate_resolutions
+     set resolution = 'merged'
+     where family_id = '10000000-0000-0000-0000-000000000001'
+       and event_id = '30000000-0000-0000-0000-000000000002'
+       and duplicate_of = '30000000-0000-0000-0000-000000000001' $$,
+  'I9: caregiver can update a persisted duplicate resolution'
+);
+reset role;
+
+-- ===========================================================================
+-- Block J — auth-triggered deletion is atomic and deterministic
+-- ===========================================================================
+set local role authenticated;
+select tests_set_identity('00000000-0000-0000-0000-000000000001');
+select lives_ok(
+  $$ select * from request_account_deletion() $$,
+  'J1: deletion request is durable before provider deletion'
+);
+reset role;
+delete from auth.users where id = '00000000-0000-0000-0000-000000000001';
+select is(
+  (select count(*) from users where id = '00000000-0000-0000-0000-000000000001'),
+  0::bigint,
+  'J2: deleted auth user has no remaining profile row'
+);
+select is(
+  (select count(*) from family_members where family_id = '10000000-0000-0000-0000-000000000001' and user_id = '00000000-0000-0000-0000-000000000002' and role = 'owner'),
+  1::bigint,
+  'J3: owner deletion transfers to the deterministic partner'
+);
+select is(
+  (select count(*) from families where id = '10000000-0000-0000-0000-000000000002'),
+  0::bigint,
+  'J4: a sole-owner family is deleted instead of promoting a limited seat'
+);
+select is(
+  (select status from account_deletion_requests where user_id = '00000000-0000-0000-0000-000000000001' order by requested_at desc limit 1),
+  'completed',
+  'J5: deletion request reaches a terminal completed state'
+);
 
 -- ===========================================================================
 -- Summary

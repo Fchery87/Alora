@@ -1,132 +1,103 @@
-# Alora backend foundation
+# Alora backend
 
-> **Release status:** blocked. The SQL and edge-function foundation exists, but the 2026-08-13 validation found non-atomic trust operations, sync-rule privacy drift, and live-schema mismatches. Complete `../VALIDATION_TASKS.md` before provisioning a beta.
+The production data layer is Supabase Postgres plus PowerSync. The canonical
+schema lives only in `../supabase/migrations/`; `sync-rules.yaml` controls what
+reaches each device, and the Edge Functions are thin authenticated transports
+over database transactions.
 
-The production data layer for Alora's live mode: Postgres schema + Row-Level
-Security, PowerSync sync rules, and the privileged Edge Functions. All artifacts
-here are written and tested — provisioning the cloud services and supplying
-credentials is the remaining step (it needs your accounts; see
-`PROVISIONING.md`).
+Release status is code-complete for the current beta contract. It is not yet a
+launch approval: the five 2026-08-15 migrations still need to be applied to the
+linked Supabase project, the hosted 74-assertion suite must pass, and PowerSync
+and device journeys remain human-gated.
 
 ## What's here
 
-| File | Purpose |
-|---|---|
-| `../supabase/migrations/` | Canonical versioned Postgres tables, enums, indexes, triggers, and Row-Level Security policies. Apply with the Supabase CLI. |
-| `sync-rules.yaml` | PowerSync buckets: shared `family`, private `user_private`, read-only `global`. |
-| `functions/generate-invite/` | Edge Function — issues a single-use, time-limited invite code for a chosen role (`partner` \| `limited`). |
-| `functions/redeem-invite/` | Edge Function — redeems a single-use invite, enforces the **configured seat limit** (not a hard-coded cap), joins the family, consumes the token. |
-| `functions/delete-account/` | Edge Function — transfer-then-scrub account deletion (promote partner / delete sole-owner family / hard-delete PII + private check-ins). |
-| `supabase/tests/01-rls-security.test.sql` | pgTAP suite (52 assertions) — verifies RLS enforcement, the invite lifecycle, seat limits, and privacy isolation at the database layer. |
+| Path                                         | Purpose                                                                                                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `../supabase/migrations/`                    | Versioned tables, ownership constraints, RLS policies, transactional bootstrap, invite redemption, duplicate resolutions, and account deletion trigger. |
+| `sync-rules.yaml`                            | Shared family care data, role-scoped trust buckets, owner-only invite tokens, per-user private check-ins, and global resources.                         |
+| `functions/generate-invite/`                 | Owner-authenticated invite issuance and audit.                                                                                                          |
+| `functions/redeem-invite/`                   | JWT-authenticated transport for durable rate limiting and atomic `redeem_invite(...)`.                                                                  |
+| `functions/delete-account/`                  | Retry-safe request creation plus Supabase Auth deletion; relational cleanup runs in the `auth.users` trigger.                                           |
+| `tests/run-pgtap.sh`                         | Docker-free local or explicitly confirmed hosted pgTAP runner.                                                                                          |
+| `tests/unit/`                                | Deno source-contract checks for Edge Function boundaries.                                                                                               |
+| `../supabase/tests/01-rls-security.test.sql` | 74-assertion RLS, ownership, role, invite, bootstrap, and deletion matrix.                                                                              |
 
-## Design decisions encoded
+## Database contract
 
-- **Roles**: `family_role` enum = `owner`, `partner`, `limited`. **`limited` is implemented** (Phase A) — a scoped caregiver seat (grandparent/nanny) that sees care events + timeline + own profile, but never private check-ins, trust actions, or the audit log.
-- **Seat limits are a family setting, not a code constant**: `families.seat_limit` is nullable (unset = unlimited). Any non-limited member may change it; the `audit_seat_limit_change` definer trigger records actor + old/new values in the audit log. The database trigger enforces the cap, but invite redemption is not yet a single atomic operation. Trust actions are column-level: generic `UPDATE` on `families` is revoked, only `seat_limit` is granted.
-- **`baby_events` has no sync-status column.** Sync state is a *client* concern owned by PowerSync's local queue; the server holds authoritative state only.
-- **Soft delete** via `deleted_at` (propagates as a sync tombstone; sync rules include deleted rows, client filters them).
-- **Invite tokens** are single-use (`used_at`), time-limited (`expires_at`, default 24h), revocable (`revoked_at`); `token_is_active()` gates redemption.
-- **Private check-ins/reflections** are isolated at *both* layers: RLS (`user_id = auth.uid()`) and the per-user PowerSync bucket — a co-member's device never pulls them.
+- Roles are `owner`, `partner`, and `limited`. Limited caregivers can read
+  family care events but cannot access check-ins, invite tokens, audit data, or
+  seat-limit management.
+- `families.seat_limit` is nullable. A null value is unlimited. Seat checks lock
+  the family row so concurrent redemptions cannot claim the last seat twice.
+- Composite foreign keys keep babies, events, edits, check-ins, reflections,
+  and duplicate resolutions inside one family. A partial unique index permits
+  at most one owner per family.
+- Invite redemption locks the token and family, applies the cap, inserts the
+  member, consumes the token, and audits the join in one transaction. Retries
+  by the winning user return the same success. Owner is not an invite-grantable
+  role.
+- `bootstrap_family(...)` is advisory-lock protected and idempotent for the
+  authenticated user. It creates the family, owner, baby, and audit row as one
+  operation.
+- Private check-ins retain a user-private PowerSync bucket while carrying
+  family context in Postgres. RLS allows only the author's non-limited seat.
+- `event_duplicate_resolutions` persists keep-both and merged decisions. Merge
+  soft-deletes only the selected loser; the shared history remains auditable.
+- Account deletion creates a durable request, calls Auth Admin, and lets the
+  `auth.users` deletion trigger transfer ownership deterministically or delete a
+  sole-owner family. The request row survives Auth deletion and reaches a
+  terminal state.
 
-## To provision (your steps)
+## Provisioning
 
-The full ordered runbook is [`PROVISIONING.md`](PROVISIONING.md) (~45–60 min), with a founder-facing checklist (including Sentry + privacy-URL steps and Phase A live checks) in `.scratch/launch-readiness/provisioning-checklist.md`. In short:
-
-1. **Create a Supabase project** (US region for the US-only launch). Copy the project URL + anon key.
-2. Apply the versioned migration history:
-   ```bash
-   supabase db push
-   ```
-   Seed `support_resources` (crisis-line copy still gated on MVP issue 13 sign-off).
-3. **Create a PowerSync instance**, connect it to the Supabase Postgres (replication user), and paste `sync-rules.yaml` into its Sync Rules.
-4. **Deploy the Edge Functions** (all three — note `generate-invite` is easy to miss):
-   ```bash
-   supabase functions deploy generate-invite
-   supabase functions deploy redeem-invite
-   supabase functions deploy delete-account
-   ```
-   They read `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` from the function environment (set automatically by Supabase, except the service-role key which you add as a secret: `supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...`).
-5. Put the credentials in the app env (never commit them):
-   ```
-   EXPO_PUBLIC_SUPABASE_URL=...
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=...
-   EXPO_PUBLIC_POWERSYNC_URL=...
-   EXPO_PUBLIC_SENTRY_DSN=...
-   EXPO_PUBLIC_PRIVACY_POLICY_URL=...
-   ```
-6. In the app: the PowerSync dependencies and strict live-path typechecking are already wired. Connect the authenticated lifecycle to `startSync()` and sign in — `data/useData.ts` then selects the Supabase repository via the runtime mode resolver (`mobile/config/mode.ts`).
-
-## Testing the security layer (pgTAP)
-
-RLS cannot be meaningfully tested through the TypeScript adapter (the adapter
-operates on the local SQLite, not the Postgres policies), so the policies and
-invite lifecycle are verified at the database layer with pgTAP:
+Use [`PROVISIONING.md`](PROVISIONING.md) for the complete sequence.
 
 ```bash
-# Needs PostgreSQL + the pgTAP extension for your server version:
-#   apt install postgresql postgresql-client postgresql-<ver>-pgtap
-supabase test db
+supabase link --project-ref <20-character-project-ref>
+supabase db push
+supabase functions deploy generate-invite
+supabase functions deploy redeem-invite
+supabase functions deploy delete-account
 ```
 
-The local runner creates a throwaway database, applies
-`../supabase/tests/support/00-mock-auth.sql` (a local stand-in for the
-Supabase `auth` schema), then the canonical migration history. Pass with
-`PGDATABASE=name ./tests/run-pgtap.sh` to override the database name.
+Set only client-safe `EXPO_PUBLIC_*` values in the mobile environment. Keep the
+service-role key in Supabase function secrets. Configure PowerSync with the
+same project and deploy `sync-rules.yaml` there.
 
-Docker-free fallback: set `PGLTAP_DATABASE_URL` to a dedicated hosted
-PostgreSQL/Supabase database and run the same script with
-`PGLTAP_REMOTE_CONFIRM=I_UNDERSTAND_THIS_IS_A_DEDICATED_TEST_DATABASE`. The
-remote target must already have the canonical migration. For a disposable
-plain PostgreSQL target, also set `PGLTAP_APPLY_MIGRATION=1` and
-`PGLTAP_USE_AUTH_MOCK=1`. The script uses `psql`, rolls back fixture data, and
-refuses remote mode without the explicit confirmation value.
+## pgTAP without Docker
 
-The runner's cleanup behavior has a database-free regression check:
+The default local path needs PostgreSQL and pgTAP. A hosted disposable target
+works with the installed `psql` client:
 
 ```bash
-bash ./tests/run-pgtap-cleanup.test.sh
+export PGLTAP_DATABASE_URL='postgresql://user:password@host:5432/postgres?sslmode=require'
+export PGLTAP_REMOTE_CONFIRM=I_UNDERSTAND_THIS_IS_A_DEDICATED_TEST_DATABASE
+./tests/run-pgtap.sh
 ```
 
-What the suite covers (52 assertions):
+Do not paste a multi-line URI. If the target is a disposable plain PostgreSQL
+database, add `PGLTAP_APPLY_MIGRATION=1` and `PGLTAP_USE_AUTH_MOCK=1`. A linked
+Supabase project should receive migrations with `supabase db push` first, then
+run the suite with migration application disabled.
 
-- A non-member cannot read family events, families, memberships, invite
-  tokens, the audit log, or other users' profiles.
-- The `members_self_join` hole is closed: a client-side insert into an
-  existing family is rejected by RLS (0 rows).
-- Onboarding still works: a user can create a family and take the owner seat
-  (`members_owner_first` policy), and no one else can use that path.
-- Invite issuance is owner-only; partners see no tokens and cannot issue them.
-- `token_is_active()` gates redemption: used, revoked, and expired codes are
-  rejected; exactly one redeemable code survives per family.
-- **Seat limits (Phase A rework):** unset limit = unlimited; a configured cap
-  rejects a third member at redeem even via the service role; the owner can
-  raise the cap; a partner can change the limit (trust action) and the change
-  is audit-logged; a **limited** member is blocked from seat-limit updates via
-  RLS (`families_member_seat_limit`), cannot see the audit log, cannot create
-  invites or private check-ins — but can still read care events.
-- Private check-ins/reflections are invisible to co-caregivers and to
-  non-members.
+The fixture transaction rolls back. The runner rejects remote mode without the
+explicit confirmation string and removes temporary local output on every path.
 
-## Edge Functions
+## Edge Function boundaries
 
-Privileged server logic that's more than RLS should allow a client to do. Each
-authenticates the caller via their JWT, then acts with the service role.
+- `generate-invite` validates the JWT and role, then performs the owner-only
+  write through the authenticated database path.
+- `redeem-invite` authenticates, applies the durable account/network limiter,
+  calls `redeem_invite`, and maps unavailable or invalid outcomes to generic
+  responses. It never reads a token into application memory first.
+- `delete-account` authenticates, creates or reuses a deletion request, calls
+  Auth Admin, and reports only terminal success or a retryable failure. It does
+  not mutate family ownership itself.
 
-- **generate-invite** — `POST {}` (or `{ role }`) → owner-only (RLS-gated; the
-  function double-checks the caller's seat) issues a single-use code for
-  `partner` or `limited`, with an expiry; audits the issue.
-- **redeem-invite** — `POST { code }` → validates the token is active (unused,
-  not revoked, unexpired), enforces the configured seat limit, upserts the
-  profile, inserts the membership (with denormalized `display_name`), consumes
-  the token, audits.
-- **delete-account** — `POST {}` → for each owned family: promote the partner
-  to owner or delete a sole-owner family; audit; then `auth.admin.deleteUser`,
-  which cascades the user's PII/check-ins and sets `baby_events.created_by →
-  NULL` ("former caregiver"). If the family has a configured seat limit, the
-  transfer prefers a non-limited member as successor.
+## Mobile boundary
 
-## Lives in the Expo app instead (`../mobile`)
-
-- **Auth**: `lib/supabase.ts`, `lib/useAuth.tsx`, `app/(auth)/*`.
-- **Local-first sync**: `powersync/{schema,system}.ts` + `data/supabaseRepository.ts`.
-- **Runtime mode resolution**: `config/mode.ts` (demo / localFirst / live) drives which repository is active — the app runs on the mock adapter with zero env vars and switches to the Supabase adapter automatically once configured and signed in.
+Runtime composition lives in `../mobile/runtime/`. The authenticated lifecycle
+selects the Supabase repository, starts one PowerSync connection, exposes a
+sanitized sync projection, and resets the repository on sign-out. The mock
+repository is used only in demo mode or for explicitly offline contract tests.

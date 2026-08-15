@@ -4,6 +4,7 @@ import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { useTheme } from "../theme/ThemeProvider";
 import { ModalScreen } from "../components/ModalScreen";
+import { CapabilityGate } from "../components/CapabilityGate";
 import { AppText, PressableScale } from "../components/Themed";
 import { setSeatLimit, useFamilyMembers, useSeatLimit } from "../data/useData";
 
@@ -11,6 +12,18 @@ import { setSeatLimit, useFamilyMembers, useSeatLimit } from "../data/useData";
 const OPTIONS: (number | null)[] = [null, 2, 3, 4, 5, 6];
 
 export default function SeatLimitScreen() {
+  return (
+    <CapabilityGate
+      allowed="canManageSeats"
+      title="Seat settings are restricted"
+      message="Limited caregiver accounts cannot change the family seat limit."
+    >
+      <SeatLimitContent />
+    </CapabilityGate>
+  );
+}
+
+function SeatLimitContent() {
   const theme = useTheme();
   const router = useRouter();
   const seatLimitState = useSeatLimit();

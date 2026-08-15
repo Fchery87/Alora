@@ -18,16 +18,11 @@ import {
   GrowthIcon,
   TimelineIcon,
 } from "../../components/icons";
-import {
-  exportMyData,
-  useBabyStatus,
-  useFamilyMembers,
-  useReminderPreferences,
-  useSeatLimit,
-} from "../../data/useData";
+import { exportMyData, useBabyStatus, useReminderPreferences, useSeatLimit } from "../../data/useData";
 import { sinceLabel } from "../../data/mock";
 import * as Print from "expo-print";
 import { buildPediatricReportHTML } from "../../lib/pediatricReport";
+import { useCaregiverCapabilities } from "../../domains/useCaregiverCapabilities";
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -60,15 +55,13 @@ export default function SettingsScreen() {
   }
 
   const baby = useBabyStatus();
-  const members = useFamilyMembers();
+  const { members, capabilities } = useCaregiverCapabilities();
   const prefs = useReminderPreferences();
   const seatLimitState = useSeatLimit();
   const babyName = baby.status === "ready" && baby.data.name ? baby.data.name : null;
   const memberCount = members.status === "ready" ? members.data.length : 0;
   const quietHours = prefs.status === "ready" ? prefs.data.find((p) => p.kind === "quietHours") : undefined;
   const familyLabel = babyName ? `${babyName}’s family` : "Your family";
-  const myRole = members.status === "ready" ? members.data.find((m) => m.isSelf)?.role : undefined;
-  const isLimited = myRole === "limited";
   const seatLimit = seatLimitState.status === "ready" ? seatLimitState.data : undefined;
 
   async function shareDataExport() {
@@ -156,7 +149,7 @@ export default function SettingsScreen() {
             roleFg={theme.color.inkFaint}
           />
         )}
-        {!isLimited && (
+        {capabilities.canInvite && capabilities.canManageSeats && (
           <>
             <Divider />
             <Row
@@ -224,7 +217,7 @@ export default function SettingsScreen() {
 
       <GroupLabel>Privacy & trust</GroupLabel>
       <List>
-        {!isLimited && (
+        {capabilities.canViewAudit && (
           <>
             <Row
               iconBg={theme.color.diaperTint}

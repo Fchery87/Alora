@@ -156,6 +156,18 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           style={{ marginTop: 22 }}
         />
 
+        {!signUp && (
+          <PressableScale
+            scale={1}
+            onPress={() => router.push("/forgot-password" as never)}
+            style={{ marginTop: 14, alignItems: "center" }}
+          >
+            <AppText variant="caption" weight="semibold" color="accent">
+              Forgot password?
+            </AppText>
+          </PressableScale>
+        )}
+
         <PressableScale
           scale={1}
           onPress={() => router.replace(signUp ? "/sign-in" : "/sign-up")}

@@ -3,6 +3,7 @@ import { View, TextInput } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import { useTheme } from "../../theme/ThemeProvider";
 import { AppText, Card, PressableScale, ScreenScroll } from "../../components/Themed";
+import { CapabilityGate } from "../../components/CapabilityGate";
 import { CheckInIcon, ChevronRight, MoodLow, MoodTired, MoodOkay, MoodGood, MoodGreat } from "../../components/icons";
 import { createCheckIn, useSupportResources } from "../../data/useData";
 import type { CheckInMood } from "../../data/repository";
@@ -16,6 +17,18 @@ const MOODS: { Icon: typeof MoodLow; label: string; mood: CheckInMood }[] = [
 ];
 
 export default function CheckInScreen() {
+  return (
+    <CapabilityGate
+      allowed="canViewCheckIn"
+      title="Check-In is private"
+      message="Limited caregiver accounts can care for the baby, but private check-ins belong to the parent account."
+    >
+      <CheckInContent />
+    </CapabilityGate>
+  );
+}
+
+function CheckInContent() {
   const theme = useTheme();
   const resources = useSupportResources();
   const [mood, setMood] = useState<number | null>(null);

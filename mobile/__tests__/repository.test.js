@@ -259,6 +259,7 @@ function loadSupabaseRepository() {
     ],
     baby_events: [],
     event_edits: [],
+    event_duplicate_resolutions: [],
     reminders: [
       {
         id: "rem-feed",
@@ -320,7 +321,7 @@ function loadSupabaseRepository() {
       getSession: async () => ({ data: { session: { user: { id: "test-user" } } } }),
     },
     functions: {
-      invoke: async () => ({ error: null }),
+      invoke: async () => ({ data: { ok: true }, error: null }),
     },
   });
 

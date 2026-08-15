@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "check": "deno check functions/generate-invite/index.ts functions/redeem-invite/index.ts functions/delete-account/index.ts",
+    "test": "deno test tests/unit"
+  },
+  "fmt": {
+    "lineWidth": 120,
+    "semiColons": true,
+    "singleQuote": false
+  }
+}

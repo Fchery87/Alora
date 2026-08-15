@@ -2,14 +2,14 @@
 
 > **Superseded on 2026-08-13.** This document records the earlier demo-mode audit. References to `backend/schema.sql` and `backend/rls.sql` are historical names from that snapshot. The canonical database source is now `supabase/migrations/`. Several listed infrastructure gaps were later addressed, but the remediation was not complete. The current executable results and release blockers live in [`VALIDATION_TASKS.md`](../VALIDATION_TASKS.md).
 
-> **Date:** Audit performed against the current codebase (demo-mode build).
-> **Scope:** Full six-phase audit — project understanding, implementation review, user-workflow mapping, competitive benchmarking, enterprise-readiness checklist, and final scored report.
+> **Date:** Audit performed against the pre-remediation demo-mode build.
+> **Scope:** Historical six-phase audit — project understanding, implementation review, user-workflow mapping, competitive benchmarking, enterprise-readiness checklist, and final scored report. Do not use its findings as current implementation status; use [`VALIDATION_TASKS.md`](../VALIDATION_TASKS.md), the production-readiness plan, and the live verification commands instead.
 
 ---
 
 ## Project Summary
 
-**Alora** is a cross-platform (iOS/Android) Expo + React Native app for first-time parents with babies aged 0–9 months, built around a local-first baby-care logging workflow (feed/diaper/sleep) with two-caregiver handoff coordination and a private, non-clinical daily check-in. The app is designed to run offline-first (on-device SQLite as source of truth, synced to Supabase Postgres via PowerSync) and currently ships in **demo mode** — all screens read from a mock repository, with the live Supabase + PowerSync backend designed but not provisioned. It targets a US-only consumer launch.
+**Alora** is a cross-platform (iOS/Android) Expo + React Native app for first-time parents with babies aged 0–9 months, built around a local-first baby-care logging workflow (feed/diaper/sleep) with two-caregiver handoff coordination and a private, non-clinical daily check-in. This historical snapshot evaluated the demo-mode surface before the live runtime composition and Supabase + PowerSync path were wired. Current release status is tracked in [`VALIDATION_TASKS.md`](../VALIDATION_TASKS.md). It targets a US-only consumer launch.
 
 ---
 

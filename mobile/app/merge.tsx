@@ -10,7 +10,7 @@ import { usePrefersReducedMotion } from "../components/usePrefersReducedMotion";
 import { FeedIcon } from "../components/icons";
 import { clockLabel } from "../data/mock";
 import type { CareEvent } from "../data/repository";
-import { softDeleteCareEvent, updateCareEvent, useTimeline } from "../data/useData";
+import { resolveDuplicate, useTimeline } from "../data/useData";
 
 type Pick = "primary" | "duplicate";
 type Result = null | "merged" | "kept";
@@ -44,8 +44,7 @@ export default function MergeScreen() {
     try {
       const kept = options.find((option) => option.key === pick) ?? options[0];
       const removed = options.find((option) => option.key !== kept.key) ?? options[1];
-      if (kept.event.duplicateOf) await updateCareEvent(kept.event.id, { duplicateOf: null });
-      await softDeleteCareEvent(removed.event.id);
+      await resolveDuplicate(removed.event.id, kept.event.id, "merged");
       setResult("merged");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't merge these entries.");
@@ -59,11 +58,9 @@ export default function MergeScreen() {
     setSaving(true);
     setError(null);
     try {
-      await Promise.all(
-        options.map((option) =>
-          option.event.duplicateOf ? updateCareEvent(option.event.id, { duplicateOf: null }) : Promise.resolve(),
-        ),
-      );
+      const primary = options.find((option) => option.key === "primary")?.event;
+      const duplicate = options.find((option) => option.key === "duplicate")?.event;
+      if (primary && duplicate) await resolveDuplicate(duplicate.id, primary.id, "keep_both");
       setResult("kept");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't keep both entries.");
