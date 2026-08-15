@@ -5,10 +5,10 @@ schema lives only in `../supabase/migrations/`; `sync-rules.yaml` controls what
 reaches each device, and the Edge Functions are thin authenticated transports
 over database transactions.
 
-Release status is code-complete for the current beta contract. It is not yet a
-launch approval: the six 2026-08-15 migrations still need to be applied to the
-linked Supabase project, the hosted 74-assertion suite must pass, and PowerSync
-and device journeys remain human-gated.
+Release status is code-complete for the current beta contract. The linked
+Supabase project has migrations through `20260815000600`, and its hosted
+74-assertion pgTAP suite passed on 2026-08-15. It is not yet a launch approval:
+PowerSync provisioning and device journeys remain human-gated.
 
 ## What's here
 

@@ -6,6 +6,9 @@
 
 This matrix separates fast contract tests, database security tests, native integration tests, and release evidence. Passing one layer never substitutes for another.
 
+Hosted database evidence: the linked Supabase project applied migrations through
+`20260815000600` and passed all 74 pgTAP assertions on 2026-08-15.
+
 ## Static checks
 
 | Check              | Command                                                | Required evidence                                                       |

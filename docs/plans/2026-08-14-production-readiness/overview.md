@@ -15,10 +15,10 @@
 The implementation slices have now restored the PowerSync build graph, strict
 TypeScript coverage, runtime lifecycle, transactional onboarding and trust
 operations, role privacy, duplicate persistence, and release CI. The remaining
-gates are evidence-producing operations: apply the additive migrations to the
-hosted project, run the 74-assertion suite, provision PowerSync, complete native
-two-device and accessibility checks, resolve dependency risk, and obtain legal
-and store approval.
+gates are evidence-producing operations. The additive migrations were applied
+to the linked hosted project and its 74-assertion suite passed on 2026-08-15.
+The remaining gates are PowerSync provisioning, native two-device and
+accessibility checks, dependency-risk resolution, and legal and store approval.
 
 This plan treats `VALIDATION_TASKS.md` as a dated hypothesis ledger. Every blocker closes only when current automated and runtime evidence exists.
 

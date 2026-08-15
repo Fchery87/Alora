@@ -54,7 +54,7 @@ Target product principles:
 | **Phase B: handoff briefing**                                              | ✅ Implemented                 | 24h summary, start-of-shift marker                                                                                |
 | **Phase B: trust positioning**                                             | ✅ Implemented                 | "No ads. No data selling. Export and leave anytime." + privacy-policy link                                        |
 | Sentry crash reporting                                                     | 🟡 Wired, not provisioned      | DSN-gated and intended to avoid PII; no production release has verified ingestion                                 |
-| Live backend (Supabase + PowerSync)                                        | 🟡 Hosted verification pending | Six additive migrations and the 74-assertion suite are ready; apply them before provisioning a beta              |
+| Live backend (Supabase + PowerSync)                                        | 🟡 Database verified; sync pending | Migrations through `20260815000600` are applied and hosted pgTAP passed 74/74; PowerSync still needs provisioning |
 | Private beta distribution                                                  | ⛔ Blocked                     | EAS profiles and checklists exist, but no release bundle or live two-device smoke test passes yet                 |
 | Backlog: pumping + milk stash, wake-window suggestions, local-first photos | 📋 Roadmap                     | See `.scratch/launch-readiness/ROADMAP-PRD.md`                                                                    |
 
