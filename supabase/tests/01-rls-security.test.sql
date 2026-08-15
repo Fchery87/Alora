@@ -529,6 +529,15 @@ reset role;
 -- ===========================================================================
 -- Block J — auth-triggered deletion is atomic and deterministic
 -- ===========================================================================
+-- F2 now has a full-access partner because Block G redeemed an invite. Create
+-- a separate owner-plus-limited-only family to prove deletion never promotes a
+-- limited seat when no eligible successor exists.
+insert into families (id, name, created_by)
+values ('10000000-0000-0000-0000-000000000004', 'F4 Limited Only', '00000000-0000-0000-0000-000000000001');
+insert into family_members (family_id, user_id, role, display_name) values
+  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'owner', 'Owner Person'),
+  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000005', 'limited', 'Grandma Person');
+
 set local role authenticated;
 select tests_set_identity('00000000-0000-0000-0000-000000000001');
 select lives_ok(
@@ -548,7 +557,7 @@ select is(
   'J3: owner deletion transfers to the deterministic partner'
 );
 select is(
-  (select count(*) from families where id = '10000000-0000-0000-0000-000000000002'),
+  (select count(*) from families where id = '10000000-0000-0000-0000-000000000004'),
   0::bigint,
   'J4: a sole-owner family is deleted instead of promoting a limited seat'
 );
