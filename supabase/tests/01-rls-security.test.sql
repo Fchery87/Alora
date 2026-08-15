@@ -342,6 +342,9 @@ select lives_ok(
   $$ select * from redeem_invite('ACTIVE-F2', 'Intruder Person') $$,
   'G2b: retrying the winning redemption returns the original success'
 );
+-- Token state is an owner/service concern, so inspect it outside the partner
+-- identity. The member-facing RLS policy intentionally hides invite rows.
+reset role;
 select is(
   (select token_is_active(t) from invitation_tokens t where t.code = 'ACTIVE-F2'),
   false, 'G3: redeemed token is consumed (single-use)'
@@ -483,6 +486,11 @@ select throws_ok(
   'I5: event attribution must match the authenticated actor'
 );
 reset role;
+-- Remove the fixture cap so this assertion reaches the one-owner unique index
+-- instead of being short-circuited by the seat-cap trigger.
+update families
+set seat_limit = null
+where id = '10000000-0000-0000-0000-000000000001';
 select throws_ok(
   $$ insert into family_members (family_id, user_id, role)
      values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'owner') $$,
