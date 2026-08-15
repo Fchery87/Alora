@@ -15,6 +15,10 @@
 
 Write a security-definer predicate that checks both family ownership and emptiness without being blocked by `families` or `family_members` RLS. Replace `members_owner_first` so only the creator of an empty family can insert the first owner member. Preserve the existing role check and prevent hijacking a family after membership exists.
 
+The follow-up migration `20260814000300_harden_owner_first_rls.sql` also requires
+the inserted `user_id` to equal `auth.uid()`, preventing a creator's client from
+assigning the first owner seat to another user.
+
 ### Task 2: Correct pgTAP behavior assertions
 
 **Files:**
