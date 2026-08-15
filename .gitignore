@@ -21,6 +21,7 @@ expo-env.d.ts
 
 # Supabase local CLI
 .supabase/
+supabase/.temp/
 
 # Test coverage
 coverage/

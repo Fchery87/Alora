@@ -10,11 +10,13 @@ set -Eeuo pipefail
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 TEST_FILE="${HERE}/../../supabase/tests/01-rls-security.test.sql"
-MIGRATION_FILE="${HERE}/../../supabase/migrations/20260814000100_alora_baseline.sql"
+MIGRATION_DIR="${HERE}/../../supabase/migrations"
 AUTH_SUPPORT_FILE="${HERE}/../../supabase/tests/support/00-mock-auth.sql"
 LOCAL_DB="${PGDATABASE:-alora_pgtap}"
 REMOTE_URL="${PGLTAP_DATABASE_URL:-}"
 REMOTE_CONFIRMATION="I_UNDERSTAND_THIS_IS_A_DEDICATED_TEST_DATABASE"
+
+mapfile -t MIGRATION_FILES < <(find "$MIGRATION_DIR" -maxdepth 1 -type f -name '*.sql' -print | sort)
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -48,6 +50,19 @@ run_suite() {
   check_tap_result "$output_file"
 }
 
+apply_migrations() {
+  (( ${#MIGRATION_FILES[@]} > 0 )) || {
+    echo "ERROR: no canonical migrations found in ${MIGRATION_DIR}" >&2
+    return 1
+  }
+
+  local migration_file
+  for migration_file in "${MIGRATION_FILES[@]}"; do
+    echo "==> applying migration $(basename "$migration_file")"
+    psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=1 -f "$migration_file"
+  done
+}
+
 run_remote() {
   [[ "${PGLTAP_REMOTE_CONFIRM:-}" == "$REMOTE_CONFIRMATION" ]] || {
     echo "ERROR: remote mode requires PGLTAP_REMOTE_CONFIRM=${REMOTE_CONFIRMATION}" >&2
@@ -66,8 +81,7 @@ run_remote() {
       echo "==> applying standalone auth support"
       psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=1 -f "$AUTH_SUPPORT_FILE"
     fi
-    echo "==> applying canonical baseline migration"
-    psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=1 -f "$MIGRATION_FILE"
+    apply_migrations
   fi
 
   # A hosted Supabase project already has these grants. They are harmless on a
@@ -90,9 +104,9 @@ run_local() {
   echo "==> installing pgTAP"
   psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=1 -c "create extension if not exists pgtap;"
 
-  echo "==> applying local auth mock + canonical baseline migration"
+  echo "==> applying local auth mock + canonical migration history"
   psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=1 -f "$AUTH_SUPPORT_FILE"
-  psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=1 -f "$MIGRATION_FILE"
+  apply_migrations
   psql "${PSQL_ARGS[@]}" -v ON_ERROR_STOP=1 -c "grant usage on schema public to authenticated; grant select, insert, update, delete on all tables in schema public to authenticated; revoke update on families from authenticated; grant update (seat_limit) on families to authenticated;"
 
   echo "==> running pgTAP suite"

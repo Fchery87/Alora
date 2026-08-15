@@ -107,7 +107,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Plan
 -- ---------------------------------------------------------------------------
-select plan(51);
+select plan(52);
 
 -- ===========================================================================
 -- Block A — non-member sees nothing (intruder@alora.test has no membership)
@@ -132,10 +132,12 @@ reset role;
 -- ===========================================================================
 set local role authenticated;
 select tests_set_identity('00000000-0000-0000-0000-000000000003');
-select lives_ok(
+select throws_ok(
   $$ insert into family_members (family_id, user_id, role)
      values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'partner') $$,
-  'B1: self-insert attempt does not raise'
+  '42501',
+  NULL,
+  'B1: self-insert attempt is rejected by RLS'
 );
 select is(
   (select count(*) from family_members where family_id = '10000000-0000-0000-0000-000000000001' and user_id = '00000000-0000-0000-0000-000000000003'),
@@ -164,20 +166,24 @@ select is(
   1::bigint,
   'C3: founder can now read their own family'
 );
-select lives_ok(
+select throws_ok(
   $$ insert into family_members (family_id, user_id, role)
      values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'owner') $$,
-  'C4: owner-first attempt on an existing family does not raise'
+  '42501',
+  NULL,
+  'C4: owner-first attempt on an existing family is rejected'
 );
 select is(
   (select count(*) from family_members where family_id = '10000000-0000-0000-0000-000000000001' and user_id = '00000000-0000-0000-0000-000000000003'),
   0::bigint,
   'C5: owner-first policy cannot be used to join a family someone else created'
 );
-select lives_ok(
+select throws_ok(
   $$ insert into family_members (family_id, user_id, role)
      values ('10000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000003', 'owner') $$,
-  'C6: hijack attempt against the founder''s family does not raise'
+  '42501',
+  NULL,
+  'C6: hijack attempt against the founder''s family is rejected'
 );
 select is(
   (select count(*) from family_members m where m.family_id = '10000000-0000-0000-0000-000000000003' and m.user_id = '00000000-0000-0000-0000-000000000003'),
@@ -191,22 +197,32 @@ reset role;
 -- ===========================================================================
 set local role authenticated;
 select tests_set_identity('00000000-0000-0000-0000-000000000001');
-select is(tests_count('invitation_tokens'), 4::bigint, 'D1: owner sees all own-family invite tokens');
+select is(
+  (select count(*) from invitation_tokens where family_id = '10000000-0000-0000-0000-000000000001'),
+  4::bigint,
+  'D1: owner sees all F1 invite tokens'
+);
 select lives_ok(
   $$ insert into invitation_tokens (family_id, created_by, code)
      values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'FRESH-F1') $$,
   'D2: owner can issue a new invite code'
 );
-select is(tests_count('invitation_tokens'), 5::bigint, 'D3: issued token is visible to the owner');
+select is(
+  (select count(*) from invitation_tokens where family_id = '10000000-0000-0000-0000-000000000001'),
+  5::bigint,
+  'D3: issued F1 token is visible to the owner'
+);
 reset role;
 
 set local role authenticated;
 select tests_set_identity('00000000-0000-0000-0000-000000000002');
 select is(tests_count('invitation_tokens'), 0::bigint, 'D4: partner cannot see invite tokens');
-select lives_ok(
+select throws_ok(
   $$ insert into invitation_tokens (family_id, created_by, code)
      values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 'SNEAK-F1') $$,
-  'D5: partner token-issue attempt does not raise'
+  '42501',
+  NULL,
+  'D5: partner token-issue attempt is rejected'
 );
 select is(tests_count('invitation_tokens'), 0::bigint, 'D6: partner cannot issue invite tokens');
 select is(tests_count('baby_events'), 2::bigint, 'D7: partner (family member) reads family events — positive control');
@@ -254,8 +270,8 @@ select is(
 );
 select is(
   (select count(*) from invitation_tokens t where t.family_id = '10000000-0000-0000-0000-000000000001' and token_is_active(t)),
-  1::bigint,
-  'F5: exactly one redeemable code remains in F1'
+  2::bigint,
+  'F5: two redeemable codes remain in F1 after issuance'
 );
 
 -- ===========================================================================
@@ -267,18 +283,20 @@ select lives_ok(
      values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000004', 'partner') $$,
   'G1: unset seat_limit = unlimited accepts a third member via service role'
 );
--- Configured limit: F2's seat_limit = 2 rejects an over-limit insert.
+-- Configured limit: F2's seat_limit = 1 rejects an over-limit insert.
 select lives_ok(
-  $$ update families set seat_limit = 2 where id = '10000000-0000-0000-0000-000000000002' $$,
-  'G1b: owner sets F2 seat_limit to 2'
+  $$ update families set seat_limit = 1 where id = '10000000-0000-0000-0000-000000000002' $$,
+  'G1b: owner sets F2 seat_limit to 1'
 );
 select throws_ok(
   $$ insert into family_members (family_id, user_id, role)
      values ('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000004', 'partner') $$,
   'P0001',
-  'Family is at its caregiver limit (2)',
+  'Family is at its caregiver limit (1)',
   'G1c: configured seat limit rejects an over-limit member even via the service role'
 );
+-- Restore one free seat so the redemption flow can succeed below.
+update families set seat_limit = 2 where id = '10000000-0000-0000-0000-000000000002';
 select lives_ok(
   $$ -- emulate redeem-invite: consume the token, join as partner, audit
      update invitation_tokens set used_at = now(), used_by = '00000000-0000-0000-0000-000000000003'
@@ -334,11 +352,14 @@ select is(
 );
 -- H3: a limited seat cannot change the seat limit (RLS).
 select tests_set_identity('00000000-0000-0000-0000-000000000005');
-select throws_ok(
+select lives_ok(
   $$ update families set seat_limit = 5 where id = '10000000-0000-0000-0000-000000000001' $$,
-  '42501',
-  NULL,
-  'H3: a limited seat cannot change the seat limit (RLS)'
+  'H3: a limited seat update is a no-op under RLS'
+);
+select is(
+  (select seat_limit from families where id = '10000000-0000-0000-0000-000000000001'),
+  4,
+  'H3b: a limited seat cannot change the seat limit'
 );
 -- H4: limited seat sees NO audit log (trust surface hidden server-side).
 select is(tests_count('audit_logs'), 0::bigint, 'H4: limited seat sees no audit log');

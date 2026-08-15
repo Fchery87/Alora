@@ -17,7 +17,7 @@ credentials is the remaining step (it needs your accounts; see
 | `functions/generate-invite/` | Edge Function — issues a single-use, time-limited invite code for a chosen role (`partner` \| `limited`). |
 | `functions/redeem-invite/` | Edge Function — redeems a single-use invite, enforces the **configured seat limit** (not a hard-coded cap), joins the family, consumes the token. |
 | `functions/delete-account/` | Edge Function — transfer-then-scrub account deletion (promote partner / delete sole-owner family / hard-delete PII + private check-ins). |
-| `supabase/tests/01-rls-security.test.sql` | pgTAP suite (51 assertions) — verifies RLS enforcement, the invite lifecycle, seat limits, and privacy isolation at the database layer. |
+| `supabase/tests/01-rls-security.test.sql` | pgTAP suite (52 assertions) — verifies RLS enforcement, the invite lifecycle, seat limits, and privacy isolation at the database layer. |
 
 ## Design decisions encoded
 
@@ -70,7 +70,7 @@ supabase test db
 
 The local runner creates a throwaway database, applies
 `../supabase/tests/support/00-mock-auth.sql` (a local stand-in for the
-Supabase `auth` schema), then the canonical baseline migration. Pass with
+Supabase `auth` schema), then the canonical migration history. Pass with
 `PGDATABASE=name ./tests/run-pgtap.sh` to override the database name.
 
 Docker-free fallback: set `PGLTAP_DATABASE_URL` to a dedicated hosted
@@ -81,7 +81,7 @@ plain PostgreSQL target, also set `PGLTAP_APPLY_MIGRATION=1` and
 `PGLTAP_USE_AUTH_MOCK=1`. The script uses `psql`, rolls back fixture data, and
 refuses remote mode without the explicit confirmation value.
 
-What the suite covers (51 assertions):
+What the suite covers (52 assertions):
 
 - A non-member cannot read family events, families, memberships, invite
   tokens, the audit log, or other users' profiles.
