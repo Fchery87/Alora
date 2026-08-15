@@ -1,10 +1,15 @@
 # Alora — Provisioning Runbook
 
-> **Blocked for beta use.** Complete the critical items in `../VALIDATION_TASKS.md` before following this runbook. Provisioning the current code does not produce a working or safe live build.
+> **Current status (2026-08-15):** the hosted schema and pgTAP security contract
+> are complete through migration `20260815000600` (74/74 assertions). The
+> remaining beta gates are Edge Function deployment, PowerSync Cloud
+> provisioning, native two-device/accessibility evidence, dependency review,
+> Sentry, and legal/store approval. Track those gates in
+> [`../docs/launch-checklist.md`](../docs/launch-checklist.md).
 
-Exact, ordered steps to take Alora from demo-mode (mock data) to live local-first
-data. Do these once. Everything the app needs is already written — this just stands
-up the cloud services and flips the switches.
+Exact, ordered steps to take Alora from a provisioned Supabase project to a live
+local-first beta build. Do these once. Everything the app needs is already
+wired; this stands up the cloud services and supplies the runtime environment.
 
 **Prereqs:** a [Supabase](https://supabase.com) account, a [PowerSync](https://powersync.com)
 account, the Supabase CLI (`npm i -g supabase`), Node 20+, and the Expo app in `../mobile`.
@@ -60,16 +65,16 @@ create trigger on_auth_user_created after insert on auth.users
   for each row execute function handle_new_user();
 ```
 
-## 4. Deploy the Edge Functions (~5 min)
+## 4. Deploy the Edge Functions (~5 min; Docker is not required)
 
 ```bash
 cd backend
 supabase login
 supabase link --project-ref <your-project-ref>
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<service_role key from step 1>
-supabase functions deploy generate-invite
-supabase functions deploy redeem-invite
-supabase functions deploy delete-account
+supabase functions deploy generate-invite --use-api
+supabase functions deploy redeem-invite --use-api
+supabase functions deploy delete-account --use-api
 ```
 
 (`SUPABASE_URL` and `SUPABASE_ANON_KEY` are injected by the platform automatically.)
@@ -80,8 +85,11 @@ supabase functions deploy delete-account
 2. **Connect to your Supabase Postgres**: PowerSync needs a logical-replication
    connection. In Supabase, create a dedicated role and publication:
    ```sql
-   create role powersync_role with replication login password '<strong-password>';
+   create role powersync_role
+     with replication bypassrls login password '<strong-password>';
    grant select on all tables in schema public to powersync_role;
+   alter default privileges in schema public
+     grant select on tables to powersync_role;
    create publication powersync for all tables;
    ```
    In PowerSync, enter the Supabase connection string with `powersync_role`.
@@ -109,30 +117,24 @@ of demo-mode tabs. Create an account and confirm you reach the tabs.
 
 ## 7. Enable local-first sync (~10 min)
 
+The repository already includes the native dependencies, strict TypeScript
+coverage, runtime composition, and PowerSync/Postgres schema contract. Do not
+edit `data/useData.ts` or add a second `startSync` effect. The authenticated
+runtime selects the Supabase/PowerSync adapter and owns connect, retry, stop,
+and user-scoped cleanup automatically when the environment contains
+`EXPO_PUBLIC_POWERSYNC_URL`.
+
+Create a development or internal-distribution build because OP-SQLite is
+native:
+
 ```bash
 cd mobile
-npx expo install @powersync/react-native @op-engineering/op-sqlite
+eas build --platform android --profile preview
+eas build --platform ios --profile preview
 ```
 
-The repository already includes the native dependencies, strict TypeScript
-coverage, and the PowerSync/Postgres schema contract. Then:
-
-1. In `data/useData.ts`, swap the active repository:
-   ```ts
-   import { supabaseRepository } from "./supabaseRepository";
-   export const repository = supabaseRepository;
-   ```
-2. Start sync after sign-in — add to `app/(tabs)/_layout.tsx`:
-   ```ts
-   import { useEffect } from "react";
-   import { startSync } from "../../powersync/system";
-   // inside the component:
-   useEffect(() => { startSync(); }, []);
-   ```
-3. A development build is required (OP-SQLite is native):
-   ```bash
-   npx expo run:ios   # or run:android
-   ```
+Use `npx expo run:ios` or `npx expo run:android` only when you are developing
+native code locally. Expo Go is not evidence for the PowerSync journey.
 
 ## 8. Verify — the tracer test (backlog issue 03)
 
